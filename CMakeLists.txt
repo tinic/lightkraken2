@@ -26,11 +26,11 @@ cmake_minimum_required(VERSION 3.0...3.16)
 # M46x M467 M467SJHAN
 project(lightkraken2 C CXX ASM)
 
-set(BASE_ADDRESS 0x00000000)
+set(BASE_ADDRESS 0x08000000)
 
 set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
 
-set(THREADX_ARCH cortex_m4)
+set(THREADX_ARCH cortex_m33)
 set(THREADX_TOOLCHAIN gnu)
 
 add_compile_definitions(
@@ -45,24 +45,25 @@ add_compile_definitions(
     TX_INLINE_THREAD_RESUME_SUSPEND
     __HXT=12000000UL
     __FPU_PRESENT=1U
-    ARM_MATH_CM4
+    ARM_MATH_CM33
+    STM32H563xx
     $<$<NOT:$<CONFIG:Release>>:TX_ENABLE_STACK_CHECKING>
     $<$<CONFIG:Release>:TX_DISABLE_STACK_FILLING>
     $<$<CONFIG:Release>:TX_DISABLE_ERROR_CHECKING>
     $<$<CONFIG:Release>:NDEBUG>)
 
-set(BSP_DIR ${PROJECT_SOURCE_DIR}/m460bsp)
+set(STM32HAL_DIR ${PROJECT_SOURCE_DIR}/stm32h5xx_hal_driver)
 set(THREADX_DIR ${PROJECT_SOURCE_DIR}/threadx)
 set(FILEX_DIR ${PROJECT_SOURCE_DIR}/filex)
 set(NETXDUO_DIR ${PROJECT_SOURCE_DIR}/netxduo)
 set(LWJSON_DIR ${PROJECT_SOURCE_DIR}/lwjson)
 set(FLASHDB_DIR ${PROJECT_SOURCE_DIR}/FlashDB)
 
-set(LD_SCRIPT_RUNTIME ${PROJECT_SOURCE_DIR}/support/gcc_arm_512k.ld)
-set(LD_SCRIPT_BOOTLOADER ${PROJECT_SOURCE_DIR}/support/gcc_arm_512k_bootloader.ld)
+set(LD_SCRIPT_RUNTIME ${PROJECT_SOURCE_DIR}/support/STM32H563xx_FLASH.ld)
+set(LD_SCRIPT_BOOTLOADER ${PROJECT_SOURCE_DIR}/support/STM32H563xx_FLASH_BOOTLOADER.ld.ld)
 
 set(CC_COMMON_FLAGS
-    -mcpu=cortex-m4
+    -mcpu=cortex-m33
     -Wformat=2
     -Wformat-overflow
     -Wformat-truncation
@@ -121,7 +122,7 @@ set(CC_RELEASE_FLAGS
 set(LD_COMMON_FLAGS
     -u _printf_float
     -specs=nano.specs
-    -mcpu=cortex-m4
+    -mcpu=cortex-m33
     -mthumb
     -mfloat-abi=hard
     -mfpu=fpv4-sp-d16
@@ -150,21 +151,19 @@ set(LD_BOOTLOADER_FLAGS
     -T${LD_SCRIPT_BOOTLOADER}
     -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}_bootloader.map,--cref)
 
+file(GLOB STM32HAL_FILES
+       ${STM32HAL_DIR}/Src/*.c)
+
 set(COMMON_SOURCES
     ${PROJECT_SOURCE_DIR}/main.c
     ${PROJECT_SOURCE_DIR}/app.cpp
     ${PROJECT_SOURCE_DIR}/network.cpp
     ${PROJECT_SOURCE_DIR}/settingsdb.cpp
     ${PROJECT_SOURCE_DIR}/webserver.cpp
-    ${PROJECT_SOURCE_DIR}/support/fal_m460.c
+    ${PROJECT_SOURCE_DIR}/support/fal_stm32h5xx.c
+    ${PROJECT_SOURCE_DIR}/support/startup_stm32h563xx.S
     ${PROJECT_SOURCE_DIR}/support/stubs.c
-    ${PROJECT_SOURCE_DIR}/support/tx_m460_init.c
-    ${PROJECT_SOURCE_DIR}/support/emac/synopGMAC_Dev.c
-    ${PROJECT_SOURCE_DIR}/support/emac/synopGMAC_network_interface.c
-    ${PROJECT_SOURCE_DIR}/support/emac/synopGMAC_plat.c
-    ${PROJECT_SOURCE_DIR}/support/emac/nx_m460_eth_driver.c
-    ${BSP_DIR}/Library/Device/Nuvoton/m460/Source/GCC/startup_M460.S
-    ${BSP_DIR}/Library/Device/Nuvoton/m460/Source/system_m460.c
+    ${PROJECT_SOURCE_DIR}/support/system_stm32h5xx.c
     ${LWJSON_DIR}/lwjson/src/lwjson/lwjson.c
     ${LWJSON_DIR}/lwjson/src/lwjson/lwjson_stream.c
     ${LWJSON_DIR}/lwjson/src/lwjson/lwjson_debug.c
@@ -174,7 +173,8 @@ set(COMMON_SOURCES
     ${FLASHDB_DIR}/port/fal/src/fal_rtt.c
     ${FLASHDB_DIR}/port/fal/src/fal.c
     ${FLASHDB_DIR}/port/fal/src/fal_partition.c
-    ${FLASHDB_DIR}/port/fal/src/fal_flash.c)
+    ${FLASHDB_DIR}/port/fal/src/fal_flash.c
+    ${STM32HAL_FILES})
 
 add_executable(${TARGET_NAME_RUNTIME} ${COMMON_SOURCES})
 add_executable(${TARGET_NAME_BOOTLOADER} ${COMMON_SOURCES})
@@ -222,21 +222,10 @@ target_sources(${TARGET_NAME_BOOTLOADER} PRIVATE fsbl.h)
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/support)
 include_directories(${PROJECT_SOURCE_DIR}/support/emac)
-include_directories(${BSP_DIR}/Library/Device/Nuvoton/m460/Include)
-include_directories(${BSP_DIR}/Library/CMSIS/Include)
-include_directories(${BSP_DIR}/Library/StdDriver/inc)
+include_directories(${STM32HAL_DIR}/Inc)
 include_directories(${LWJSON_DIR}/lwjson/src/include)
 include_directories(${FLASHDB_DIR}/inc)
 include_directories(${FLASHDB_DIR}/port/fal/inc)
-
-# StdDriver
-add_subdirectory(${BSP_DIR}/Library/StdDriver/src)
-target_link_libraries(${TARGET_NAME_RUNTIME} standard_driver)
-target_link_libraries(${TARGET_NAME_BOOTLOADER} standard_driver)
-
-target_compile_options(standard_driver PRIVATE "$<$<COMPILE_LANGUAGE:C>:${CC_COMMON_FLAGS}>")
-target_compile_options(standard_driver PRIVATE "$<$<CONFIG:DEBUG>:${CC_DEBUG_FLAGS}>")
-target_compile_options(standard_driver PRIVATE "$<$<CONFIG:RELEASE>:${CC_RELEASE_FLAGS}>")
 
 # ThreadX
 add_subdirectory(${THREADX_DIR})
@@ -316,5 +305,5 @@ add_custom_command(TARGET ${TARGET_NAME_BOOTLOADER} POST_BUILD
     COMMAND ${CMAKE_SIZE} ${TARGET_NAME_BOOTLOADER}
     COMMENT ("Building ${HEX_FILE_BOOTLOADER}\\nBuilding ${BIN_FILE_BOOTLOADER}"))
 
-set(PROGRAM_CMD "./openocd -f ./stlink.cfg -f ./numicro_m4.cfg -c \"adapter speed 12000\" -c \"program ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.bin ${BASE_ADDRESS} verify reset exit\"")
+set(PROGRAM_CMD "./openocd -f ./stlink.cfg -f ./stm32h5x.cfg -c \"adapter speed 12000\" -c \"program ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.bin ${BASE_ADDRESS} verify reset exit\"")
 install(CODE "execute_process(COMMAND ${PROGRAM_CMD} WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/openocd)")
