@@ -169,6 +169,7 @@ set(COMMON_SOURCES
     ${PROJECT_SOURCE_DIR}/support/syscalls.c
     ${PROJECT_SOURCE_DIR}/support/sysmem.c
     ${PROJECT_SOURCE_DIR}/support/system_stm32h5xx.c
+    ${PROJECT_SOURCE_DIR}/support/tx_initialize_low_level.S
     ${LWJSON_DIR}/lwjson/src/lwjson/lwjson.c
     ${LWJSON_DIR}/lwjson/src/lwjson/lwjson_stream.c
     ${LWJSON_DIR}/lwjson/src/lwjson/lwjson_debug.c
@@ -380,6 +381,7 @@ target_compile_options(netxduo PRIVATE "$<$<CONFIG:RELEASE>:${CC_RELEASE_FLAGS}>
 # Runtime
 target_include_directories(${TARGET_NAME_RUNTIME} PRIVATE ${CMAKE_BINARY_DIR})
 
+target_compile_options(${TARGET_NAME_RUNTIME} PRIVATE "$<$<COMPILE_LANGUAGE:ASM>:${CC_COMMON_FLAGS}>")
 target_compile_options(${TARGET_NAME_RUNTIME} PRIVATE "$<$<COMPILE_LANGUAGE:C>:${CC_COMMON_FLAGS}>")
 target_compile_options(${TARGET_NAME_RUNTIME} PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CXX_COMMON_FLAGS}>")
 target_compile_options(${TARGET_NAME_RUNTIME} PRIVATE "$<$<CONFIG:DEBUG>:${CC_DEBUG_FLAGS}>")
@@ -394,6 +396,7 @@ target_link_options(${TARGET_NAME_RUNTIME} PRIVATE "$<$<CONFIG:RELEASE>:${LD_REL
 target_include_directories(${TARGET_NAME_BOOTLOADER} PRIVATE ${CMAKE_BINARY_DIR})
 target_compile_definitions(${TARGET_NAME_BOOTLOADER} PRIVATE BOOTLOADER)
 
+target_compile_options(${TARGET_NAME_BOOTLOADER} PRIVATE "$<$<COMPILE_LANGUAGE:ASM>:${CC_COMMON_FLAGS}>")
 target_compile_options(${TARGET_NAME_BOOTLOADER} PRIVATE "$<$<COMPILE_LANGUAGE:C>:${CC_COMMON_FLAGS}>")
 target_compile_options(${TARGET_NAME_BOOTLOADER} PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CXX_COMMON_FLAGS}>")
 target_compile_options(${TARGET_NAME_BOOTLOADER} PRIVATE "$<$<CONFIG:DEBUG>:${CC_DEBUG_FLAGS}>")
