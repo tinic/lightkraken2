@@ -106,11 +106,11 @@ void SettingsDB::init() {
 }
 
 void SettingsDB::lock() {
-    __enable_irq();
+//    __enable_irq();
 }
 
 void SettingsDB::unlock() {
-    __disable_irq();
+//    __disable_irq();
 }
 
 void SettingsDB::dump() {

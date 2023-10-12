@@ -23,8 +23,10 @@ SOFTWARE.
 */
 #include "network.h"
 
-#define NX_PACKET_SIZE PKT_FRAME_BUF_SIZE
-#define NX_PACKET_POOL_SIZE (PKT_FRAME_BUF_SIZE + sizeof(NX_PACKET)) * RECEIVE_DESC_SIZE
+#include "stm32h5xx_hal_eth.h"
+#include "nx_stm32_eth_driver.h"
+
+#define NX_PACKET_POOL_SIZE (ETH_MAX_PACKET_SIZE * 32)
 
 Network &Network::instance() {
     static Network network;
@@ -57,17 +59,17 @@ uint8_t *Network::setup(uint8_t *pointer) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 
-    status = nx_packet_pool_create(&client_pool, "NetX Main Packet Pool", NX_PACKET_SIZE, pointer, NX_PACKET_POOL_SIZE);
+    status = nx_packet_pool_create(&client_pool, "NetX Main Packet Pool", ETH_MAX_PACKET_SIZE, pointer, ETH_MAX_PACKET_SIZE * 32);
     pointer = pointer + NX_PACKET_POOL_SIZE;
     if (status)
         goto fail;
 
-    status = nx_ip_create(&client_ip, "IP", IP_ADDRESS(0, 0, 0, 0), 0xFFFFFF00UL, &client_pool, nx_m460_eth_driver, pointer, ip_stack_size, 1);
+    status = nx_ip_create(&client_ip, "IP", IP_ADDRESS(0, 0, 0, 0), 0xFFFFFF00UL, &client_pool, nx_stm32_eth_driver, pointer, ip_stack_size, 1);
     pointer = pointer + ip_stack_size;
     if (status)
         goto fail;
 
-    status = nx_ip_interface_mtu_set(&client_ip, 0, MAX_ETHERNET_PAYLOAD);
+    status = nx_ip_interface_mtu_set(&client_ip, 0, ETH_MAX_PAYLOAD);
     if (status)
         goto fail;
 

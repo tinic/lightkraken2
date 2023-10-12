@@ -44,10 +44,13 @@ add_compile_definitions(
     TX_TIMER_PROCESS_IN_ISR
     TX_REACTIVATE_INLINE
     TX_INLINE_THREAD_RESUME_SUSPEND
+    TX_SINGLE_MODE_NON_SECURE=1
     __HXT=12000000UL
     __FPU_PRESENT=1U
     ARM_MATH_CM33
     STM32H563xx
+    USE_FULL_LL_DRIVER
+    USE_HAL_DRIVER
     $<$<NOT:$<CONFIG:Release>>:TX_ENABLE_STACK_CHECKING>
     $<$<CONFIG:Release>:TX_DISABLE_STACK_FILLING>
     $<$<CONFIG:Release>:TX_DISABLE_ERROR_CHECKING>
@@ -152,9 +155,6 @@ set(LD_BOOTLOADER_FLAGS
     -T${LD_SCRIPT_BOOTLOADER}
     -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}_bootloader.map,--cref)
 
-file(GLOB STM32HAL_FILES
-       ${STM32HAL_DIR}/Src/*.c)
-
 set(COMMON_SOURCES
     ${PROJECT_SOURCE_DIR}/main.c
     ${PROJECT_SOURCE_DIR}/app.cpp
@@ -162,8 +162,12 @@ set(COMMON_SOURCES
     ${PROJECT_SOURCE_DIR}/settingsdb.cpp
     ${PROJECT_SOURCE_DIR}/webserver.cpp
     ${PROJECT_SOURCE_DIR}/support/fal_stm32h5xx.c
+    ${PROJECT_SOURCE_DIR}/support/lan8742.c
+    ${PROJECT_SOURCE_DIR}/support/nx_stm32_eth_driver.c
+    ${PROJECT_SOURCE_DIR}/support/nx_stm32_phy_driver.c
     ${PROJECT_SOURCE_DIR}/support/startup_stm32h563xx.S
-    ${PROJECT_SOURCE_DIR}/support/stubs.c
+    ${PROJECT_SOURCE_DIR}/support/syscalls.c
+    ${PROJECT_SOURCE_DIR}/support/sysmem.c
     ${PROJECT_SOURCE_DIR}/support/system_stm32h5xx.c
     ${LWJSON_DIR}/lwjson/src/lwjson/lwjson.c
     ${LWJSON_DIR}/lwjson/src/lwjson/lwjson_stream.c
@@ -174,8 +178,7 @@ set(COMMON_SOURCES
     ${FLASHDB_DIR}/port/fal/src/fal_rtt.c
     ${FLASHDB_DIR}/port/fal/src/fal.c
     ${FLASHDB_DIR}/port/fal/src/fal_partition.c
-    ${FLASHDB_DIR}/port/fal/src/fal_flash.c
-    ${STM32HAL_FILES})
+    ${FLASHDB_DIR}/port/fal/src/fal_flash.c)
 
 add_executable(${TARGET_NAME_RUNTIME} ${COMMON_SOURCES})
 add_executable(${TARGET_NAME_BOOTLOADER} ${COMMON_SOURCES})
@@ -227,6 +230,124 @@ include_directories(${STM32HAL_DIR}/Inc)
 include_directories(${LWJSON_DIR}/lwjson/src/include)
 include_directories(${FLASHDB_DIR}/inc)
 include_directories(${FLASHDB_DIR}/port/fal/inc)
+
+# STM32HAL
+add_library(stm32hal)
+target_sources(stm32hal PRIVATE
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_adc.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_adc_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_cec.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_comp.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_cordic.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_cortex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_crc.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_crc_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_cryp.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_cryp_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_dac.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_dac_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_dcache.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_dcmi.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_dma.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_dma_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_dts.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_eth.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_eth_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_exti.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_fdcan.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_flash.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_flash_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_fmac.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_gpio.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_gtzc.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_hash.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_hcd.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_i2c.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_i2c_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_i2s.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_i2s_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_i3c.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_icache.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_irda.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_iwdg.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_lptim.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_mmc.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_mmc_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_nand.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_nor.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_opamp.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_opamp_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_otfdec.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_pcd.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_pcd_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_pka.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_pssi.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_pwr.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_pwr_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_ramcfg.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_rcc.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_rcc_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_rng.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_rng_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_rtc.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_rtc_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_sai.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_sai_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_sd.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_sd_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_sdram.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_smartcard.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_smartcard_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_smbus.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_smbus_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_spi.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_spi_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_sram.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_tim.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_tim_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_uart.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_uart_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_usart.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_usart_ex.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_wwdg.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_hal_xspi.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_adc.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_comp.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_cordic.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_crc.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_crs.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_dac.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_dlyb.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_dma.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_exti.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_fmac.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_fmc.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_gpio.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_i2c.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_i3c.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_icache.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_lptim.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_lpuart.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_opamp.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_pka.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_pwr.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_rcc.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_rng.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_rtc.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_sdmmc.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_spi.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_tim.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_ucpd.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_usart.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_usb.c
+    ${STM32HAL_DIR}/Src/stm32h5xx_ll_utils.c)
+target_link_libraries(${TARGET_NAME_RUNTIME} stm32hal)
+target_link_libraries(${TARGET_NAME_BOOTLOADER} stm32hal)
+target_compile_options(stm32hal PRIVATE "$<$<COMPILE_LANGUAGE:ASM>:${CC_COMMON_FLAGS}>")
+target_compile_options(stm32hal PRIVATE "$<$<COMPILE_LANGUAGE:C>:${CC_COMMON_FLAGS}>")
+target_compile_options(stm32hal PRIVATE "$<$<CONFIG:DEBUG>:${CC_DEBUG_FLAGS}>")
+target_compile_options(stm32hal PRIVATE "$<$<CONFIG:RELEASE>:${CC_RELEASE_FLAGS}>")
 
 # ThreadX
 add_subdirectory(${THREADX_DIR})
