@@ -1,0 +1,15 @@
+{
+    "cmake.configureSettings": {
+        "CMAKE_TOOLCHAIN_FILE": "../cmake/arm-gcc-toolchain.cmake",
+    },
+    "C_Cpp.files.exclude": {
+        "version.h.in": true,
+    },
+    "cmake.outputLogEncoding": "utf8",
+    "cmake.configureOnOpen": true,
+    "files.associations": {
+        "*.h": "cpp",
+        "*.cpp": "cpp",
+        "*.c": "c",
+    },
+}

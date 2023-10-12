@@ -1,0 +1,43 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "STM32 compile",
+        "type": "shell",
+        "command": "ninja",
+        "options": {
+          "cwd": "${workspaceRoot}/build"
+        },
+        "problemMatcher": [],
+        "presentation": {
+            "close": true,
+            "clear": true
+        }
+      },
+      {
+        "windows": {
+        },
+        "osx": {
+        },
+        "linux": {
+        },
+        "label": "STM32 upload",
+        "type": "shell",
+        "command": "./openocd.exe",
+        "args": [
+          "-f", "./stlink.cfg",
+          "-f", "./stm32h5x.cfg",
+          "-c", "adapter speed 12000",
+          "-c", "program ../build/lightkraken2.bin 0x00000000 verify exit"
+        ],
+        "options": {
+          "cwd": "${workspaceRoot}/openocd"
+        },
+        "problemMatcher": [],
+        "presentation": {
+            "close": true,
+            "clear": true
+        }
+       }
+      ]
+}

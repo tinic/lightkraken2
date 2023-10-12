@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+build/
+.venv
+vue3/dist

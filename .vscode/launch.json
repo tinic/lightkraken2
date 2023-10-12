@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "cwd": "${workspaceFolder}/openocd",
+            "executable": "${workspaceFolder}/build/lightkraken2.elf",
+            "name": "Debug Main Firmware",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "device": "H563ZIT6",
+            "interface": "swd",
+            "configFiles": [
+                "./stlink.cfg",
+                "./stm32h5x.cfg"
+            ],
+            "openOCDLaunchCommands": ["adapter speed 12000"],
+            "preLaunchTask": "upload",
+            "openOCDPreConfigLaunchCommands": ["gdb_breakpoint_override hard"],
+            "showDevDebugOutput": "raw",
+            "overrideLaunchCommands": [
+                "interpreter-exec console \"monitor reset halt\"",
+                "-enable-pretty-printing"
+            ],
+        }
+    ]
+}
