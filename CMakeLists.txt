@@ -266,8 +266,6 @@ target_sources(stm32hal PRIVATE
     ${STM32HAL_DIR}/Src/stm32h5xx_hal_hcd.c
     ${STM32HAL_DIR}/Src/stm32h5xx_hal_i2c.c
     ${STM32HAL_DIR}/Src/stm32h5xx_hal_i2c_ex.c
-    ${STM32HAL_DIR}/Src/stm32h5xx_hal_i2s.c
-    ${STM32HAL_DIR}/Src/stm32h5xx_hal_i2s_ex.c
     ${STM32HAL_DIR}/Src/stm32h5xx_hal_i3c.c
     ${STM32HAL_DIR}/Src/stm32h5xx_hal_icache.c
     ${STM32HAL_DIR}/Src/stm32h5xx_hal_irda.c

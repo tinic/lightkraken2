@@ -1660,7 +1660,7 @@ static UINT  _nx_driver_hardware_packet_send(NX_PACKET *packet_ptr)
 
   for (pktIdx = packet_ptr;pktIdx != NX_NULL ; pktIdx = pktIdx -> nx_packet_next)
   {
-    if (i >= ETH_TX_DESC_CNT)
+    if (i >= (int)ETH_TX_DESC_CNT)
     {
       return NX_DRIVER_ERROR;
     }
