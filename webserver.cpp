@@ -25,9 +25,6 @@ SOFTWARE.
 #include "network.h"
 #include "settingsdb.h"
 
-#include "synopGMAC_Dev.h"
-#include "nx_m460_eth_driver.h"
-
 #ifndef BOOTLOADER
 #include "lwjson/lwjson.h"
 #endif  // #ifndef BOOTLOADER

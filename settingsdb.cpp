@@ -29,8 +29,6 @@ SOFTWARE.
 #pragma GCC diagnostic ignored "-Wpedantic"
 #pragma GCC diagnostic ignored "-Wregister"
 
-#include "NuMicro.h"
-
 #pragma GCC diagnostic pop
 
 #pragma GCC diagnostic push
@@ -53,7 +51,7 @@ SettingsDB &SettingsDB::instance() {
 }
 
 void SettingsDB::erase() {
-
+#if 0
     lock();
 
     SYS_UnlockReg();
@@ -72,6 +70,7 @@ void SettingsDB::erase() {
     SYS_LockReg();
 
     unlock();
+#endif  // #if 0
 }
 
 void SettingsDB::init() {

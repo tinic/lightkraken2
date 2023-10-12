@@ -32,6 +32,7 @@ set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
 
 set(THREADX_ARCH cortex_m33)
 set(THREADX_TOOLCHAIN gnu)
+set(FILEX_CUSTOM_PORT ${PROJECT_SOURCE_DIR}/filex/ports/cortex_m4/gnu)
 
 add_compile_definitions(
     TX_TIMER_TICKS_PER_SECOND=240

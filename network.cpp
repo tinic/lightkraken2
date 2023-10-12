@@ -23,9 +23,6 @@ SOFTWARE.
 */
 #include "network.h"
 
-#include "synopGMAC_Dev.h"
-#include "nx_m460_eth_driver.h"
-
 #define NX_PACKET_SIZE PKT_FRAME_BUF_SIZE
 #define NX_PACKET_POOL_SIZE (PKT_FRAME_BUF_SIZE + sizeof(NX_PACKET)) * RECEIVE_DESC_SIZE
 
