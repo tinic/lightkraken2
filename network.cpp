@@ -23,7 +23,7 @@ SOFTWARE.
 */
 #include "network.h"
 
-#include "stm32h5xx_hal_eth.h"
+#include "stm32h5xx_hal.h"
 #include "nx_stm32_eth_driver.h"
 
 #define NX_PACKET_POOL_SIZE (ETH_MAX_PACKET_SIZE * 32)

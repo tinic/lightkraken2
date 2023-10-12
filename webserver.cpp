@@ -25,6 +25,8 @@ SOFTWARE.
 #include "network.h"
 #include "settingsdb.h"
 
+#include "stm32h5xx_hal.h"
+
 #ifndef BOOTLOADER
 #include "lwjson/lwjson.h"
 #endif  // #ifndef BOOTLOADER
@@ -160,7 +162,7 @@ UINT WebServer::postRequestUpload(
         NX_PACKET *packet_ptr) {
 
     ULONG offset = 0, chunk_length = 0, total_length = 0;
-    UCHAR buffer[MAX_ETHERNET_PAYLOAD + 1]; // plus 1 for null termination
+    UCHAR buffer[ETH_MAX_PAYLOAD + 1]; // plus 1 for null termination
     while(nx_http_server_get_entity_header(server_ptr, &packet_ptr, buffer, sizeof(buffer)) == NX_SUCCESS) {
         buffer[chunk_length] = 0;
         if (strstr((const char *)buffer, "application/octet-stream") != NULL) {
