@@ -15,13 +15,9 @@
                 "./stm32h5x.cfg"
             ],
             "openOCDLaunchCommands": ["adapter speed 12000"],
-//            "preLaunchTask": "upload",
+            "preLaunchTask": "STM32 upload",
             "openOCDPreConfigLaunchCommands": ["gdb_breakpoint_override hard"],
             "showDevDebugOutput": "raw",
-            "overrideLaunchCommands": [
-                "interpreter-exec console \"monitor reset halt\"",
-                "-enable-pretty-printing"
-            ],
         }
     ]
 }

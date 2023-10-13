@@ -309,6 +309,11 @@ int32_t LAN8742_GetLinkState(lan8742_Object_t *pObj)
 {
   uint32_t readval = 0;
 
+  /* Check if we were ever initialized */
+  if (pObj->IO.Init == 0) {
+    return LAN8742_STATUS_READ_ERROR;
+  }
+
   /* Read Status register  */
   if(pObj->IO.ReadReg(pObj->DevAddr, LAN8742_BSR, &readval) < 0)
   {

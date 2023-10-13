@@ -64,12 +64,12 @@ uint8_t *Network::setup(uint8_t *pointer)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 
-    status = nx_packet_pool_create(&client_pool, "NetX Main Packet Pool", ETH_MAX_PACKET_SIZE, pointer, NX_PACKET_POOL_SIZE);
+    status = nx_packet_pool_create(&client_pool, (CHAR *)"NetX Main Packet Pool", ETH_MAX_PACKET_SIZE, pointer, NX_PACKET_POOL_SIZE);
     pointer = pointer + NX_PACKET_POOL_SIZE;
     if (status)
         goto fail;
 
-    status = nx_ip_create(&client_ip, "IP", IP_ADDRESS(0, 0, 0, 0), 0xFFFFFF00UL, &client_pool, nx_stm32_eth_driver, pointer, ip_stack_size, 1);
+    status = nx_ip_create(&client_ip, (CHAR *)"IP", IP_ADDRESS(0, 0, 0, 0), 0xFFFFFF00UL, &client_pool, nx_stm32_eth_driver, pointer, ip_stack_size, 1);
     pointer = pointer + ip_stack_size;
     if (status)
         goto fail;
@@ -78,7 +78,7 @@ uint8_t *Network::setup(uint8_t *pointer)
     if (status)
         goto fail;
 
-    status = nx_auto_ip_create(&auto_ip, "AutoIP", &client_ip, pointer, auto_ip_stack_size, 1);
+    status = nx_auto_ip_create(&auto_ip, (CHAR *)"AutoIP", &client_ip, pointer, auto_ip_stack_size, 1);
     pointer = pointer + auto_ip_stack_size;
     if (status)
         goto fail;
@@ -176,11 +176,12 @@ bool Network::start()
     bool try_dhcp = true;
     bool try_autop = true;
     bool try_settings = true;
-
+    
     /* Wait for the link to come up.  */
     do
     {
         status = nx_ip_status_check(&client_ip, NX_IP_LINK_ENABLED, &actual_status, NX_IP_PERIODIC_RATE);
+        HAL_Delay(10);
     } while (status != NX_SUCCESS);
 
     if (!got_ip && try_settings)
@@ -195,15 +196,12 @@ bool Network::start()
     if (!got_ip && try_dhcp)
     {
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wwrite-strings"
         /* Create the DHCP instance.  */
-        status = nx_dhcp_create(&dhcp_client, &client_ip, "DHCP Client");
+        status = nx_dhcp_create(&dhcp_client, &client_ip, (CHAR *)"DHCP Client");
         if (status)
         {
             return false;
         }
-#pragma GCC diagnostic pop
 
         /* Register state change variable.  */
         status = nx_dhcp_state_change_notify(&dhcp_client, dhcp_state_change);

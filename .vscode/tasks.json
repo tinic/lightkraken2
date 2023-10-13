@@ -28,7 +28,7 @@
           "-f", "./stlink-dap.cfg",
           "-f", "./stm32h5x.cfg",
           "-c", "adapter speed 12000",
-          "-c", "program ../build/lightkraken2.bin 0x00000000 verify exit"
+          "-c", "program ../build/lightkraken2.bin 0x08000000 verify exit"
         ],
         "options": {
           "cwd": "${workspaceRoot}/openocd"
@@ -37,7 +37,10 @@
         "presentation": {
             "close": true,
             "clear": true
-        }
+        },
+        "dependsOn": [
+          "STM32 compile"
+        ]
        }
       ]
 }

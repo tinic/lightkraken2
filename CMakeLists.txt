@@ -116,7 +116,7 @@ set(CXX_COMMON_FLAGS
     -fno-exceptions)
 
 set(CC_DEBUG_FLAGS
-    -O0 -g3 -gdwarf-2)
+    -O0 -g3 -gdwarf-4)
 
 set(CC_RELEASE_FLAGS   
     -flto=auto
@@ -153,6 +153,15 @@ set(DUMP_FILE_BOOTLOADER ${PROJECT_BINARY_DIR}/${PROJECT_NAME}_bootloader.S)
 set(LD_BOOTLOADER_FLAGS
     -T${LD_SCRIPT_BOOTLOADER}
     -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}_bootloader.map,--cref)
+
+# Common include directories
+include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/support)
+include_directories(${PROJECT_SOURCE_DIR}/support/emac)
+include_directories(${STM32HAL_DIR}/Inc)
+include_directories(${LWJSON_DIR}/lwjson/src/include)
+include_directories(${FLASHDB_DIR}/inc)
+include_directories(${FLASHDB_DIR}/port/fal/inc)
 
 set(COMMON_SOURCES
     ${PROJECT_SOURCE_DIR}/main.c
@@ -221,15 +230,6 @@ add_custom_command(
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/fsbl
     DEPENDS ${FSBL_FILES} ${MKFAT_BINARY})
 target_sources(${TARGET_NAME_BOOTLOADER} PRIVATE fsbl.h)
-
-# Common include directories
-include_directories(${PROJECT_SOURCE_DIR})
-include_directories(${PROJECT_SOURCE_DIR}/support)
-include_directories(${PROJECT_SOURCE_DIR}/support/emac)
-include_directories(${STM32HAL_DIR}/Inc)
-include_directories(${LWJSON_DIR}/lwjson/src/include)
-include_directories(${FLASHDB_DIR}/inc)
-include_directories(${FLASHDB_DIR}/port/fal/inc)
 
 # STM32HAL
 add_library(stm32hal)

@@ -22,12 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #include <stdio.h>
+#include <stdint.h>
 
 #include "stm32h5xx_hal.h"
 
 #include "tx_api.h"
 
-__attribute__((__used__))
 void WWDG_IRQHandler()
 {
     while (1)
@@ -35,7 +35,6 @@ void WWDG_IRQHandler()
     }
 }
 
-__attribute__((__used__))
 void NMI_Handler(void)
 {
     while (1)
@@ -43,7 +42,6 @@ void NMI_Handler(void)
     }
 }
 
-__attribute__((__used__))
 void HardFault_Handler(void)
 {
     while (1)
@@ -51,7 +49,6 @@ void HardFault_Handler(void)
     }
 }
 
-__attribute__((__used__))
 void MemManage_Handler(void)
 {
     while (1)
@@ -59,7 +56,6 @@ void MemManage_Handler(void)
     }
 }
 
-__attribute__((__used__))
 void BusFault_Handler(void)
 {
     while (1)
@@ -67,7 +63,6 @@ void BusFault_Handler(void)
     }
 }
 
-__attribute__((__used__))
 void UsageFault_Handler(void)
 {
     while (1)
@@ -75,7 +70,6 @@ void UsageFault_Handler(void)
     }
 }
 
-__attribute__((__used__))
 void DebugMon_Handler(void)
 {
 }
@@ -88,6 +82,77 @@ static void MX_ICACHE_Init(void)
         {
         }
     }
+}
+
+TIM_HandleTypeDef htim1;
+HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
+{
+    RCC_ClkInitTypeDef clkconfig;
+    uint32_t uwTimclock;
+
+    uint32_t uwPrescalerValue;
+    uint32_t pFLatency;
+    HAL_StatusTypeDef status;
+
+    __HAL_RCC_TIM1_CLK_ENABLE();
+
+    HAL_RCC_GetClockConfig(&clkconfig, &pFLatency);
+
+    uwTimclock = HAL_RCC_GetPCLK2Freq();
+
+    uwPrescalerValue = (uint32_t)((uwTimclock / 100000U) - 1U);
+
+    htim1.Instance = TIM1;
+
+    htim1.Init.Period = (100000U / 1000U) - 1U;
+    htim1.Init.Prescaler = uwPrescalerValue;
+    htim1.Init.ClockDivision = 0;
+    htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+
+    status = HAL_TIM_Base_Init(&htim1);
+    if (status == HAL_OK)
+    {
+        status = HAL_TIM_Base_Start_IT(&htim1);
+        if (status == HAL_OK)
+        {
+            if (TickPriority < (1UL << __NVIC_PRIO_BITS))
+            {
+                HAL_NVIC_SetPriority(TIM1_UP_IRQn, TickPriority, 0U);
+                uwTickPrio = TickPriority;
+            }
+            else
+            {
+                status = HAL_ERROR;
+            }
+        }
+    }
+
+    HAL_NVIC_EnableIRQ(TIM1_UP_IRQn);
+
+    return status;
+}
+
+void HAL_SuspendTick(void)
+{
+    __HAL_TIM_DISABLE_IT(&htim1, TIM_IT_UPDATE);
+}
+
+void HAL_ResumeTick(void)
+{
+    __HAL_TIM_ENABLE_IT(&htim1, TIM_IT_UPDATE);
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+    if (htim->Instance == TIM1)
+    {
+        HAL_IncTick();
+    }
+}
+
+void TIM1_UP_IRQHandler(void)
+{
+    HAL_TIM_IRQHandler(&htim1);
 }
 
 static void MX_GPIO_Init(void)
@@ -103,7 +168,6 @@ static void MX_GPIO_Init(void)
 
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-    /* GPIO Ports Clock Enable */
     __HAL_RCC_GPIOE_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOF_CLK_ENABLE();
@@ -113,36 +177,27 @@ static void MX_GPIO_Init(void)
     __HAL_RCC_GPIOD_CLK_ENABLE();
     __HAL_RCC_GPIOG_CLK_ENABLE();
 
-    /*Configure GPIO pin Output Level */
     HAL_GPIO_WritePin(LED2_YELLOW_GPIO_Port, LED2_YELLOW_Pin, GPIO_PIN_RESET);
-
-    /*Configure GPIO pin Output Level */
     HAL_GPIO_WritePin(LED1_GREEN_GPIO_Port, LED1_GREEN_Pin, GPIO_PIN_RESET);
-
-    /*Configure GPIO pin Output Level */
     HAL_GPIO_WritePin(LED3_RED_GPIO_Port, LED3_RED_Pin, GPIO_PIN_RESET);
 
-    /*Configure GPIO pin : USER_BUTTON_Pin */
     GPIO_InitStruct.Pin = USER_BUTTON_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(USER_BUTTON_GPIO_Port, &GPIO_InitStruct);
 
-    /*Configure GPIO pin : LED2_YELLOW_Pin */
     GPIO_InitStruct.Pin = LED2_YELLOW_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(LED2_YELLOW_GPIO_Port, &GPIO_InitStruct);
 
-    /*Configure GPIO pin : LED1_GREEN_Pin */
     GPIO_InitStruct.Pin = LED1_GREEN_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(LED1_GREEN_GPIO_Port, &GPIO_InitStruct);
 
-    /*Configure GPIO pin : LED3_RED_Pin */
     GPIO_InitStruct.Pin = LED3_RED_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -155,17 +210,12 @@ static void SystemClock_Config(void)
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
     RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-    /** Configure the main internal regulator output voltage
-     */
     __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
 
     while (!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY))
     {
     }
 
-    /** Initializes the RCC Oscillators according to the specified parameters
-     * in the RCC_OscInitTypeDef structure.
-     */
     RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48 | RCC_OSCILLATORTYPE_HSI | RCC_OSCILLATORTYPE_HSE;
     RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS_DIGITAL;
     RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -189,8 +239,6 @@ static void SystemClock_Config(void)
         }
     }
 
-    /** Initializes the CPU, AHB and APB buses clocks
-     */
     RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2 | RCC_CLOCKTYPE_PCLK3;
     RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
     RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
@@ -221,50 +269,8 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
-    if (huart->Instance == LPUART1)
+    if (huart->Instance == USART3)
     {
-        /* USER CODE BEGIN LPUART1_MspInit 0 */
-
-        /* USER CODE END LPUART1_MspInit 0 */
-
-        /** Initializes the peripherals clock
-         */
-        PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_LPUART1;
-        PeriphClkInitStruct.Lpuart1ClockSelection = RCC_LPUART1CLKSOURCE_PCLK3;
-        if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
-        {
-            while (1)
-            {
-            }
-        }
-
-        /* Peripheral clock enable */
-        __HAL_RCC_LPUART1_CLK_ENABLE();
-
-        __HAL_RCC_GPIOB_CLK_ENABLE();
-        /**LPUART1 GPIO Configuration
-        PB6     ------> LPUART1_TX
-        PB7     ------> LPUART1_RX
-        */
-        GPIO_InitStruct.Pin = ARD_D1_TX_Pin | ARD_D0_RX_Pin;
-        GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-        GPIO_InitStruct.Pull = GPIO_NOPULL;
-        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-        GPIO_InitStruct.Alternate = GPIO_AF8_LPUART1;
-        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-        /* USER CODE BEGIN LPUART1_MspInit 1 */
-
-        /* USER CODE END LPUART1_MspInit 1 */
-    }
-    else if (huart->Instance == USART3)
-    {
-        /* USER CODE BEGIN USART3_MspInit 0 */
-
-        /* USER CODE END USART3_MspInit 0 */
-
-        /** Initializes the peripherals clock
-         */
         PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART3;
         PeriphClkInitStruct.Usart3ClockSelection = RCC_USART3CLKSOURCE_PCLK1;
         if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
@@ -274,7 +280,6 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
             }
         }
 
-        /* Peripheral clock enable */
         __HAL_RCC_USART3_CLK_ENABLE();
 
         __HAL_RCC_GPIOD_CLK_ENABLE();
@@ -288,12 +293,21 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
         GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
         HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-
-        /* USER CODE BEGIN USART3_MspInit 1 */
-
-        /* USER CODE END USART3_MspInit 1 */
     }
 }
+
+int __io_putchar(int ch)
+{
+    HAL_UART_Transmit(&huart3, (const uint8_t *)&ch, 1, HAL_MAX_DELAY);
+    return 1;
+};
+
+int __io_getchar(void)
+{
+    uint8_t byte = 0;
+    HAL_UART_Receive(&huart3, &byte, sizeof(byte), HAL_MAX_DELAY);
+    return byte;
+};
 
 static void MX_USART3_UART_Init(void)
 {
@@ -303,7 +317,7 @@ static void MX_USART3_UART_Init(void)
     huart3.Init.StopBits = UART_STOPBITS_1;
     huart3.Init.Parity = UART_PARITY_NONE;
     huart3.Init.Mode = UART_MODE_TX_RX;
-    huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    huart3.Init.HwFlowCtl = UART_HWCONTROL_RTS_CTS;
     huart3.Init.OverSampling = UART_OVERSAMPLING_8;
     huart3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
     huart3.Init.ClockPrescaler = UART_PRESCALER_DIV1;
@@ -468,6 +482,8 @@ void SYS_Lightkraken_Init()
     MX_GPIO_Init();
     MX_USART3_UART_Init();
     MX_ETH_Init();
+
+    printf("Test!\n");
 }
 
 int main()
