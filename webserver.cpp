@@ -387,14 +387,14 @@ bool WebServer::start()
     UINT status;
 
 #ifdef BOOTLOADER
-    static __attribute__((section(".text#")))
+    static __attribute__((section(".text#"))) const
 #include "fsbl.h"
 #else // #ifndef BOOTLOADER
-    static __attribute__((section(".text#")))
+    static __attribute__((section(".text#"))) const
 #include "fs.h"
 #endif // #ifndef BOOTLOADER
 
-    status = fx_media_open(&ram_disk, "APROM Disk", APROMDiskDriver, fs_data, media_memory, sizeof(media_memory));
+    status = fx_media_open(&ram_disk, "APROM Disk", APROMDiskDriver, (void *)fs_data, media_memory, sizeof(media_memory));
     if (status)
     {
         return false;
