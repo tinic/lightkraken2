@@ -25,7 +25,7 @@
         "type": "shell",
         "command": "./openocd.exe",
         "args": [
-          "-f", "./stlink.cfg",
+          "-f", "./stlink-dap.cfg",
           "-f", "./stm32h5x.cfg",
           "-c", "adapter speed 12000",
           "-c", "program ../build/lightkraken2.bin 0x00000000 verify exit"

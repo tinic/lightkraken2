@@ -427,5 +427,5 @@ add_custom_command(TARGET ${TARGET_NAME_BOOTLOADER} POST_BUILD
     COMMAND ${CMAKE_SIZE} ${TARGET_NAME_BOOTLOADER}
     COMMENT ("Building ${HEX_FILE_BOOTLOADER}\\nBuilding ${BIN_FILE_BOOTLOADER}"))
 
-set(PROGRAM_CMD "./openocd -f ./stlink.cfg -f ./stm32h5x.cfg -c \"adapter speed 12000\" -c \"program ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.bin ${BASE_ADDRESS} verify reset exit\"")
+set(PROGRAM_CMD "./openocd -f ./stlink-dap.cfg -f ./stm32h5x.cfg -c \"adapter speed 8000\" -c \"program ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.bin ${BASE_ADDRESS} verify reset exit\"")
 install(CODE "execute_process(COMMAND ${PROGRAM_CMD} WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/openocd)")
