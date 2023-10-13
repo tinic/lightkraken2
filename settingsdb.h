@@ -26,7 +26,8 @@ SOFTWARE.
 
 #include <flashdb.h>
 
-class SettingsDB {
+class SettingsDB
+{
 public:
     static SettingsDB &instance();
 
@@ -50,8 +51,9 @@ private:
     static void lock();
     static void unlock();
 
-    struct fdb_kvdb kvdb {};
-
+    struct fdb_kvdb kvdb
+    {
+    };
 };
 
-#endif  // #ifndef _SETTINGSDB_H_
+#endif // #ifndef _SETTINGSDB_H_

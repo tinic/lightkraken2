@@ -31,7 +31,8 @@ SOFTWARE.
 #include "nx_auto_ip.h"
 #include "nxd_dhcp_client.h"
 
-class Network {
+class Network
+{
 public:
     static Network &instance();
 
@@ -42,14 +43,13 @@ public:
     NX_PACKET_POOL *pool() { return &client_pool; }
 
 private:
-
     void init();
     bool initialized = false;
 
-    NX_IP client_ip {};
-    NX_AUTO_IP auto_ip {};
-    NX_DHCP dhcp_client {};
-    NX_PACKET_POOL client_pool {};
+    NX_IP client_ip{};
+    NX_AUTO_IP auto_ip{};
+    NX_DHCP dhcp_client{};
+    NX_PACKET_POOL client_pool{};
 };
 
-#endif  // #ifndef _NETWORK_H_
+#endif // #ifndef _NETWORK_H_
