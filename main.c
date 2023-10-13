@@ -27,6 +27,59 @@ SOFTWARE.
 
 #include "tx_api.h"
 
+__attribute__((__used__))
+void WWDG_IRQHandler()
+{
+    while (1)
+    {
+    }
+}
+
+__attribute__((__used__))
+void NMI_Handler(void)
+{
+    while (1)
+    {
+    }
+}
+
+__attribute__((__used__))
+void HardFault_Handler(void)
+{
+    while (1)
+    {
+    }
+}
+
+__attribute__((__used__))
+void MemManage_Handler(void)
+{
+    while (1)
+    {
+    }
+}
+
+__attribute__((__used__))
+void BusFault_Handler(void)
+{
+    while (1)
+    {
+    }
+}
+
+__attribute__((__used__))
+void UsageFault_Handler(void)
+{
+    while (1)
+    {
+    }
+}
+
+__attribute__((__used__))
+void DebugMon_Handler(void)
+{
+}
+
 static void MX_ICACHE_Init(void)
 {
     if (HAL_ICACHE_Enable() != HAL_OK)

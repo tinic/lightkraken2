@@ -26,7 +26,7 @@ SOFTWARE.
 #include "stm32h5xx_hal.h"
 #include "nx_stm32_eth_driver.h"
 
-#define NX_PACKET_POOL_SIZE (ETH_MAX_PACKET_SIZE * 32)
+#define NX_PACKET_POOL_SIZE (ETH_MAX_PACKET_SIZE * 5)
 
 Network &Network::instance()
 {
@@ -64,7 +64,7 @@ uint8_t *Network::setup(uint8_t *pointer)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 
-    status = nx_packet_pool_create(&client_pool, "NetX Main Packet Pool", ETH_MAX_PACKET_SIZE, pointer, ETH_MAX_PACKET_SIZE * 32);
+    status = nx_packet_pool_create(&client_pool, "NetX Main Packet Pool", ETH_MAX_PACKET_SIZE, pointer, NX_PACKET_POOL_SIZE);
     pointer = pointer + NX_PACKET_POOL_SIZE;
     if (status)
         goto fail;

@@ -11,11 +11,11 @@
             "device": "H563ZIT6",
             "interface": "swd",
             "configFiles": [
-                "./stlink.cfg",
+                "./stlink-dap.cfg",
                 "./stm32h5x.cfg"
             ],
             "openOCDLaunchCommands": ["adapter speed 12000"],
-            "preLaunchTask": "upload",
+//            "preLaunchTask": "upload",
             "openOCDPreConfigLaunchCommands": ["gdb_breakpoint_override hard"],
             "showDevDebugOutput": "raw",
             "overrideLaunchCommands": [

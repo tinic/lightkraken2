@@ -46,6 +46,8 @@ extern "C" void tx_application_define(void *first_unused_memory);
 void tx_application_define(void *first_unused_memory) {
     uint8_t *pointer = (uint8_t *)first_unused_memory;
 
+    printf("Lightkraken startup.\n");
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 
