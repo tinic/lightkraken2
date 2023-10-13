@@ -116,7 +116,7 @@ set(CXX_COMMON_FLAGS
     -fno-exceptions)
 
 set(CC_DEBUG_FLAGS
-    -O0 -g3)
+    -O0 -g3 -gdwarf-2)
 
 set(CC_RELEASE_FLAGS   
     -flto=auto
