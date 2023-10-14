@@ -14,6 +14,8 @@
 
 #include "nx_stm32_eth_config.h"
 
+#include "lan8742.h"
+
 /* LAN8742 IO functions */
 static int32_t lan8742_io_init(void);
 static int32_t lan8742_io_deinit(void);

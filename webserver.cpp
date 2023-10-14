@@ -92,13 +92,14 @@ UINT WebServer::postRequestJson(NX_HTTP_SERVER *server_ptr, UINT request_type, C
     UINT status = nx_http_server_packet_content_find(server_ptr, &packet_ptr, &contentLength);
     if (status) {
         nx_packet_release(packet_ptr);
-        nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_REQUEST_TIMEOUT, sizeof(NX_HTTP_STATUS_REQUEST_TIMEOUT) - 1, NX_NULL, 0,
-                                                       NX_NULL, 0);
+        nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_REQUEST_TIMEOUT, sizeof(NX_HTTP_STATUS_REQUEST_TIMEOUT) - 1, NX_NULL,
+                                                       0, NX_NULL, 0);
         return (NX_HTTP_CALLBACK_COMPLETED);
     }
     if (contentLength == 0) {
         nx_packet_release(packet_ptr);
-        nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_NO_CONTENT, sizeof(NX_HTTP_STATUS_NO_CONTENT) - 1, NX_NULL, 0, NX_NULL, 0);
+        nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_NO_CONTENT, sizeof(NX_HTTP_STATUS_NO_CONTENT) - 1, NX_NULL, 0,
+                                                       NX_NULL, 0);
         return (NX_HTTP_CALLBACK_COMPLETED);
     }
     lwjson_stream_parser_t stream_parser;
@@ -117,8 +118,8 @@ UINT WebServer::postRequestJson(NX_HTTP_SERVER *server_ptr, UINT request_type, C
                 break;
             } else {
                 nx_packet_release(packet_ptr);
-                nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_BAD_REQUEST, sizeof(NX_HTTP_STATUS_BAD_REQUEST) - 1, NX_NULL, 0,
-                                                               NX_NULL, 0);
+                nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_BAD_REQUEST, sizeof(NX_HTTP_STATUS_BAD_REQUEST) - 1, NX_NULL,
+                                                               0, NX_NULL, 0);
                 return (NX_HTTP_CALLBACK_COMPLETED);
             }
         }
@@ -130,8 +131,8 @@ UINT WebServer::postRequestJson(NX_HTTP_SERVER *server_ptr, UINT request_type, C
             nx_packet_release(packet_ptr);
             status = nx_tcp_socket_receive(&(server_ptr->nx_http_server_socket), &packet_ptr, NX_HTTP_SERVER_TIMEOUT_RECEIVE);
             if (status) {
-                nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_REQUEST_TIMEOUT, sizeof(NX_HTTP_STATUS_REQUEST_TIMEOUT) - 1, NX_NULL,
-                                                               0, NX_NULL, 0);
+                nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_REQUEST_TIMEOUT, sizeof(NX_HTTP_STATUS_REQUEST_TIMEOUT) - 1,
+                                                               NX_NULL, 0, NX_NULL, 0);
                 return (NX_HTTP_CALLBACK_COMPLETED);
             }
         }
@@ -158,7 +159,7 @@ UINT WebServer::postRequestUpload(NX_HTTP_SERVER *server_ptr, UINT request_type,
         }
     }
 
-    nx_http_server_callback_response_send_extended(server_ptr, NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, 0, NX_NULL, 0);
+    nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, 0, NX_NULL, 0);
     return (NX_HTTP_CALLBACK_COMPLETED);
 }
 #endif  // #ifdef BOOTLOADER
@@ -173,8 +174,8 @@ UINT WebServer::requestNotify(NX_HTTP_SERVER *server_ptr, UINT request_type, CHA
             if (strcmp(resource, "/") == 0) {
                 const char *redirect = "<html><head><meta http-equiv=\"refresh\" content=\"0; url='./index.html'\"/></head><body></body></html>";
                 nx_packet_release(packet_ptr);
-                nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, (CHAR *)redirect, strlen(redirect),
-                                                               NX_NULL, 0);
+                nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, (CHAR *)redirect,
+                                                               strlen(redirect), NX_NULL, 0);
                 return (NX_HTTP_CALLBACK_COMPLETED);
             }
 #ifndef BOOTLOADER
@@ -221,14 +222,17 @@ uint8_t *WebServer::setup(uint8_t *pointer) {
 
     fx_system_initialize();
 
-    status = nx_http_server_create(&http_server, (CHAR *)"WebServer", Network::instance().ip(), &ram_disk, pointer, http_server_stack_size, Network::instance().pool(),
-                                   NX_NULL, requestNotifyCallback);
+    status = nx_http_server_create(&http_server, (CHAR *)"WebServer", Network::instance().ip(), &ram_disk, pointer, http_server_stack_size,
+                                   Network::instance().pool(), NX_NULL, requestNotifyCallback);
     pointer = pointer + http_server_stack_size;
     if (status) {
         goto fail;
     }
 
-    static NX_HTTP_SERVER_MIME_MAP map[] = {{(CHAR *)"js", (CHAR *)"text/javascript"}, {(CHAR *)"css", (CHAR *)"text/css"}, {(CHAR *)"json", (CHAR *)"application/json"}, {(CHAR *)"svg", (CHAR *)"image/svg+xml"}};
+    static NX_HTTP_SERVER_MIME_MAP map[] = {{(CHAR *)"js", (CHAR *)"text/javascript"},
+                                            {(CHAR *)"css", (CHAR *)"text/css"},
+                                            {(CHAR *)"json", (CHAR *)"application/json"},
+                                            {(CHAR *)"svg", (CHAR *)"image/svg+xml"}};
 
     nx_http_server_mime_maps_additional_set(&http_server, map, 4);
 
@@ -309,7 +313,7 @@ bool WebServer::start() {
 #include "fs.h"
 #endif  // #ifndef BOOTLOADER
 
-        status = fx_media_open(&ram_disk, "APROM Disk", APROMDiskDriver, (void *)fs_data, media_memory, sizeof(media_memory));
+        status = fx_media_open(&ram_disk, (CHAR *)"APROM Disk", APROMDiskDriver, (void *)fs_data, media_memory, sizeof(media_memory));
     if (status) {
         return false;
     }

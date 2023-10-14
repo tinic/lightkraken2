@@ -27,81 +27,152 @@ SOFTWARE.
 
 #include "fal.h"
 #include "fal_cfg.h"
+#include "stm32h5xx_hal.h"
 
-static int init(void) {
-#if 0
-    FMC_Open();
-#endif  // #if 0
-    return 1;
-}
+static int init(void) { return 0; }
 
 static int read(long offset, uint8_t *buf, size_t size) {
-    uint8_t *addr = ((uint8_t *)nor_flash0.addr) + offset;
-    for (size_t i = 0; i < size; i++) {
-        buf[i] = addr[i];
+    if (offset % 4 != 0) {
+        while (1) {
+        }
     }
+
+    if (size % 4 != 0) {
+        while (1) {
+        }
+    }
+
+    uint32_t *addr = (uint32_t *)(nor_flash0.addr + offset);
+    for (size_t i = 0; i < size; i += sizeof(uint32_t), addr++) {
+        memcpy(&buf[i], addr, sizeof(uint32_t));
+    }
+
     return size;
 }
 
 static int write(long offset, const uint8_t *buf, size_t size) {
-#if 0
-    uint32_t addr = nor_flash0.addr + offset;
-
-    if(addr%8 != 0) {
-        while(1) { }
-    }
-
-    SYS_UnlockReg();
-
-    FMC_ENABLE_AP_UPDATE();
-
-    uint32_t data[2];
-    for (size_t i = 0; i < size; i += 8) {
-        memcpy(&data, &buf[i], sizeof(data));
-        if (data[0] != 0xFFFFFFFF || data[1] != 0xFFFFFFFF) {
-            FMC_Write8Bytes(addr + i, data[0], data[1]);
+    if (HAL_ICACHE_Disable() != 0) {
+        while (1) {
         }
     }
 
-    const uint8_t *wrt = (const uint8_t *)buf; 
-    const uint8_t *org = (const uint8_t *)addr; 
-    if (memcmp(wrt, org, size) != 0) {
-        while(1) { }
+    HAL_FLASH_Unlock();
+
+    uintptr_t addr = nor_flash0.addr + offset;
+    if (addr % 16 != 0) {
+        while (1) {
+        }
     }
 
-    FMC_DISABLE_AP_UPDATE();
+    if (size % 16 != 0) {
+        while (1) {
+        }
+    }
 
-    SYS_LockReg();
-#endif  // #if 0
+    uint32_t data[4];
+    for (size_t i = 0; i < size; i += sizeof(data)) {
+        memcpy(&data, &buf[i], sizeof(data));
+        if (data[0] != 0xFFFFFFFF || data[1] != 0xFFFFFFFF || data[2] != 0xFFFFFFFF || data[3] != 0xFFFFFFFF) {
+            if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_QUADWORD, addr + i, ((uintptr_t)&data[0])) != 0) {
+                while (1) {
+                }
+            }
+        }
+    }
+
+    HAL_FLASH_Lock();
+
+    if (HAL_ICACHE_Enable() != 0) {
+        while (1) {
+        }
+    }
+
+    const uint8_t *wrt = (const uint8_t *)buf;
+    const uint8_t *org = (const uint8_t *)addr;
+    if (memcmp(wrt, org, size) != 0) {
+        while (1) {
+        }
+    }
+
     return size;
 }
 
+static uint32_t GetSector(uint32_t Address) {
+    uint32_t sector = 0;
+
+    if ((Address >= FLASH_BASE) && (Address < FLASH_BASE + FLASH_BANK_SIZE)) {
+        sector = (Address & ~FLASH_BASE) / FLASH_SECTOR_SIZE;
+    } else if ((Address >= FLASH_BASE + FLASH_BANK_SIZE) && (Address < FLASH_BASE + FLASH_SIZE)) {
+        sector = ((Address & ~FLASH_BASE) - FLASH_BANK_SIZE) / FLASH_SECTOR_SIZE;
+    } else {
+        sector = 0xFFFFFFFF; /* Address out of range */
+    }
+
+    return sector;
+}
+
+static uint32_t GetBank(uint32_t Addr) {
+    uint32_t bank = 0;
+    if (READ_BIT(FLASH->OPTSR_CUR, FLASH_OPTSR_SWAP_BANK) == 0) {
+        /* No Bank swap */
+        if (Addr < (FLASH_BASE + FLASH_BANK_SIZE)) {
+            bank = FLASH_BANK_1;
+        } else {
+            bank = FLASH_BANK_2;
+        }
+    } else {
+        /* Bank swap */
+        if (Addr < (FLASH_BASE + FLASH_BANK_SIZE)) {
+            bank = FLASH_BANK_2;
+        } else {
+            bank = FLASH_BANK_1;
+        }
+    }
+
+    return bank;
+}
+
 static int erase(long offset, size_t size) {
-#if 0
-    if (offset % FLASH_DB_BLOCK_SIZE != 0) {
-        while(1) { }
-    }
-
     uint32_t addr = nor_flash0.addr + offset;
-
-    size_t erase_pages = size / FLASH_DB_BLOCK_SIZE;
-    if (size % FLASH_DB_BLOCK_SIZE != 0) {
-        erase_pages++;
+    if (addr % FLASH_DB_BLOCK_SIZE != 0) {
+        while (1) {
+        }
     }
 
-    SYS_UnlockReg();
-
-    FMC_ENABLE_AP_UPDATE();
-
-    for (size_t i = 0; i < erase_pages; i++) {
-        FMC_Erase(addr);
-        addr += FLASH_DB_BLOCK_SIZE;
+    if (HAL_ICACHE_Disable() != 0) {
+        while (1) {
+        }
     }
 
-    FMC_DISABLE_AP_UPDATE();
+    HAL_FLASH_Unlock();
 
-    SYS_LockReg();
-#endif  // #if 0
+    FLASH_EraseInitTypeDef eraseInitStruct = {0};
+    eraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
+    eraseInitStruct.Banks = GetBank(addr);
+    eraseInitStruct.Sector = GetSector(addr);
+    eraseInitStruct.NbSectors = size / FLASH_DB_BLOCK_SIZE;
+
+    uint32_t sectorError;
+    if (HAL_FLASHEx_Erase(&eraseInitStruct, &sectorError) != 0) {
+        while (1) {
+        }
+    }
+
+    HAL_FLASH_Lock();
+
+    if (HAL_ICACHE_Enable() != 0) {
+        while (1) {
+        }
+    }
+
+    const uint32_t *empty = (const uint32_t *)addr;
+    for (size_t c = 0; c < size / sizeof(uint32_t); c++) {
+        if (empty[c] != 0xFFFFFFFF) {
+            while (1) {
+            }
+        }
+    }
+
     return size;
 }
 

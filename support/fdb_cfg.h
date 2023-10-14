@@ -28,13 +28,13 @@ SOFTWARE.
 #define FDB_USING_KVDB
 
 /* using TSDB (Time series database) feature */
-#define FDB_USING_TSDB
+//#define FDB_USING_TSDB
 
 /* Using FAL storage mode */
 #define FDB_USING_FAL_MODE
 
 #ifdef FDB_USING_FAL_MODE
-#define FDB_WRITE_GRAN 64
+#define FDB_WRITE_GRAN 128
 #endif
 
 /* log print macro. default EF_PRINT macro is printf() */

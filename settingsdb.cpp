@@ -26,8 +26,8 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 
-#include "stm32h5xx_hal.h"
 #include "nx_api.h"
+#include "stm32h5xx_hal.h"
 
 SettingsDB &SettingsDB::instance() {
     static SettingsDB settingsDB;
@@ -38,31 +38,10 @@ SettingsDB &SettingsDB::instance() {
     return settingsDB;
 }
 
-void SettingsDB::erase() {
-#if 0
-    lock();
-
-    SYS_UnlockReg();
-
-    FMC_ENABLE_AP_UPDATE();
-
-    size_t addr = FLASH_DB_START_ADDRESS;
-    for (size_t i = 0; i < FLASH_DB_LENGTH; i += FLASH_DB_BLOCK_SIZE) {
-        printf("Erasing block at %08x\n", addr);
-        FMC_Erase_Bank(addr);
-        addr += FLASH_DB_BLOCK_SIZE;
-    }
-
-    FMC_DISABLE_AP_UPDATE();
-
-    SYS_LockReg();
-
-    unlock();
-#endif  // #if 0
-}
+void SettingsDB::erase() { nor_flash0.ops.erase(0, FLASH_DB_LENGTH); }
 
 void SettingsDB::init() {
-    //    erase();
+    // erase();
 
     fdb_kvdb_control(&kvdb, FDB_KVDB_CTRL_SET_LOCK, (void *)lock);
     fdb_kvdb_control(&kvdb, FDB_KVDB_CTRL_SET_UNLOCK, (void *)unlock);
