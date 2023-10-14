@@ -12,7 +12,7 @@
 	url = https://github.com/MaJerle/lwjson.git
 [submodule "FlashDB"]
 	path = FlashDB
-	url = https://github.com/armink/FlashDB.git
+	url = https://github.com/tinic/FlashDB.git
 [submodule "stm32h5xx_hal_driver"]
 	path = stm32h5xx_hal_driver
 	url = https://github.com/STMicroelectronics/stm32h5xx_hal_driver.git
