@@ -27,24 +27,23 @@ SOFTWARE.
 #include <stdint.h>
 
 #include "fx_api.h"
-#include "tx_api.h"
 #include "nx_api.h"
 #include "nx_auto_ip.h"
 #include "nxd_http_server.h"
+#include "tx_api.h"
 
 #ifndef BOOTLOADER
 #include "lwjson/lwjson.h"
-#endif // #ifndef BOOTLOADER
+#endif  // #ifndef BOOTLOADER
 
-class WebServer
-{
-public:
+class WebServer {
+   public:
     static WebServer &instance();
 
     uint8_t *setup(uint8_t *pointer);
     bool start();
 
-private:
+   private:
     void init();
     bool initialized = false;
 
@@ -52,11 +51,11 @@ private:
     static void jsonStreamSettingsCallback(lwjson_stream_parser_t *jsp, lwjson_stream_type_t type);
     void jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_type_t type);
     UINT postRequestJson(NX_HTTP_SERVER *server_ptr, UINT request_type, CHAR *resource, NX_PACKET *packet_ptr, lwjson_stream_parser_callback_fn callback);
-#endif // #ifndef BOOTLOADER
+#endif  // #ifndef BOOTLOADER
 
 #ifdef BOOTLOADER
     UINT postRequestUpload(NX_HTTP_SERVER *server_ptr, UINT request_type, CHAR *resource, NX_PACKET *packet_ptr);
-#endif // #ifdef BOOTLOADER
+#endif  // #ifdef BOOTLOADER
 
     static UINT requestNotifyCallback(NX_HTTP_SERVER *server_ptr, UINT request_type, CHAR *resource, NX_PACKET *packet_ptr);
     UINT requestNotify(NX_HTTP_SERVER *server_ptr, UINT request_type, CHAR *resource, NX_PACKET *packet_ptr);
@@ -68,4 +67,4 @@ private:
     unsigned char media_memory[512];
 };
 
-#endif // #ifndef _WEBSERVER_H_
+#endif  // #ifndef _WEBSERVER_H_

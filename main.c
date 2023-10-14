@@ -21,16 +21,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+#include "hal_sys_init.h"
 #include "stm32h5xx_hal.h"
 #include "tx_api.h"
-#include "hal_sys_init.h"
 
-int main()
-{
+int main() {
     SYS_Init();
     tx_kernel_enter();
-    while (1)
-    {
+    while (1) {
         __WFI();
     }
 }

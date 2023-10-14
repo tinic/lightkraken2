@@ -22,11 +22,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+#include <memory.h>
+#include <stdint.h>
+
 #include "fal.h"
 #include "fal_cfg.h"
-
-#include <stdint.h>
-#include <memory.h>
 
 static int init(void) {
 #if 0
@@ -42,7 +42,6 @@ static int read(long offset, uint8_t *buf, size_t size) {
     }
     return size;
 }
-
 
 static int write(long offset, const uint8_t *buf, size_t size) {
 #if 0
@@ -77,7 +76,6 @@ static int write(long offset, const uint8_t *buf, size_t size) {
     return size;
 }
 
-
 static int erase(long offset, size_t size) {
 #if 0
     if (offset % FLASH_DB_BLOCK_SIZE != 0) {
@@ -107,12 +105,9 @@ static int erase(long offset, size_t size) {
     return size;
 }
 
-const struct fal_flash_dev nor_flash0 =
-{
-    .name       = "norflash0",
-    .addr       = FLASH_DB_START_ADDRESS,
-    .len        = FLASH_DB_LENGTH,
-    .blk_size   = FLASH_DB_BLOCK_SIZE,
-    .ops        = {init, read, write, erase},
-    .write_gran = FLASH_DB_WRITE_GRAN
-};
+const struct fal_flash_dev nor_flash0 = {.name = "norflash0",
+                                         .addr = FLASH_DB_START_ADDRESS,
+                                         .len = FLASH_DB_LENGTH,
+                                         .blk_size = FLASH_DB_BLOCK_SIZE,
+                                         .ops = {init, read, write, erase},
+                                         .write_gran = FLASH_DB_WRITE_GRAN};

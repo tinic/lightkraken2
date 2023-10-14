@@ -23,69 +23,52 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #include "hal_sys_init.h"
-#include "stm32h5xx_hal.h"
 
 #include <memory.h>
 
-void WWDG_IRQHandler()
-{
-    while (1)
-    {
+#include "stm32h5xx_hal.h"
+
+void WWDG_IRQHandler() {
+    while (1) {
     }
 }
 
-void NMI_Handler(void)
-{
-    while (1)
-    {
+void NMI_Handler(void) {
+    while (1) {
     }
 }
 
-void HardFault_Handler(void)
-{
-    while (1)
-    {
+void HardFault_Handler(void) {
+    while (1) {
     }
 }
 
-void MemManage_Handler(void)
-{
-    while (1)
-    {
+void MemManage_Handler(void) {
+    while (1) {
     }
 }
 
-void BusFault_Handler(void)
-{
-    while (1)
-    {
+void BusFault_Handler(void) {
+    while (1) {
     }
 }
 
-void UsageFault_Handler(void)
-{
-    while (1)
-    {
+void UsageFault_Handler(void) {
+    while (1) {
     }
 }
 
-void DebugMon_Handler(void)
-{
-}
+void DebugMon_Handler(void) {}
 
-static void MX_ICACHE_Init(void)
-{
-    if (HAL_ICACHE_Enable() != HAL_OK)
-    {
-        while (1)
-        {
+static void MX_ICACHE_Init(void) {
+    if (HAL_ICACHE_Enable() != HAL_OK) {
+        while (1) {
         }
     }
 }
 
 TIM_HandleTypeDef htim1;
-HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
-{
+HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority) {
     RCC_ClkInitTypeDef clkconfig;
     uint32_t uwTimclock;
 
@@ -109,18 +92,13 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
     htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
 
     status = HAL_TIM_Base_Init(&htim1);
-    if (status == HAL_OK)
-    {
+    if (status == HAL_OK) {
         status = HAL_TIM_Base_Start_IT(&htim1);
-        if (status == HAL_OK)
-        {
-            if (TickPriority < (1UL << __NVIC_PRIO_BITS))
-            {
+        if (status == HAL_OK) {
+            if (TickPriority < (1UL << __NVIC_PRIO_BITS)) {
                 HAL_NVIC_SetPriority(TIM1_UP_IRQn, TickPriority, 0U);
                 uwTickPrio = TickPriority;
-            }
-            else
-            {
+            } else {
                 status = HAL_ERROR;
             }
         }
@@ -131,31 +109,19 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
     return status;
 }
 
-void HAL_SuspendTick(void)
-{
-    __HAL_TIM_DISABLE_IT(&htim1, TIM_IT_UPDATE);
-}
+void HAL_SuspendTick(void) { __HAL_TIM_DISABLE_IT(&htim1, TIM_IT_UPDATE); }
 
-void HAL_ResumeTick(void)
-{
-    __HAL_TIM_ENABLE_IT(&htim1, TIM_IT_UPDATE);
-}
+void HAL_ResumeTick(void) { __HAL_TIM_ENABLE_IT(&htim1, TIM_IT_UPDATE); }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-    if (htim->Instance == TIM1)
-    {
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+    if (htim->Instance == TIM1) {
         HAL_IncTick();
     }
 }
 
-void TIM1_UP_IRQHandler(void)
-{
-    HAL_TIM_IRQHandler(&htim1);
-}
+void TIM1_UP_IRQHandler(void) { HAL_TIM_IRQHandler(&htim1); }
 
-static void MX_GPIO_Init(void)
-{
+static void MX_GPIO_Init(void) {
 #define USER_BUTTON_Pin GPIO_PIN_13
 #define USER_BUTTON_GPIO_Port GPIOC
 #define LED1_GREEN_Pin GPIO_PIN_0
@@ -204,15 +170,13 @@ static void MX_GPIO_Init(void)
     HAL_GPIO_Init(LED3_RED_GPIO_Port, &GPIO_InitStruct);
 }
 
-static void SystemClock_Config(void)
-{
+static void SystemClock_Config(void) {
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
     RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
     __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
 
-    while (!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY))
-    {
+    while (!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {
     }
 
     RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48 | RCC_OSCILLATORTYPE_HSI | RCC_OSCILLATORTYPE_HSE;
@@ -231,10 +195,8 @@ static void SystemClock_Config(void)
     RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1_VCIRANGE_3;
     RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1_VCORANGE_WIDE;
     RCC_OscInitStruct.PLL.PLLFRACN = 0;
-    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-    {
-        while (1)
-        {
+    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
+        while (1) {
         }
     }
 
@@ -245,17 +207,14 @@ static void SystemClock_Config(void)
     RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
     RCC_ClkInitStruct.APB3CLKDivider = RCC_HCLK_DIV1;
 
-    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
-    {
-        while (1)
-        {
+    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK) {
+        while (1) {
         }
     }
 }
 
 UART_HandleTypeDef huart3;
-void HAL_UART_MspInit(UART_HandleTypeDef *huart)
-{
+void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
 #define ARD_D1_TX_Pin GPIO_PIN_6
 #define ARD_D1_TX_GPIO_Port GPIOB
 #define ARD_D0_RX_Pin GPIO_PIN_7
@@ -267,14 +226,11 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
-    if (huart->Instance == USART3)
-    {
+    if (huart->Instance == USART3) {
         PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART3;
         PeriphClkInitStruct.Usart3ClockSelection = RCC_USART3CLKSOURCE_PCLK1;
-        if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
-        {
-            while (1)
-            {
+        if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
+            while (1) {
             }
         }
 
@@ -294,21 +250,18 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
     }
 }
 
-int __io_putchar(int ch)
-{
+int __io_putchar(int ch) {
     HAL_UART_Transmit(&huart3, (const uint8_t *)&ch, 1, HAL_MAX_DELAY);
     return 1;
 };
 
-int __io_getchar(void)
-{
+int __io_getchar(void) {
     uint8_t byte = 0;
     HAL_UART_Receive(&huart3, &byte, sizeof(byte), HAL_MAX_DELAY);
     return byte;
 };
 
-static void MX_USART3_UART_Init(void)
-{
+static void MX_USART3_UART_Init(void) {
     huart3.Instance = USART3;
     huart3.Init.BaudRate = 115200;
     huart3.Init.WordLength = UART_WORDLENGTH_8B;
@@ -320,28 +273,20 @@ static void MX_USART3_UART_Init(void)
     huart3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
     huart3.Init.ClockPrescaler = UART_PRESCALER_DIV1;
     huart3.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-    if (HAL_UART_Init(&huart3) != HAL_OK)
-    {
-        while (1)
-        {
+    if (HAL_UART_Init(&huart3) != HAL_OK) {
+        while (1) {
         }
     }
-    if (HAL_UARTEx_SetTxFifoThreshold(&huart3, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
-    {
-        while (1)
-        {
+    if (HAL_UARTEx_SetTxFifoThreshold(&huart3, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK) {
+        while (1) {
         }
     }
-    if (HAL_UARTEx_SetRxFifoThreshold(&huart3, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
-    {
-        while (1)
-        {
+    if (HAL_UARTEx_SetRxFifoThreshold(&huart3, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK) {
+        while (1) {
         }
     }
-    if (HAL_UARTEx_DisableFifoMode(&huart3) != HAL_OK)
-    {
-        while (1)
-        {
+    if (HAL_UARTEx_DisableFifoMode(&huart3) != HAL_OK) {
+        while (1) {
         }
     }
 }
@@ -352,8 +297,7 @@ static ETH_TxPacketConfig TxConfig;
 
 ETH_HandleTypeDef heth;
 
-void HAL_ETH_MspInit(ETH_HandleTypeDef *heth)
-{
+void HAL_ETH_MspInit(ETH_HandleTypeDef *heth) {
 #define RMII_TXT_EN_Pin GPIO_PIN_11
 #define RMII_TXT_EN_GPIO_Port GPIOG
 #define RMII_RXD0_Pin GPIO_PIN_4
@@ -374,8 +318,7 @@ void HAL_ETH_MspInit(ETH_HandleTypeDef *heth)
 #define RMII_MDIO_GPIO_Port GPIOA
 
     GPIO_InitTypeDef GPIO_InitStruct = {0};
-    if (heth->Instance == ETH)
-    {
+    if (heth->Instance == ETH) {
         __HAL_RCC_ETH_CLK_ENABLE();
         __HAL_RCC_ETHTX_CLK_ENABLE();
         __HAL_RCC_ETHRX_CLK_ENABLE();
@@ -425,8 +368,7 @@ void HAL_ETH_MspInit(ETH_HandleTypeDef *heth)
     }
 }
 
-static void MX_ETH_Init(void)
-{
+static void MX_ETH_Init(void) {
     static uint8_t MACAddr[6];
     heth.Instance = ETH;
     MACAddr[0] = 0x00;
@@ -441,10 +383,8 @@ static void MX_ETH_Init(void)
     heth.Init.RxDesc = DMARxDscrTab;
     heth.Init.RxBuffLen = 1524;
 
-    if (HAL_ETH_Init(&heth) != HAL_OK)
-    {
-        while (1)
-        {
+    if (HAL_ETH_Init(&heth) != HAL_OK) {
+        while (1) {
         }
     }
 
@@ -454,8 +394,7 @@ static void MX_ETH_Init(void)
     TxConfig.CRCPadCtrl = ETH_CRC_PAD_INSERT;
 }
 
-void SYS_Init()
-{
+void SYS_Init() {
     HAL_Init();
 
     SystemClock_Config();

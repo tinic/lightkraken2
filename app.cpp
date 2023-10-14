@@ -21,15 +21,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-#include "network.h"
-#include "webserver.h"
-#include "settingsdb.h"
-
 #include <stdio.h>
 
-static TX_THREAD thread_startup {};
-void thread_startup_entry(ULONG thread_input) {
+#include "network.h"
+#include "settingsdb.h"
+#include "webserver.h"
 
+static TX_THREAD thread_startup{};
+void thread_startup_entry(ULONG thread_input) {
     NX_PARAMETER_NOT_USED(thread_input);
 
     SettingsDB::instance().dump();
@@ -59,5 +58,5 @@ void tx_application_define(void *first_unused_memory) {
 
     pointer = WebServer::instance().setup(pointer);
 
-    printf("Consumed %d bytes of RAM.\n", (int)(pointer-(uint8_t *)first_unused_memory));
+    printf("Consumed %d bytes of RAM.\n", (int)(pointer - (uint8_t *)first_unused_memory));
 }

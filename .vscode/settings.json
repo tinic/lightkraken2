@@ -5,6 +5,7 @@
     "C_Cpp.files.exclude": {
         "version.h.in": true,
     },
+    "C_Cpp.clang_format_fallbackStyle":"Google",
     "cmake.outputLogEncoding": "utf8",
     "cmake.configureOnOpen": true,
     "files.associations": {

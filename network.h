@@ -26,14 +26,13 @@ SOFTWARE.
 
 #include <stdint.h>
 
-#include "tx_api.h"
 #include "nx_api.h"
 #include "nx_auto_ip.h"
 #include "nxd_dhcp_client.h"
+#include "tx_api.h"
 
-class Network
-{
-public:
+class Network {
+   public:
     static Network &instance();
 
     uint8_t *setup(uint8_t *pointer);
@@ -42,7 +41,7 @@ public:
     NX_IP *ip() { return &client_ip; };
     NX_PACKET_POOL *pool() { return &client_pool; }
 
-private:
+   private:
     void init();
     bool initialized = false;
 
@@ -52,4 +51,4 @@ private:
     NX_PACKET_POOL client_pool{};
 };
 
-#endif // #ifndef _NETWORK_H_
+#endif  // #ifndef _NETWORK_H_

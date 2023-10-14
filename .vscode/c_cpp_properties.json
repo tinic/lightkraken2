@@ -7,6 +7,7 @@
             "defines": ["__GNUC__", "STM32H563xx", "USE_HAL_DRIVER", "USE_FULL_LL_DRIVER"],
             "includePath": [
                 "${workspaceFolder}/",
+                "${workspaceFolder}/build",
                 "${workspaceFolder}/stm32h5xx_hal_driver/Inc",
                 "${workspaceFolder}/support",
                 "${workspaceFolder}/lwjson/lwjson/src/include",

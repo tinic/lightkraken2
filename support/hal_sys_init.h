@@ -26,12 +26,12 @@ SOFTWARE.
 
 #ifdef __cplusplus
 extern "C" {
-#endif   
+#endif
 
 void SYS_Init(void);
 
 #ifdef __cplusplus
 }  //  extern "C" {
-#endif   
+#endif
 
-#endif // #ifndef _STM32GH5_INIT_H_
+#endif  // #ifndef _STM32GH5_INIT_H_
