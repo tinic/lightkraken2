@@ -183,10 +183,21 @@
   * @brief This is the HAL system configuration section
   */
 
+#ifndef VDD_VALUE
 #define  VDD_VALUE                  3300UL /*!< Value of VDD in mv */
+#endif  // #ifndef VDD_VALUE
+
+#ifndef TICK_INT_PRIORITY
 #define  TICK_INT_PRIORITY          (15UL)  /*!< tick interrupt priority (lowest by default) */
+#endif  // #ifndef TICK_INT_PRIORITY
+
+#ifndef USE_RTOS
 #define  USE_RTOS                   0U
+#endif  // #ifndef USE_RTOS
+
+#ifndef PREFETCH_ENABLE
 #define  PREFETCH_ENABLE            0U               /*!< Enable prefetch */
+#endif  // #ifndef PREFETCH_ENABLE
 
 /* ############################################ Assert Selection #################################################### */
 
