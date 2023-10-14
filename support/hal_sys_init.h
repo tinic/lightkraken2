@@ -21,43 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-#include "network.h"
-#include "webserver.h"
-#include "settingsdb.h"
+#ifndef _STM32GH5_INIT_H_
+#define _STM32GH5_INIT_H_
 
-#include <stdio.h>
+#ifdef __cplusplus
+extern "C" {
+#endif   
 
-static TX_THREAD thread_startup {};
-void thread_startup_entry(ULONG thread_input) {
+void SYS_Init(void);
 
-    NX_PARAMETER_NOT_USED(thread_input);
+#ifdef __cplusplus
+}  //  extern "C" {
+#endif   
 
-    SettingsDB::instance().dump();
-
-    if (!Network::instance().start()) {
-        return;
-    }
-
-    if (!WebServer::instance().start()) {
-        return;
-    }
-
-    tx_thread_relinquish();
-}
-
-extern "C" void tx_application_define(void *first_unused_memory);
-void tx_application_define(void *first_unused_memory) {
-    uint8_t *pointer = (uint8_t *)first_unused_memory;
-
-    printf("Lightkraken startup.\n");
-
-    const size_t startup_stack_size = 4096;
-    tx_thread_create(&thread_startup, (CHAR *)"startup", thread_startup_entry, 0, pointer, startup_stack_size, 1, 1, TX_NO_TIME_SLICE, TX_AUTO_START);
-    pointer = pointer + startup_stack_size;
-
-    pointer = Network::instance().setup(pointer);
-
-    pointer = WebServer::instance().setup(pointer);
-
-    printf("Consumed %d bytes of RAM.\n", (int)(pointer-(uint8_t *)first_unused_memory));
-}
+#endif // #ifndef _STM32GH5_INIT_H_

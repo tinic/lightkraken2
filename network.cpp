@@ -51,6 +51,8 @@ static void client_ip_address_changed(NX_IP *ip_ptr, VOID *user)
     printf("client_ip_address_changed %08x %08x\n", ip_address, network_mask);
 }
 
+extern "C" VOID  nx_stm32_eth_driver(NX_IP_DRIVER *driver_req_ptr);
+
 uint8_t *Network::setup(uint8_t *pointer)
 {
     UINT status = 0;
@@ -60,9 +62,6 @@ uint8_t *Network::setup(uint8_t *pointer)
     const size_t arp_cache_size = 1024;
 
     nx_system_initialize();
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wwrite-strings"
 
     status = nx_packet_pool_create(&client_pool, (CHAR *)"NetX Main Packet Pool", ETH_MAX_PACKET_SIZE, pointer, NX_PACKET_POOL_SIZE);
     pointer = pointer + NX_PACKET_POOL_SIZE;
@@ -82,8 +81,6 @@ uint8_t *Network::setup(uint8_t *pointer)
     pointer = pointer + auto_ip_stack_size;
     if (status)
         goto fail;
-
-#pragma GCC diagnostic pop
 
     status = nx_arp_enable(&client_ip, (void *)pointer, arp_cache_size);
     pointer = pointer + arp_cache_size;
