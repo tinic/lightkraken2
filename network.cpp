@@ -87,14 +87,14 @@ uint8_t *Network::setup(uint8_t *pointer) {
     pointer = pointer + NX_PACKET_POOL_SIZE;
     if (status) goto fail;
 
-    status = nx_ip_create(&client_ip, (CHAR *)"IP", IP_ADDRESS(0, 0, 0, 0), 0xFFFFFF00UL, &client_pool, nx_stm32_eth_driver, pointer, ip_stack_size, 1);
+    status = nx_ip_create(&client_ip, (CHAR *)hostname, IP_ADDRESS(0, 0, 0, 0), 0xFFFFFF00UL, &client_pool, nx_stm32_eth_driver, pointer, ip_stack_size, 1);
     pointer = pointer + ip_stack_size;
     if (status) goto fail;
 
     status = nx_ip_interface_mtu_set(&client_ip, 0, ETH_MAX_PAYLOAD);
     if (status) goto fail;
 
-    status = nx_auto_ip_create(&auto_ip, (CHAR *)"AutoIP", &client_ip, pointer, auto_ip_stack_size, 1);
+    status = nx_auto_ip_create(&auto_ip, (CHAR *)hostname, &client_ip, pointer, auto_ip_stack_size, 1);
     pointer = pointer + auto_ip_stack_size;
     if (status) goto fail;
 
@@ -193,7 +193,7 @@ bool Network::start() {
 
     if (!got_ip && try_dhcp) {
         /* Create the DHCP instance.  */
-        status = nx_dhcp_create(&dhcp_client, &client_ip, (CHAR *)"DHCP Client");
+        status = nx_dhcp_create(&dhcp_client, &client_ip, (CHAR *)hostname);
         if (status) {
             return false;
         }
