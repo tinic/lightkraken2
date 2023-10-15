@@ -51,9 +51,9 @@ extern "C" VOID nx_stm32_eth_driver(NX_IP_DRIVER *driver_req_ptr);
 uint8_t *Network::setup(uint8_t *pointer) {
     UINT status = 0;
 
-    const size_t ip_stack_size = 1024;
-    const size_t auto_ip_stack_size = 256;
-    const size_t arp_cache_size = 1024;
+    const size_t ip_stack_size = 2048;
+    const size_t auto_ip_stack_size = 1024;
+    const size_t arp_cache_size = 2048;
 
     nx_system_initialize();
 

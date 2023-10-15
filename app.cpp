@@ -50,7 +50,7 @@ void tx_application_define(void *first_unused_memory) {
 
     printf("Lightkraken startup.\n");
 
-    const size_t startup_stack_size = 4096;
+    const size_t startup_stack_size = 8192;
     tx_thread_create(&thread_startup, (CHAR *)"startup", thread_startup_entry, 0, pointer, startup_stack_size, 1, 1, TX_NO_TIME_SLICE, TX_AUTO_START);
     pointer = pointer + startup_stack_size;
 
