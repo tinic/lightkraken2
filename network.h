@@ -41,6 +41,9 @@ class Network {
     NX_IP *ip() { return &client_ip; };
     NX_PACKET_POOL *pool() { return &client_pool; }
 
+    const char *hostName() const { return hostname; }
+    const uint8_t *MACAddr() const { return macaddr; }
+
    private:
     void init();
     bool initialized = false;
@@ -49,6 +52,18 @@ class Network {
     NX_AUTO_IP auto_ip{};
     NX_DHCP dhcp_client{};
     NX_PACKET_POOL client_pool{};
+
+    uint32_t murmur3_32(const uint8_t* key, size_t len, uint32_t seed) const;
+
+    uint32_t get_uid0() const; 
+    uint32_t get_uid1() const; 
+    uint32_t get_uid2() const; 
+
+    static constexpr char hostname_base[] = "lightkraken-";
+    static constexpr char hex_table[16] = { '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f',};
+
+    char hostname[sizeof(hostname_base)+8];
+    uint8_t macaddr[6];
 };
 
 #endif  // #ifndef _NETWORK_H_

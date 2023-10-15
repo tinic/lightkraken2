@@ -373,16 +373,11 @@ void HAL_ETH_MspInit(ETH_HandleTypeDef *heth) {
     }
 }
 
+const uint8_t *networkMACAddr(void);
+
 static void MX_ETH_Init(void) {
-    static uint8_t MACAddr[6];
-    heth.Instance = ETH;
-    MACAddr[0] = 0x00;
-    MACAddr[1] = 0x80;
-    MACAddr[2] = 0xE1;
-    MACAddr[3] = 0x00;
-    MACAddr[4] = 0x00;
-    MACAddr[5] = 0x00;
-    heth.Init.MACAddr = &MACAddr[0];
+
+    heth.Init.MACAddr = (uint8_t *)networkMACAddr();
     heth.Init.MediaInterface = HAL_ETH_RMII_MODE;
     heth.Init.TxDesc = DMATxDscrTab;
     heth.Init.RxDesc = DMARxDscrTab;
@@ -404,8 +399,6 @@ void SYS_Init() {
 
     SystemClock_Config();
     SystemCoreClockUpdate();
-
-//    HAL_InitTick(TICK_INT_PRIORITY);
 
     MX_ICACHE_Init();
     MX_GPIO_Init();
