@@ -1707,6 +1707,7 @@ static VOID _nx_driver_hardware_packet_received(VOID) {
     NX_PACKET *received_packet_ptr;
 
     while (HAL_ETH_ReadData(&eth_handle, (void **)&received_packet_ptr) == HAL_OK) {
+        printf("%p %d\n", received_packet_ptr, received_packet_ptr->nx_packet_append_ptr - received_packet_ptr->nx_packet_prepend_ptr);
         /* Transfer the packet to NetX.  */
         _nx_driver_transfer_to_netx(nx_driver_information.nx_driver_information_ip_ptr, received_packet_ptr);
     }

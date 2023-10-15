@@ -26,7 +26,7 @@ SOFTWARE.
 #include "nx_stm32_eth_driver.h"
 #include "stm32h5xx_hal.h"
 
-#define NX_PACKET_POOL_SIZE (ETH_MAX_PACKET_SIZE * 5)
+#define NX_PACKET_POOL_SIZE (ETH_MAX_PACKET_SIZE * 32)
 
 Network &Network::instance() {
     static Network network;

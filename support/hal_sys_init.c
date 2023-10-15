@@ -297,6 +297,8 @@ static ETH_TxPacketConfig TxConfig;
 
 ETH_HandleTypeDef heth;
 
+void ETH_IRQHandler(void) { HAL_ETH_IRQHandler(&heth); }
+
 void HAL_ETH_MspInit(ETH_HandleTypeDef *heth) {
 #define RMII_TXT_EN_Pin GPIO_PIN_11
 #define RMII_TXT_EN_GPIO_Port GPIOG
@@ -365,6 +367,9 @@ void HAL_ETH_MspInit(ETH_HandleTypeDef *heth) {
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
         GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
         HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+
+        HAL_NVIC_SetPriority(ETH_IRQn, 7, 0);
+        HAL_NVIC_EnableIRQ(ETH_IRQn);
     }
 }
 
@@ -381,7 +386,7 @@ static void MX_ETH_Init(void) {
     heth.Init.MediaInterface = HAL_ETH_RMII_MODE;
     heth.Init.TxDesc = DMATxDscrTab;
     heth.Init.RxDesc = DMARxDscrTab;
-    heth.Init.RxBuffLen = 1524;
+    heth.Init.RxBuffLen = 1536;
 
     if (HAL_ETH_Init(&heth) != HAL_OK) {
         while (1) {
@@ -400,7 +405,7 @@ void SYS_Init() {
     SystemClock_Config();
     SystemCoreClockUpdate();
 
-    HAL_InitTick(TICK_INT_PRIORITY);
+//    HAL_InitTick(TICK_INT_PRIORITY);
 
     MX_ICACHE_Init();
     MX_GPIO_Init();

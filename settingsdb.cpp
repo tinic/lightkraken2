@@ -72,9 +72,9 @@ void SettingsDB::init() {
     fdb_kv_set_blob(&kvdb, "boot_count@i", fdb_blob_make(&blob, &boot_count, sizeof(boot_count)));
 }
 
-void SettingsDB::lock() { __enable_irq(); }
+void SettingsDB::lock() { __disable_irq(); }
 
-void SettingsDB::unlock() { __disable_irq(); }
+void SettingsDB::unlock() { __enable_irq(); }
 
 void SettingsDB::dump() {
     struct fdb_kv_iterator iterator {};
