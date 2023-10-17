@@ -218,7 +218,7 @@ UINT WebServer::requestNotify(NX_HTTP_SERVER *server_ptr, UINT request_type, CHA
 uint8_t *WebServer::setup(uint8_t *pointer) {
     UINT status;
 
-    const size_t http_server_stack_size = 16384;
+    const size_t http_server_stack_size = 32768;
 
     fx_system_initialize();
 

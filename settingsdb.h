@@ -43,6 +43,8 @@ class SettingsDB {
     void dump();
     void erase();
 
+    void jsonGETRespone();
+
    private:
     void init();
     bool initialized = false;
