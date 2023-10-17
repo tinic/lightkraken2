@@ -43,15 +43,11 @@ class WebServer {
     uint8_t *setup(uint8_t *pointer);
     bool start();
 
+    NX_HTTP_SERVER *httpServer() { return &http_server; }
+
    private:
     void init();
     bool initialized = false;
-
-#ifndef BOOTLOADER
-    static void jsonStreamSettingsCallback(lwjson_stream_parser_t *jsp, lwjson_stream_type_t type);
-    void jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_type_t type);
-    UINT postRequestJson(NX_HTTP_SERVER *server_ptr, UINT request_type, CHAR *resource, NX_PACKET *packet_ptr, lwjson_stream_parser_callback_fn callback);
-#endif  // #ifndef BOOTLOADER
 
 #ifdef BOOTLOADER
     UINT postRequestUpload(NX_HTTP_SERVER *server_ptr, UINT request_type, CHAR *resource, NX_PACKET *packet_ptr);

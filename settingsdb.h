@@ -25,6 +25,9 @@ SOFTWARE.
 #define _SETTINGSDB_H_
 
 #include <flashdb.h>
+#include "tx_api.h"
+#include "nx_api.h"
+#include "lwjson/lwjson.h"
 
 class SettingsDB {
    public:
@@ -43,11 +46,16 @@ class SettingsDB {
     void dump();
     void erase();
 
-    void jsonGETRespone();
+    UINT jsonGETRequest(NX_PACKET *packet_ptr);
+    UINT jsonPUTRequest(NX_PACKET *packet_ptr);
 
    private:
+
     void init();
     bool initialized = false;
+
+    static void jsonStreamSettingsCallback(lwjson_stream_parser_t *jsp, lwjson_stream_type_t type);
+    void jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_type_t type);
 
     static void lock();
     static void unlock();

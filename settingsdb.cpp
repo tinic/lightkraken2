@@ -23,12 +23,11 @@ SOFTWARE.
 */
 #include "settingsdb.h"
 
-#include <stdlib.h>
-#include <string.h>
-
-#include "nx_api.h"
+#include "webserver.h"
 #include "stm32h5xx_hal.h"
 
+#include <stdlib.h>
+#include <string.h>
 #include <string>
 #include <sstream>
 #include <array>
@@ -95,7 +94,12 @@ void SettingsDB::lock() { __disable_irq(); }
 
 void SettingsDB::unlock() { __enable_irq(); }
 
-void SettingsDB::jsonGETRespone() {
+UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
+
+    nx_packet_release(packet_ptr);
+    nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, 0, NX_NULL, 0);
+    return (NX_HTTP_CALLBACK_COMPLETED);
+
     size_t jsonSize = 0;
     for (size_t pass = 0; pass < 2; pass ++) {
         mtustreambuf streambuf([=](const char *data, size_t size) mutable {
@@ -155,6 +159,106 @@ void SettingsDB::jsonGETRespone() {
         out.flush();
     }
 }
+
+void SettingsDB::jsonStreamSettingsCallback(lwjson_stream_parser_t *jsp, lwjson_stream_type_t type) { SettingsDB::instance().jsonStreamSettings(jsp, type); }
+
+void SettingsDB::jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_type_t type) {
+    if (jsp == NULL) {
+        return;
+    }
+
+    // Top level values only, no nesting
+    if (jsp->stack_pos != 2) {
+        return;
+    }
+
+    const char *key_name = jsp->stack[jsp->stack_pos - 1].meta.name;
+    const char *data_buf = jsp->data.str.buff;
+
+    switch (type) {
+        case LWJSON_STREAM_TYPE_STRING:
+            SettingsDB::instance().setString(key_name, data_buf);
+            break;
+        case LWJSON_STREAM_TYPE_TRUE:
+            SettingsDB::instance().setBool(key_name, true);
+            break;
+        case LWJSON_STREAM_TYPE_FALSE:
+            SettingsDB::instance().setBool(key_name, false);
+            break;
+        case LWJSON_STREAM_TYPE_NULL:
+            SettingsDB::instance().setNull(key_name);
+            break;
+        case LWJSON_STREAM_TYPE_NUMBER: {
+            SettingsDB::instance().setNumber(key_name, strtof(data_buf, NULL));
+        } break;
+        case LWJSON_STREAM_TYPE_NONE:
+        case LWJSON_STREAM_TYPE_KEY:
+        case LWJSON_STREAM_TYPE_OBJECT:
+        case LWJSON_STREAM_TYPE_OBJECT_END:
+        case LWJSON_STREAM_TYPE_ARRAY:
+        case LWJSON_STREAM_TYPE_ARRAY_END:
+        default:
+            // not supported
+            break;
+    }
+}
+
+UINT SettingsDB::jsonPUTRequest(NX_PACKET *packet_ptr) {
+    ULONG contentLength = 0;
+    UINT status = nx_http_server_packet_content_find(WebServer::instance().httpServer(), &packet_ptr, &contentLength);
+    if (status) {
+        nx_packet_release(packet_ptr);
+        nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_REQUEST_TIMEOUT, sizeof(NX_HTTP_STATUS_REQUEST_TIMEOUT) - 1, NX_NULL,
+                                                       0, NX_NULL, 0);
+        return (NX_HTTP_CALLBACK_COMPLETED);
+    }
+    if (contentLength == 0) {
+        nx_packet_release(packet_ptr);
+        nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_NO_CONTENT, sizeof(NX_HTTP_STATUS_NO_CONTENT) - 1, NX_NULL, 0,
+                                                       NX_NULL, 0);
+        return (NX_HTTP_CALLBACK_COMPLETED);
+    }
+    lwjson_stream_parser_t stream_parser;
+    lwjson_stream_init(&stream_parser, jsonStreamSettingsCallback);
+    ULONG contentOffset = 0;
+    bool done = false;
+    do {
+        UCHAR *jsonBuf = packet_ptr->nx_packet_prepend_ptr;
+        ULONG jsonLen = ULONG(packet_ptr->nx_packet_append_ptr - packet_ptr->nx_packet_prepend_ptr);
+        for (size_t c = 0; c < jsonLen; c++) {
+            lwjsonr_t res = lwjson_stream_parse(&stream_parser, jsonBuf[c]);
+            if (res == lwjsonSTREAMINPROG || res == lwjsonSTREAMWAITFIRSTCHAR || res == lwjsonOK) {
+                // NOP
+            } else if (res == lwjsonSTREAMDONE) {
+                done = true;
+                break;
+            } else {
+                nx_packet_release(packet_ptr);
+                nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_BAD_REQUEST, sizeof(NX_HTTP_STATUS_BAD_REQUEST) - 1, NX_NULL,
+                                                               0, NX_NULL, 0);
+                return (NX_HTTP_CALLBACK_COMPLETED);
+            }
+        }
+        contentOffset += jsonLen;
+        if (!done) {
+            done = contentOffset >= contentLength;
+        }
+        if (!done) {
+            nx_packet_release(packet_ptr);
+            status = nx_tcp_socket_receive(&(WebServer::instance().httpServer()->nx_http_server_socket), &packet_ptr, NX_HTTP_SERVER_TIMEOUT_RECEIVE);
+            if (status) {
+                nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_REQUEST_TIMEOUT, sizeof(NX_HTTP_STATUS_REQUEST_TIMEOUT) - 1,
+                                                               NX_NULL, 0, NX_NULL, 0);
+                return (NX_HTTP_CALLBACK_COMPLETED);
+            }
+        }
+    } while (!done);
+    nx_packet_release(packet_ptr);
+    SettingsDB::instance().dump();
+    nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, 0, NX_NULL, 0);
+    return (NX_HTTP_CALLBACK_COMPLETED);
+}
+
 
 void SettingsDB::dump() {
     struct fdb_kv_iterator iterator {};

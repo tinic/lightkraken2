@@ -27,10 +27,6 @@ SOFTWARE.
 #include "settingsdb.h"
 #include "stm32h5xx_hal.h"
 
-#ifndef BOOTLOADER
-#include "lwjson/lwjson.h"
-#endif  // #ifndef BOOTLOADER
-
 WebServer &WebServer::instance() {
     static WebServer webserver;
     if (!webserver.initialized) {
@@ -41,109 +37,6 @@ WebServer &WebServer::instance() {
 }
 
 void WebServer::init() {}
-
-#ifndef BOOTLOADER
-void WebServer::jsonStreamSettingsCallback(lwjson_stream_parser_t *jsp, lwjson_stream_type_t type) { WebServer::instance().jsonStreamSettings(jsp, type); }
-
-void WebServer::jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_type_t type) {
-    if (jsp == NULL) {
-        return;
-    }
-
-    // Top level values only, no nesting
-    if (jsp->stack_pos != 2) {
-        return;
-    }
-
-    const char *key_name = jsp->stack[jsp->stack_pos - 1].meta.name;
-    const char *data_buf = jsp->data.str.buff;
-
-    switch (type) {
-        case LWJSON_STREAM_TYPE_STRING:
-            SettingsDB::instance().setString(key_name, data_buf);
-            break;
-        case LWJSON_STREAM_TYPE_TRUE:
-            SettingsDB::instance().setBool(key_name, true);
-            break;
-        case LWJSON_STREAM_TYPE_FALSE:
-            SettingsDB::instance().setBool(key_name, false);
-            break;
-        case LWJSON_STREAM_TYPE_NULL:
-            SettingsDB::instance().setNull(key_name);
-            break;
-        case LWJSON_STREAM_TYPE_NUMBER: {
-            SettingsDB::instance().setNumber(key_name, strtof(data_buf, NULL));
-        } break;
-        case LWJSON_STREAM_TYPE_NONE:
-        case LWJSON_STREAM_TYPE_KEY:
-        case LWJSON_STREAM_TYPE_OBJECT:
-        case LWJSON_STREAM_TYPE_OBJECT_END:
-        case LWJSON_STREAM_TYPE_ARRAY:
-        case LWJSON_STREAM_TYPE_ARRAY_END:
-        default:
-            // not supported
-            break;
-    }
-}
-
-UINT WebServer::postRequestJson(NX_HTTP_SERVER *server_ptr, UINT request_type, CHAR *resource, NX_PACKET *packet_ptr,
-                                lwjson_stream_parser_callback_fn callback) {
-    ULONG contentLength = 0;
-    UINT status = nx_http_server_packet_content_find(server_ptr, &packet_ptr, &contentLength);
-    if (status) {
-        nx_packet_release(packet_ptr);
-        nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_REQUEST_TIMEOUT, sizeof(NX_HTTP_STATUS_REQUEST_TIMEOUT) - 1, NX_NULL,
-                                                       0, NX_NULL, 0);
-        return (NX_HTTP_CALLBACK_COMPLETED);
-    }
-    if (contentLength == 0) {
-        nx_packet_release(packet_ptr);
-        nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_NO_CONTENT, sizeof(NX_HTTP_STATUS_NO_CONTENT) - 1, NX_NULL, 0,
-                                                       NX_NULL, 0);
-        return (NX_HTTP_CALLBACK_COMPLETED);
-    }
-    lwjson_stream_parser_t stream_parser;
-    lwjson_stream_init(&stream_parser, callback);
-    ULONG contentOffset = 0;
-    bool done = false;
-    do {
-        UCHAR *jsonBuf = packet_ptr->nx_packet_prepend_ptr;
-        ULONG jsonLen = ULONG(packet_ptr->nx_packet_append_ptr - packet_ptr->nx_packet_prepend_ptr);
-        for (size_t c = 0; c < jsonLen; c++) {
-            lwjsonr_t res = lwjson_stream_parse(&stream_parser, jsonBuf[c]);
-            if (res == lwjsonSTREAMINPROG || res == lwjsonSTREAMWAITFIRSTCHAR || res == lwjsonOK) {
-                // NOP
-            } else if (res == lwjsonSTREAMDONE) {
-                done = true;
-                break;
-            } else {
-                nx_packet_release(packet_ptr);
-                nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_BAD_REQUEST, sizeof(NX_HTTP_STATUS_BAD_REQUEST) - 1, NX_NULL,
-                                                               0, NX_NULL, 0);
-                return (NX_HTTP_CALLBACK_COMPLETED);
-            }
-        }
-        contentOffset += jsonLen;
-        if (!done) {
-            done = contentOffset >= contentLength;
-        }
-        if (!done) {
-            nx_packet_release(packet_ptr);
-            status = nx_tcp_socket_receive(&(server_ptr->nx_http_server_socket), &packet_ptr, NX_HTTP_SERVER_TIMEOUT_RECEIVE);
-            if (status) {
-                nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_REQUEST_TIMEOUT, sizeof(NX_HTTP_STATUS_REQUEST_TIMEOUT) - 1,
-                                                               NX_NULL, 0, NX_NULL, 0);
-                return (NX_HTTP_CALLBACK_COMPLETED);
-            }
-        }
-    } while (!done);
-    nx_packet_release(packet_ptr);
-    SettingsDB::instance().dump();
-    nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, 0, NX_NULL, 0);
-    return (NX_HTTP_CALLBACK_COMPLETED);
-}
-
-#endif  // #ifndef BOOTLOADER
 
 #ifdef BOOTLOADER
 UINT WebServer::postRequestUpload(NX_HTTP_SERVER *server_ptr, UINT request_type, CHAR *resource, NX_PACKET *packet_ptr) {
@@ -180,10 +73,7 @@ UINT WebServer::requestNotify(NX_HTTP_SERVER *server_ptr, UINT request_type, CHA
             }
 #ifndef BOOTLOADER
             if (strcmp(resource, "/settings") == 0) {
-                SettingsDB::instance().dump();
-                nx_packet_release(packet_ptr);
-                nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, 0, NX_NULL, 0);
-                return (NX_HTTP_CALLBACK_COMPLETED);
+                return SettingsDB::instance().jsonGETRequest(packet_ptr);
             }
 #endif  // #ifndef BOOTLOADER
         } break;
@@ -191,7 +81,7 @@ UINT WebServer::requestNotify(NX_HTTP_SERVER *server_ptr, UINT request_type, CHA
         case NX_HTTP_SERVER_PUT_REQUEST: {
 #ifndef BOOTLOADER
             if (strcmp(resource, "/settings") == 0) {
-                return postRequestJson(server_ptr, request_type, resource, packet_ptr, jsonStreamSettingsCallback);
+                return SettingsDB::instance().jsonPUTRequest(packet_ptr);
             }
 #endif  // #ifndef BOOTLOADER
 #ifdef BOOTLOADER
