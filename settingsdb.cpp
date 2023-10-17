@@ -32,12 +32,13 @@ SOFTWARE.
 #include <string>
 #include <sstream>
 #include <array>
+#include <functional>
 
 class mtustreambuf : public std::streambuf {
-    std::array<char, 1500> buf;
 public:
+    static constexpr size_t mtuSize = 1500;
 
-    mtustreambuf() : buf() { }
+    mtustreambuf(std::function<void (const char *, size_t)> c) : buf(), callback(c) { }
 
     mtustreambuf(const mtustreambuf &) = delete;
     mtustreambuf(mtustreambuf &&);
@@ -48,6 +49,7 @@ public:
     }
 
     virtual std::streamsize xsputn(const char* s, std::streamsize n) override {
+
         printf(">>> %s\n", s);
         return n;
     }
@@ -61,7 +63,9 @@ public:
         printf("<<< \n");
         return 0;
     }
-
+private:
+    std::array<char, mtuSize> buf;
+    std::function<void (const char *, size_t )> callback;
 };
 
 SettingsDB &SettingsDB::instance() {
@@ -112,53 +116,63 @@ void SettingsDB::lock() { __disable_irq(); }
 void SettingsDB::unlock() { __enable_irq(); }
 
 void SettingsDB::jsonGETRespone() {
+    size_t jsonSize = 0;
+    for (size_t pass = 0; pass < 2; pass ++) {
+        mtustreambuf streambuf([=](const char *data, size_t size) mutable {
+            if (pass == 1) {
+                jsonSize += size;
+                return;
+            }
+            if (pass == 2) {
+//                nx_http_server_callback_generate_response_header(http_server_ptr,
+//                    &resp_packet_ptr, NX_HTTP_STATUS_OK,
+//                    jsonSize, temp_string, NX_NULL);
+            }
+        });
+        std::ostream out(&streambuf);
+        out << "{";
+        struct fdb_kv_iterator iterator {};
+        fdb_kv_iterator_init(&kvdb, &iterator);
+        while (fdb_kv_iterate(&kvdb, &iterator)) {
+            fdb_kv_t cur_kv = &(iterator.curr_kv);
+            size_t data_size = (size_t)cur_kv->value_len;
+            struct fdb_blob blob {};
 
-    mtustreambuf streambuf;
-    std::ostream out(&streambuf);
-    out << "{";
-
-    struct fdb_kv_iterator iterator {};
-    fdb_kv_iterator_init(&kvdb, &iterator);
-    while (fdb_kv_iterate(&kvdb, &iterator)) {
-        fdb_kv_t cur_kv = &(iterator.curr_kv);
-        size_t data_size = (size_t)cur_kv->value_len;
-        struct fdb_blob blob {};
-
-        size_t name_len = strlen(cur_kv->name);
-        if (name_len > 2 && cur_kv->name[name_len - 2] == '@') {
-            char name_buf[256];
-            strcpy(name_buf, cur_kv->name);
-            name_buf[name_len-2] = 0;
-            switch (cur_kv->name[name_len - 1]) {
-                case 's': {
-                    uint8_t data_buf[256];
-                    data_buf[data_size] = 0;
-                    fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, data_buf, data_size)));
-                    out << "'" << name_buf << "':'" << data_buf << "',";
-                } break;
-                case 'b': {
-                    bool value = false;
-                    fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
-                    out << "'" << name_buf << "':" << (value ? "true": "false") << ",";
-                } break;
-                case 'f': {
-                    float value = 0;
-                    fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
-                    out << "'" << name_buf << "':" << value << ",";
-                } break;
-                case 'n': {
-                    char value = 0;
-                    fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
-                    out << "'" << name_buf << "':null,";
-                } break;
-                default:
-                    break;
+            size_t name_len = strlen(cur_kv->name);
+            if (name_len > 2 && cur_kv->name[name_len - 2] == '@') {
+                char name_buf[256];
+                strcpy(name_buf, cur_kv->name);
+                name_buf[name_len-2] = 0;
+                switch (cur_kv->name[name_len - 1]) {
+                    case 's': {
+                        uint8_t data_buf[256];
+                        data_buf[data_size] = 0;
+                        fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, data_buf, data_size)));
+                        out << "'" << name_buf << "':'" << data_buf << "',";
+                    } break;
+                    case 'b': {
+                        bool value = false;
+                        fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
+                        out << "'" << name_buf << "':" << (value ? "true": "false") << ",";
+                    } break;
+                    case 'f': {
+                        float value = 0;
+                        fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
+                        out << "'" << name_buf << "':" << value << ",";
+                    } break;
+                    case 'n': {
+                        char value = 0;
+                        fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
+                        out << "'" << name_buf << "':null,";
+                    } break;
+                    default:
+                        break;
+                }
             }
         }
+        out << "}";
+        out.flush();
     }
-    
-    out << "}";
-    out.flush();
 }
 
 void SettingsDB::dump() {
