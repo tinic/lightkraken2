@@ -33,38 +33,18 @@ SOFTWARE.
 #include <sstream>
 #include <array>
 #include <functional>
+#include <algorithm>
 
 class mtustreambuf : public std::streambuf {
 public:
-    static constexpr size_t mtuSize = 1500;
-
-    mtustreambuf(std::function<void (const char *, size_t)> c) : buf(), callback(c) { }
-
-    mtustreambuf(const mtustreambuf &) = delete;
-    mtustreambuf(mtustreambuf &&);
-    mtustreambuf& operator=(const mtustreambuf &) = delete;
-
-    mtustreambuf& operator=(mtustreambuf &&) {
-        return *this;
-    }
-
+    mtustreambuf(std::function<void (const char *, size_t)> c) : callback(c) { }
     virtual std::streamsize xsputn(const char* s, std::streamsize n) override {
-
-        printf(">>> %s\n", s);
+        for (size_t c = 0; c < size_t(n); c += 256) {
+            callback(&s[c], c - std::min(size_t(n), c + 256));
+        }
         return n;
     }
-
-    virtual int overflow(int c) override {
-        printf("!!! %d\n", c);
-        return 0;
-    }
-
-    virtual int sync() override {
-        printf("<<< \n");
-        return 0;
-    }
 private:
-    std::array<char, mtuSize> buf;
     std::function<void (const char *, size_t )> callback;
 };
 
@@ -129,6 +109,7 @@ void SettingsDB::jsonGETRespone() {
 //                    jsonSize, temp_string, NX_NULL);
             }
         });
+
         std::ostream out(&streambuf);
         out << "{";
         struct fdb_kv_iterator iterator {};
