@@ -1020,9 +1020,8 @@ scandir(
 		}
 
 		/* Read directory entry to temporary area */
-		struct dirent *entry;
-		if (readdir_r(dir, tmp, &entry) != /*OK*/0)
-			goto exit_failure;
+		struct dirent *entry = NULL;
+		readdir_r(dir, tmp, &entry);
 
 		/* Stop if we already read the last directory entry */
 		if (entry == NULL)

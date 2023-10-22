@@ -44,7 +44,7 @@ extern void _fx_ram_driver(FX_MEDIA *media_ptr);
 static unsigned char media_memory[512] = { 0 };
 static FX_MEDIA ram_disk = { 0 };
 
-void fwriteAsCHeader(FILE *fp, unsigned char arr[], size_t length) {
+void fwriteAsCHeader(FILE *fp, const unsigned char *arr, size_t length) {
     fprintf(fp, "unsigned char fs_data[%d] = {\n/* %08x */ ", (int)length, (unsigned int)(0));
     
     for (size_t i = 0; i < length; ++i) {
@@ -151,25 +151,23 @@ static void copy_tree(FX_MEDIA *media, const char *in_full_path, const char *in_
 
             fclose(file);
 
-            UINT status = 0;
-
-            if ( (status = fx_file_create(media, local_path)) != FX_SUCCESS) {
+            if ( fx_file_create(media, local_path) != FX_SUCCESS) {
                 printf("fx_file_create failed!\n");
                 exit(-1);
             }
 
             FX_FILE fx_file = { 0 };
-            if ( (status = fx_file_open(media, &fx_file, local_path, FX_OPEN_FOR_WRITE)) != FX_SUCCESS) {
+            if ( fx_file_open(media, &fx_file, local_path, FX_OPEN_FOR_WRITE) != FX_SUCCESS) {
                 printf("fx_file_open failed!\n");
                 exit(-1);
             }
 
-            if ( (status = fx_file_allocate(&fx_file, (ULONG)bytesRead) != FX_SUCCESS)) {
+            if ( fx_file_allocate(&fx_file, (ULONG)bytesRead) != FX_SUCCESS) {
                 printf("_fx_file_allocate failed!\n");
                 exit(-1);
             }
             
-            if ( (status = fx_file_write(&fx_file, buffer, (ULONG)bytesRead) != FX_SUCCESS)) {
+            if ( fx_file_write(&fx_file, buffer, (ULONG)bytesRead) != FX_SUCCESS) {
                 printf("fx_file_write failed!\n");
                 exit(-1);
             }
@@ -214,7 +212,7 @@ void print_contents(FX_MEDIA *media, CHAR *default_dir, ULONG *total_bytes, ULON
     }
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, const char *argv[]) {
 
 
     if (argc != 6) {
@@ -234,13 +232,18 @@ int main(int argc, char *argv[]) {
     printf("🍳🥓mkfat generating header and image file from source directory...\n");
 
     const char *source_path = argv[1];
-    const size_t num_sectors = atoi(argv[2]);
-    const size_t sector_size = atoi(argv[3]);
+    const int num_sectors = atoi(argv[2]);
+    const int sector_size = atoi(argv[3]);
     const char *header_file = argv[4];
     const char *image_file = argv[5];
 
     if (num_sectors <= 0) {
         printf("Invalid num_sectors!\n");
+        exit(-1);
+    }
+
+    if (sector_size <= 0) {
+        printf("Invalid sector_size!\n");
         exit(-1);
     }
 
