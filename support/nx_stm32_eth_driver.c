@@ -220,14 +220,8 @@ VOID nx_stm32_eth_driver(NX_IP_DRIVER *driver_req_ptr)
 #endif /* NX_ENABLE_INTERFACE_CAPABILITY */
 
         default:
-
-            /* Invalid driver request.  */
-
             /* Return the unhandled command status.  */
             driver_req_ptr->nx_ip_driver_status = NX_UNHANDLED_COMMAND;
-
-            /* Default to successful return.  */
-            driver_req_ptr->nx_ip_driver_status = NX_DRIVER_ERROR;
     }
 }
 

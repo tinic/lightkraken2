@@ -172,7 +172,7 @@ bool Network::start() {
     UINT status = 0;
     ULONG actual_status = 0;
 
-    bool got_ip = false;
+    volatile bool got_ip = false;
 
     bool try_dhcp = true;
     bool try_autop = true;

@@ -60,7 +60,7 @@ class WebServer {
 
     NX_HTTP_SERVER http_server{};
     FX_MEDIA ram_disk{};
-    unsigned char media_memory[512];
+    unsigned char media_memory[512] = {};
 };
 
 #endif  // #ifndef _WEBSERVER_H_

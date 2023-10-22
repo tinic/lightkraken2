@@ -103,11 +103,10 @@ UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
     size_t jsonSize = 0;
     for (size_t pass = 0; pass < 2; pass ++) {
         mtustreambuf streambuf([=](const char *data, size_t size) mutable {
-            if (pass == 1) {
+            if (pass == 0) {
                 jsonSize += size;
-                return;
             }
-            if (pass == 2) {
+            if (pass == 1) {
 //                nx_http_server_callback_generate_response_header(http_server_ptr,
 //                    &resp_packet_ptr, NX_HTTP_STATUS_OK,
 //                    jsonSize, temp_string, NX_NULL);
@@ -296,7 +295,7 @@ void SettingsDB::dump() {
                     printf("Null:   <%s>\n", cur_kv->name);
                 } break;
                 case 'i': {
-                    uint32_t value = 0;
+                    int32_t value = 0;
                     fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
                     printf("Int:    <%s> <%d>\n", cur_kv->name, value);
                 } break;

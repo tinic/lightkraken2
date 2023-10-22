@@ -83,7 +83,7 @@ int32_t LAN8742_RegisterBusIO(lan8742_Object_t *pObj, lan8742_IOCtx_t *ioctx) {
  *         LAN8742_STATUS_RESET_TIMEOUT if cannot perform a software reset
  */
 int32_t LAN8742_Init(lan8742_Object_t *pObj) {
-    uint32_t tickstart = 0, regvalue = 0, addr = 0;
+    uint32_t tickstart = 0, regvalue = 0;
     int32_t status = LAN8742_STATUS_OK;
 
     if (pObj->Is_Initialized == 0) {
@@ -96,7 +96,7 @@ int32_t LAN8742_Init(lan8742_Object_t *pObj) {
         pObj->DevAddr = LAN8742_MAX_DEV_ADDR + 1;
 
         /* Get the device address from special mode register */
-        for (addr = 0; addr <= LAN8742_MAX_DEV_ADDR; addr++) {
+        for (uint32_t addr = 0; addr <= LAN8742_MAX_DEV_ADDR; addr++) {
             if (pObj->IO.ReadReg(addr, LAN8742_SMR, &regvalue) < 0) {
                 status = LAN8742_STATUS_READ_ERROR;
                 /* Can't read from this device address
