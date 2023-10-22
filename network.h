@@ -55,10 +55,6 @@ class Network {
 
     uint32_t murmur3_32(const uint8_t* key, size_t len, uint32_t seed) const;
 
-    uint32_t get_uid0() const; 
-    uint32_t get_uid1() const; 
-    uint32_t get_uid2() const; 
-
     static constexpr char hostname_base[] = "lightkraken-";
     static constexpr char hex_table[16] = { '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f',};
 

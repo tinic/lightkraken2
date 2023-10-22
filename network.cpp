@@ -42,11 +42,22 @@ extern "C" const uint8_t *networkMACAddr(void);
 const uint8_t *networkMACAddr(void) { return Network::instance().MACAddr(); }
 
 void Network::init() {
+
+    if (HAL_ICACHE_Disable() != 0) {
+        while (1) {
+        }
+    }
+
     uint32_t uid[3];
-    uid[0] = get_uid0();
-    uid[1] = get_uid1();
-    uid[2] = get_uid2();
+    uid[0] = HAL_GetUIDw0();
+    uid[1] = HAL_GetUIDw1();
+    uid[2] = HAL_GetUIDw2();
     uint32_t unique_id = murmur3_32(reinterpret_cast<uint8_t *>(&uid[0]), sizeof(uid), 0x66cf8031);
+
+    if (HAL_ICACHE_Enable() != 0) {
+        while (1) {
+        }
+    }
 
     macaddr[0] = 0x1E;
     macaddr[1] = 0xD5;
@@ -238,12 +249,6 @@ bool Network::start() {
 
     return true;
 }
-
-uint32_t Network::get_uid0() const { return *reinterpret_cast<uint32_t *>(0x08FFF800); }
-
-uint32_t Network::get_uid1() const { return *reinterpret_cast<uint32_t *>(0x08FFF804); }
-
-uint32_t Network::get_uid2() const { return *reinterpret_cast<uint32_t *>(0x08FFF808); }
 
 uint32_t Network::murmur3_32(const uint8_t *key, size_t len, uint32_t seed) const {
     uint32_t h = seed;
