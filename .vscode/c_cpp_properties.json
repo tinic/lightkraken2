@@ -1,10 +1,14 @@
 {
-    "env": {
-    },
+    "env": {},
     "configurations": [
         {
             "name": "Windows",
-            "defines": ["__GNUC__", "STM32H563xx", "USE_HAL_DRIVER", "USE_FULL_LL_DRIVER"],
+            "defines": [
+                "__GNUC__",
+                "STM32H563xx",
+                "USE_HAL_DRIVER",
+                "USE_FULL_LL_DRIVER"
+            ],
             "includePath": [
                 "${workspaceFolder}/",
                 "${workspaceFolder}/build",
@@ -20,10 +24,12 @@
                 "${workspaceFolder}/netxduo/addons/dhcp",
                 "${workspaceFolder}/netxduo/common/inc",
                 "${workspaceFolder}/threadx/common/inc",
-                "${workspaceFolder}/threadx/ports/cortex_m33/gnu/inc"],
+                "${workspaceFolder}/threadx/ports/cortex_m33/gnu/inc"
+            ],
             "cStandard": "c11",
-            "cppStandard": "c++20"
-        },
-      ],
+            "cppStandard": "c++20",
+            "configurationProvider": "ms-vscode.cmake-tools"
+        }
+    ],
     "version": 4
-}    
+}

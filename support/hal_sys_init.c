@@ -379,7 +379,6 @@ void HAL_ETH_MspInit(ETH_HandleTypeDef *heth) {
 const uint8_t *networkMACAddr(void);
 
 static void MX_ETH_Init(void) {
-
     heth.Init.MACAddr = (uint8_t *)networkMACAddr();
     heth.Init.MediaInterface = HAL_ETH_RMII_MODE;
     heth.Init.TxDesc = DMATxDscrTab;

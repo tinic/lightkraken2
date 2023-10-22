@@ -23,28 +23,30 @@ SOFTWARE.
 */
 #include "settingsdb.h"
 
-#include "webserver.h"
-#include "stm32h5xx_hal.h"
-
 #include <stdlib.h>
 #include <string.h>
-#include <string>
-#include <sstream>
+
+#include <algorithm>
 #include <array>
 #include <functional>
-#include <algorithm>
+#include <sstream>
+#include <string>
+
+#include "stm32h5xx_hal.h"
+#include "webserver.h"
 
 class mtustreambuf : public std::streambuf {
-public:
-    mtustreambuf(std::function<void (const char *, size_t)> c) : callback(c) { }
-    virtual std::streamsize xsputn(const char* s, std::streamsize n) override {
+   public:
+    mtustreambuf(std::function<void(const char *, size_t)> c) : callback(c) {}
+    virtual std::streamsize xsputn(const char *s, std::streamsize n) override {
         for (size_t c = 0; c < size_t(n); c += 256) {
             callback(&s[c], c - std::min(size_t(n), c + 256));
         }
         return n;
     }
-private:
-    std::function<void (const char *, size_t )> callback;
+
+   private:
+    std::function<void(const char *, size_t)> callback;
 };
 
 SettingsDB &SettingsDB::instance() {
@@ -95,21 +97,21 @@ void SettingsDB::lock() { __disable_irq(); }
 void SettingsDB::unlock() { __enable_irq(); }
 
 UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
-
     nx_packet_release(packet_ptr);
-    nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, 0, NX_NULL, 0);
+    nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, 0,
+                                                   NX_NULL, 0);
     return (NX_HTTP_CALLBACK_COMPLETED);
 
     size_t jsonSize = 0;
-    for (size_t pass = 0; pass < 2; pass ++) {
+    for (size_t pass = 0; pass < 2; pass++) {
         mtustreambuf streambuf([=](const char *data, size_t size) mutable {
             if (pass == 0) {
                 jsonSize += size;
             }
             if (pass == 1) {
-//                nx_http_server_callback_generate_response_header(http_server_ptr,
-//                    &resp_packet_ptr, NX_HTTP_STATUS_OK,
-//                    jsonSize, temp_string, NX_NULL);
+                //                nx_http_server_callback_generate_response_header(http_server_ptr,
+                //                    &resp_packet_ptr, NX_HTTP_STATUS_OK,
+                //                    jsonSize, temp_string, NX_NULL);
             }
         });
 
@@ -126,7 +128,7 @@ UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
             if (name_len > 2 && cur_kv->name[name_len - 2] == '@') {
                 char name_buf[256];
                 strcpy(name_buf, cur_kv->name);
-                name_buf[name_len-2] = 0;
+                name_buf[name_len - 2] = 0;
                 switch (cur_kv->name[name_len - 1]) {
                     case 's': {
                         uint8_t data_buf[256];
@@ -137,7 +139,7 @@ UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
                     case 'b': {
                         bool value = false;
                         fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
-                        out << "'" << name_buf << "':" << (value ? "true": "false") << ",";
+                        out << "'" << name_buf << "':" << (value ? "true" : "false") << ",";
                     } break;
                     case 'f': {
                         float value = 0;
@@ -207,14 +209,14 @@ UINT SettingsDB::jsonPUTRequest(NX_PACKET *packet_ptr) {
     UINT status = nx_http_server_packet_content_find(WebServer::instance().httpServer(), &packet_ptr, &contentLength);
     if (status) {
         nx_packet_release(packet_ptr);
-        nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_REQUEST_TIMEOUT, sizeof(NX_HTTP_STATUS_REQUEST_TIMEOUT) - 1, NX_NULL,
-                                                       0, NX_NULL, 0);
+        nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_REQUEST_TIMEOUT,
+                                                       sizeof(NX_HTTP_STATUS_REQUEST_TIMEOUT) - 1, NX_NULL, 0, NX_NULL, 0);
         return (NX_HTTP_CALLBACK_COMPLETED);
     }
     if (contentLength == 0) {
         nx_packet_release(packet_ptr);
-        nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_NO_CONTENT, sizeof(NX_HTTP_STATUS_NO_CONTENT) - 1, NX_NULL, 0,
-                                                       NX_NULL, 0);
+        nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_NO_CONTENT,
+                                                       sizeof(NX_HTTP_STATUS_NO_CONTENT) - 1, NX_NULL, 0, NX_NULL, 0);
         return (NX_HTTP_CALLBACK_COMPLETED);
     }
     lwjson_stream_parser_t stream_parser;
@@ -233,8 +235,8 @@ UINT SettingsDB::jsonPUTRequest(NX_PACKET *packet_ptr) {
                 break;
             } else {
                 nx_packet_release(packet_ptr);
-                nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_BAD_REQUEST, sizeof(NX_HTTP_STATUS_BAD_REQUEST) - 1, NX_NULL,
-                                                               0, NX_NULL, 0);
+                nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_BAD_REQUEST,
+                                                               sizeof(NX_HTTP_STATUS_BAD_REQUEST) - 1, NX_NULL, 0, NX_NULL, 0);
                 return (NX_HTTP_CALLBACK_COMPLETED);
             }
         }
@@ -246,18 +248,18 @@ UINT SettingsDB::jsonPUTRequest(NX_PACKET *packet_ptr) {
             nx_packet_release(packet_ptr);
             status = nx_tcp_socket_receive(&(WebServer::instance().httpServer()->nx_http_server_socket), &packet_ptr, NX_HTTP_SERVER_TIMEOUT_RECEIVE);
             if (status) {
-                nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_REQUEST_TIMEOUT, sizeof(NX_HTTP_STATUS_REQUEST_TIMEOUT) - 1,
-                                                               NX_NULL, 0, NX_NULL, 0);
+                nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_REQUEST_TIMEOUT,
+                                                               sizeof(NX_HTTP_STATUS_REQUEST_TIMEOUT) - 1, NX_NULL, 0, NX_NULL, 0);
                 return (NX_HTTP_CALLBACK_COMPLETED);
             }
         }
     } while (!done);
     nx_packet_release(packet_ptr);
     SettingsDB::instance().dump();
-    nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, 0, NX_NULL, 0);
+    nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, 0,
+                                                   NX_NULL, 0);
     return (NX_HTTP_CALLBACK_COMPLETED);
 }
-
 
 void SettingsDB::dump() {
     struct fdb_kv_iterator iterator {};

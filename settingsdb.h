@@ -25,9 +25,10 @@ SOFTWARE.
 #define _SETTINGSDB_H_
 
 #include <flashdb.h>
-#include "tx_api.h"
-#include "nx_api.h"
+
 #include "lwjson/lwjson.h"
+#include "nx_api.h"
+#include "tx_api.h"
 
 class SettingsDB {
    public:
@@ -50,7 +51,6 @@ class SettingsDB {
     UINT jsonPUTRequest(NX_PACKET *packet_ptr);
 
    private:
-
     void init();
     bool initialized = false;
 

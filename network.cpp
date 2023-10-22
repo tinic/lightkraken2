@@ -39,29 +39,26 @@ Network &Network::instance() {
 
 extern "C" const uint8_t *networkMACAddr(void);
 
-const uint8_t *networkMACAddr(void) {
-    return Network::instance().MACAddr();
-}
+const uint8_t *networkMACAddr(void) { return Network::instance().MACAddr(); }
 
 void Network::init() {
-
     uint32_t uid[3];
     uid[0] = get_uid0();
     uid[1] = get_uid1();
     uid[2] = get_uid2();
     uint32_t unique_id = murmur3_32(reinterpret_cast<uint8_t *>(&uid[0]), sizeof(uid), 0x66cf8031);
 
-    macaddr[0] =  0x1E;
-    macaddr[1] =  0xD5;
-    macaddr[2] =  uint8_t(( unique_id >> 24 ) & 0xFF);
-    macaddr[3] =  uint8_t(( unique_id >> 16 ) & 0xFF);
-    macaddr[4] =  uint8_t(( unique_id >>  8 ) & 0xFF);
-    macaddr[5] =  uint8_t(( unique_id >>  0 ) & 0xFF);
+    macaddr[0] = 0x1E;
+    macaddr[1] = 0xD5;
+    macaddr[2] = uint8_t((unique_id >> 24) & 0xFF);
+    macaddr[3] = uint8_t((unique_id >> 16) & 0xFF);
+    macaddr[4] = uint8_t((unique_id >> 8) & 0xFF);
+    macaddr[5] = uint8_t((unique_id >> 0) & 0xFF);
 
     memset(hostname, 0, sizeof(hostname));
     strcpy(hostname, hostname_base);
-    for (size_t c=0; c<8; c++) {
-        hostname[c + sizeof(hostname_base) - 1] = hex_table[(unique_id>>(32-((c+1)*4)))&0xF];
+    for (size_t c = 0; c < 8; c++) {
+        hostname[c + sizeof(hostname_base) - 1] = hex_table[(unique_id >> (32 - ((c + 1) * 4))) & 0xF];
     }
 }
 
@@ -242,19 +239,13 @@ bool Network::start() {
     return true;
 }
 
-uint32_t Network::get_uid0() const { 
-    return *reinterpret_cast<uint32_t*>(0x08FFF800); 
-}
+uint32_t Network::get_uid0() const { return *reinterpret_cast<uint32_t *>(0x08FFF800); }
 
-uint32_t Network::get_uid1() const { 
-    return *reinterpret_cast<uint32_t*>(0x08FFF804); 
-}
+uint32_t Network::get_uid1() const { return *reinterpret_cast<uint32_t *>(0x08FFF804); }
 
-uint32_t Network::get_uid2() const  { 
-    return *reinterpret_cast<uint32_t*>(0x08FFF808); 
-}
+uint32_t Network::get_uid2() const { return *reinterpret_cast<uint32_t *>(0x08FFF808); }
 
-uint32_t Network::murmur3_32(const uint8_t* key, size_t len, uint32_t seed) const {
+uint32_t Network::murmur3_32(const uint8_t *key, size_t len, uint32_t seed) const {
     uint32_t h = seed;
     if (len > 3) {
         size_t i = len >> 2;
