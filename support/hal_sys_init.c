@@ -211,6 +211,9 @@ static void SystemClock_Config(void) {
         while (1) {
         }
     }
+
+    // MCO1/PA8 => 25Mhz
+    HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_PLL1Q, RCC_MCODIV_10);
 }
 
 UART_HandleTypeDef huart3;
