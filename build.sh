@@ -5,8 +5,8 @@ set -e
 mkdir -p build
 mkdir -p build/cppcheck
 
-cppcheck . -q -i filex -i FlashDB -i netxduo -i threadx -i build -i stm32h5xx_hal_driver -f --cppcheck-build-dir=build/cppcheck
-cppcheck . --enable=style --suppress=constParameterPointer --suppress=cstyleCast --suppress=noExplicitConstructor -q -i lwjson -i filex -i FlashDB -i netxduo -i threadx -i build -i stm32h5xx_hal_driver -f --cppcheck-build-dir=build/cppcheck
+cppcheck . -q -i emio -i filex -i FlashDB -i netxduo -i threadx -i build -i stm32h5xx_hal_driver -f --cppcheck-build-dir=build/cppcheck
+cppcheck . --enable=style --suppress=constParameterPointer --suppress=cstyleCast --suppress=noExplicitConstructor -q -i emio -i lwjson -i filex -i FlashDB -i netxduo -i threadx -i build -i stm32h5xx_hal_driver -f --cppcheck-build-dir=build/cppcheck
 
 build_type="Ninja"
 

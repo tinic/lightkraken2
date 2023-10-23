@@ -23,13 +23,53 @@ SOFTWARE.
 */
 #include "settingsdb.h"
 
+#ifndef BOOTLOADER
+
 #include <stdlib.h>
 #include <string.h>
+
+#include <emio/buffer.hpp>
+#include <emio/format.hpp>
 
 #include "stm32h5xx_hal.h"
 #include "webserver.h"
 
-#ifndef BOOTLOADER
+
+namespace emio {
+
+template <size_t CacheSize = default_cache_size>
+class packet_buffer final : public buffer {
+   public:
+    constexpr explicit packet_buffer() noexcept : cache_{} { this->set_write_area(cache_); }
+
+    packet_buffer(const packet_buffer &) = delete;
+    packet_buffer(packet_buffer &&) = delete;
+    packet_buffer &operator=(const packet_buffer &) = delete;
+    packet_buffer &operator=(packet_buffer &&) = delete;
+    ~packet_buffer() override = default;
+
+    result<void> flush() noexcept {
+        printf("Flush Packet!!!\n");
+        //const size_t written = std::fwrite(cache_.data(), sizeof(char), this->get_used_count(), file_);
+        this->set_write_area(cache_);
+        return success;
+    }
+
+   protected:
+    result<std::span<char>> request_write_area(const size_t /*used*/, const size_t size) noexcept override {
+        EMIO_TRYV(flush());
+        const std::span<char> area{cache_};
+        this->set_write_area(area);
+        if (size > cache_.size()) {
+            return area;
+        }
+        return area.subspan(0, size);
+    }
+
+   private:
+    std::array<char, CacheSize> cache_;
+};
+}  // namespace emio
 
 SettingsDB &SettingsDB::instance() {
     static SettingsDB settingsDB;
@@ -81,47 +121,58 @@ void SettingsDB::unlock() { __enable_irq(); }
 UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
     nx_packet_release(packet_ptr);
 
-    printf("{");
-    struct fdb_kv_iterator iterator {};
-    fdb_kv_iterator_init(&kvdb, &iterator);
-    while (fdb_kv_iterate(&kvdb, &iterator)) {
-        fdb_kv_t cur_kv = &(iterator.curr_kv);
-        size_t data_size = (size_t)cur_kv->value_len;
-        struct fdb_blob blob {};
+    auto toBuffer = [this](emio::buffer &buf) {
+        emio::format_to(buf, "{{").value();
+        struct fdb_kv_iterator iterator {};
+        fdb_kv_iterator_init(&kvdb, &iterator);
+        while (fdb_kv_iterate(&kvdb, &iterator)) {
+            fdb_kv_t cur_kv = &(iterator.curr_kv);
+            size_t data_size = (size_t)cur_kv->value_len;
+            struct fdb_blob blob {};
 
-        size_t name_len = strlen(cur_kv->name);
-        if (name_len > 2 && cur_kv->name[name_len - 2] == '@') {
-            char name_buf[256];
-            strcpy(name_buf, cur_kv->name);
-            name_buf[name_len - 2] = 0;
-            switch (cur_kv->name[name_len - 1]) {
-                case 's': {
-                    uint8_t data_buf[256];
-                    data_buf[data_size] = 0;
-                    fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, data_buf, data_size)));
-                    printf("'%s':'%s',",name_buf,data_buf);
-                } break;
-                case 'b': {
-                    bool value = false;
-                    fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
-                    printf("'%s':'%s',",name_buf,(value ? "true" : "false"));
-                } break;
-                case 'f': {
-                    float value = 0;
-                    fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
-                    printf("'%s':%f,",name_buf,double(value));
-                } break;
-                case 'n': {
-                    char value = 0;
-                    fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
-                    printf("'%s':null,",name_buf,value);
-                } break;
-                default:
-                    break;
+            size_t name_len = strlen(cur_kv->name);
+            if (name_len > 2 && cur_kv->name[name_len - 2] == '@') {
+                char name_buf[256];
+                strcpy(name_buf, cur_kv->name);
+                name_buf[name_len - 2] = 0;
+                switch (cur_kv->name[name_len - 1]) {
+                    case 's': {
+                        char data_buf[256];
+                        data_buf[data_size] = 0;
+                        fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, data_buf, data_size)));
+                        emio::format_to(buf, "'{}':'{}',", name_buf, data_buf).value();
+                    } break;
+                    case 'b': {
+                        bool value = false;
+                        fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
+                        emio::format_to(buf, "'{}':{},", name_buf, (value ? "true" : "false")).value();
+                    } break;
+                    case 'f': {
+                        float value = 0;
+                        fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
+                        emio::format_to(buf, "'{}':{},", name_buf, value).value();
+                    } break;
+                    case 'n': {
+                        char value = 0;
+                        fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
+                        emio::format_to(buf, "'{}':null,", name_buf).value();
+                    } break;
+                    default:
+                        break;
+                }
             }
         }
-    }
-    printf("}\n");
+        emio::format_to(buf, "}}").value();
+    };
+
+    emio::detail::counting_buffer<1024> cbuf{};
+    toBuffer(cbuf);
+    printf("cbuf.count %d\n", cbuf.count());
+
+    emio::packet_buffer<1024> pbuf{};
+    toBuffer(pbuf);
+    auto success = pbuf.flush();
+    (void)success;
 
     return (NX_HTTP_CALLBACK_COMPLETED);
 }

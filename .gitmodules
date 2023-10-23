@@ -16,3 +16,6 @@
 [submodule "stm32h5xx_hal_driver"]
 	path = stm32h5xx_hal_driver
 	url = https://github.com/STMicroelectronics/stm32h5xx_hal_driver.git
+[submodule "emio"]
+	path = emio
+	url = https://github.com/Viatorus/emio.git
