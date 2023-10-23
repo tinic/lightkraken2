@@ -26,28 +26,10 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 
-#include <algorithm>
-#include <array>
-#include <functional>
-#include <sstream>
-#include <string>
-
 #include "stm32h5xx_hal.h"
 #include "webserver.h"
 
-class mtustreambuf : public std::streambuf {
-   public:
-    mtustreambuf(std::function<void(const char *, size_t)> c) : callback(c) {}
-    virtual std::streamsize xsputn(const char *s, std::streamsize n) override {
-        for (size_t c = 0; c < size_t(n); c += 256) {
-            callback(&s[c], c - std::min(size_t(n), c + 256));
-        }
-        return n;
-    }
-
-   private:
-    std::function<void(const char *, size_t)> callback;
-};
+#ifndef BOOTLOADER
 
 SettingsDB &SettingsDB::instance() {
     static SettingsDB settingsDB;
@@ -98,67 +80,50 @@ void SettingsDB::unlock() { __enable_irq(); }
 
 UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
     nx_packet_release(packet_ptr);
-    nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, 0,
-                                                   NX_NULL, 0);
-    return (NX_HTTP_CALLBACK_COMPLETED);
 
-    size_t jsonSize = 0;
-    for (size_t pass = 0; pass < 2; pass++) {
-        mtustreambuf streambuf([=](const char *data, size_t size) mutable {
-            if (pass == 0) {
-                jsonSize += size;
-            }
-            if (pass == 1) {
-                //                nx_http_server_callback_generate_response_header(http_server_ptr,
-                //                    &resp_packet_ptr, NX_HTTP_STATUS_OK,
-                //                    jsonSize, temp_string, NX_NULL);
-            }
-        });
+    printf("{");
+    struct fdb_kv_iterator iterator {};
+    fdb_kv_iterator_init(&kvdb, &iterator);
+    while (fdb_kv_iterate(&kvdb, &iterator)) {
+        fdb_kv_t cur_kv = &(iterator.curr_kv);
+        size_t data_size = (size_t)cur_kv->value_len;
+        struct fdb_blob blob {};
 
-        std::ostream out(&streambuf);
-        out << "{";
-        struct fdb_kv_iterator iterator {};
-        fdb_kv_iterator_init(&kvdb, &iterator);
-        while (fdb_kv_iterate(&kvdb, &iterator)) {
-            fdb_kv_t cur_kv = &(iterator.curr_kv);
-            size_t data_size = (size_t)cur_kv->value_len;
-            struct fdb_blob blob {};
-
-            size_t name_len = strlen(cur_kv->name);
-            if (name_len > 2 && cur_kv->name[name_len - 2] == '@') {
-                char name_buf[256];
-                strcpy(name_buf, cur_kv->name);
-                name_buf[name_len - 2] = 0;
-                switch (cur_kv->name[name_len - 1]) {
-                    case 's': {
-                        uint8_t data_buf[256];
-                        data_buf[data_size] = 0;
-                        fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, data_buf, data_size)));
-                        out << "'" << name_buf << "':'" << data_buf << "',";
-                    } break;
-                    case 'b': {
-                        bool value = false;
-                        fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
-                        out << "'" << name_buf << "':" << (value ? "true" : "false") << ",";
-                    } break;
-                    case 'f': {
-                        float value = 0;
-                        fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
-                        out << "'" << name_buf << "':" << value << ",";
-                    } break;
-                    case 'n': {
-                        char value = 0;
-                        fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
-                        out << "'" << name_buf << "':null,";
-                    } break;
-                    default:
-                        break;
-                }
+        size_t name_len = strlen(cur_kv->name);
+        if (name_len > 2 && cur_kv->name[name_len - 2] == '@') {
+            char name_buf[256];
+            strcpy(name_buf, cur_kv->name);
+            name_buf[name_len - 2] = 0;
+            switch (cur_kv->name[name_len - 1]) {
+                case 's': {
+                    uint8_t data_buf[256];
+                    data_buf[data_size] = 0;
+                    fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, data_buf, data_size)));
+                    printf("'%s':'%s',",name_buf,data_buf);
+                } break;
+                case 'b': {
+                    bool value = false;
+                    fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
+                    printf("'%s':'%s',",name_buf,(value ? "true" : "false"));
+                } break;
+                case 'f': {
+                    float value = 0;
+                    fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
+                    printf("'%s':%f,",name_buf,double(value));
+                } break;
+                case 'n': {
+                    char value = 0;
+                    fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
+                    printf("'%s':null,",name_buf,value);
+                } break;
+                default:
+                    break;
             }
         }
-        out << "}";
-        out.flush();
     }
+    printf("}\n");
+
+    return (NX_HTTP_CALLBACK_COMPLETED);
 }
 
 void SettingsDB::jsonStreamSettingsCallback(lwjson_stream_parser_t *jsp, lwjson_stream_type_t type) { SettingsDB::instance().jsonStreamSettings(jsp, type); }
@@ -404,3 +369,13 @@ void SettingsDB::setNull(const char *key) {
     struct fdb_blob blob {};
     fdb_kv_set_blob(&kvdb, keyN, fdb_blob_make(&blob, reinterpret_cast<const void *>(&value), sizeof(value)));
 }
+
+void SettingsDB::setIP(const char *key, const NXD_ADDRESS *value) {
+    char keyF[256]{};
+    strncpy(keyF, key, sizeof(keyF) - 3);
+    strcat(keyF, "@a");
+    struct fdb_blob blob {};
+    fdb_kv_set_blob(&kvdb, keyF, fdb_blob_make(&blob, reinterpret_cast<const void *>(value), sizeof(NXD_ADDRESS)));
+}
+
+#endif  // #ifndef BOOTLOADER

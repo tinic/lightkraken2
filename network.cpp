@@ -24,6 +24,7 @@ SOFTWARE.
 #include "network.h"
 
 #include "nx_stm32_eth_driver.h"
+#include "settingsdb.h"
 #include "stm32h5xx_hal.h"
 
 #define NX_PACKET_POOL_SIZE (ETH_MAX_PACKET_SIZE * 32)
@@ -73,10 +74,21 @@ void Network::init() {
 }
 
 static void client_ip_address_changed(NX_IP *ip_ptr, VOID *user) {
-    ULONG ip_address = 0;
-    ULONG network_mask = 0;
-    nx_ip_address_get(ip_ptr, &ip_address, &network_mask);
-    printf("client_ip_address_changed %08x %08x\n", ip_address, network_mask);
+#ifndef BOOTLOADER
+    NXD_ADDRESS ipv4{};
+    ULONG netmask = 0;
+    ipv4.nxd_ip_version = NX_IP_VERSION_V4;
+    if (nx_ip_address_get(ip_ptr, &ipv4.nxd_ip_address.v4, &netmask) == NX_SUCCESS) {
+        SettingsDB::instance().setIP("last_ipv4", &ipv4);
+    }
+
+    NXD_ADDRESS ipv6{};
+    ULONG prefix = 0;
+    UINT interface = 0;
+    if (nxd_ipv6_address_get(ip_ptr, 0, &ipv6, &prefix, &interface) == NX_SUCCESS) {
+        SettingsDB::instance().setIP("last_ipv6", &ipv6);
+    }
+#endif  // #ifndef BOOTLOADER
 }
 
 extern "C" VOID nx_stm32_eth_driver(NX_IP_DRIVER *driver_req_ptr);
@@ -202,10 +214,8 @@ bool Network::start() {
     } while (status != NX_SUCCESS);
 
     if (!got_ip && try_settings) {
-        if (1) {
-            nx_ip_address_set(&client_ip, IP_ADDRESS(192, 168, 1, 147), IP_ADDRESS(255, 255, 255, 0));
-            got_ip = true;
-        }
+        nx_ip_address_set(&client_ip, IP_ADDRESS(192, 168, 1, 147), IP_ADDRESS(255, 255, 255, 0));
+        got_ip = true;
     }
 
     if (!got_ip && try_dhcp) {

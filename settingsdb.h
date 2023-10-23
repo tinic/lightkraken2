@@ -30,6 +30,8 @@ SOFTWARE.
 #include "nx_api.h"
 #include "tx_api.h"
 
+#ifndef BOOTLOADER
+
 class SettingsDB {
    public:
     static SettingsDB &instance();
@@ -43,6 +45,7 @@ class SettingsDB {
     void setBool(const char *key, bool value);
     void setNumber(const char *key, float value);
     void setNull(const char *key);
+    void setIP(const char *key, const NXD_ADDRESS *addr);
 
     void dump();
     void erase();
@@ -62,5 +65,7 @@ class SettingsDB {
 
     struct fdb_kvdb kvdb {};
 };
+
+#endif  // #ifndef BOOTLOADER
 
 #endif  // #ifndef _SETTINGSDB_H_

@@ -37,15 +37,7 @@ static int read(long offset, uint8_t *buf, size_t size) {
         }
     }
 
-    if (size % 4 != 0) {
-        while (1) {
-        }
-    }
-
-    uint32_t *addr = (uint32_t *)(nor_flash0.addr + offset);
-    for (size_t i = 0; i < size; i += sizeof(uint32_t), addr++) {
-        memcpy(&buf[i], addr, sizeof(uint32_t));
-    }
+    memcpy(buf, (void *)(nor_flash0.addr + offset), size);
 
     return size;
 }
