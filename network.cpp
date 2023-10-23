@@ -68,7 +68,7 @@ void Network::init() {
 
     memset(hostname, 0, sizeof(hostname));
     strcpy(hostname, hostname_base);
-    for (size_t c = 0; c < 8; c++) {
+    for (size_t c = 0; c < id_length; c++) {
         hostname[c + sizeof(hostname_base) - 1] = hex_table[(unique_id >> (32 - ((c + 1) * 4))) & 0xF];
     }
 }
@@ -98,9 +98,11 @@ uint8_t *Network::setup(uint8_t *pointer) {
 
     const size_t ip_stack_size = 2048;
     const size_t auto_ip_stack_size = 1024;
+#ifndef BOOTLOADER
     const size_t mdns_stack_size = 2048;
     const size_t mdns_service_cache_size = 2048;
     const size_t mdns_peer_service_cache_size = 2048;
+#endif  // #ifndef BOOTLOADER
     const size_t arp_cache_size = 2048;
 
     nx_system_initialize();
@@ -127,28 +129,25 @@ uint8_t *Network::setup(uint8_t *pointer) {
     status = nx_icmp_enable(&client_ip);
     if (status) goto fail;
 
-#ifndef BOOTLOADER
-    status = nx_udp_enable(&client_ip);
-    if (status) goto fail;
-#endif  // #ifndef BOOTLOADER
-
     status = nx_tcp_enable(&client_ip);
     if (status) goto fail;
 
 #ifndef BOOTLOADER
+    status = nx_udp_enable(&client_ip);
+    if (status) goto fail;
+
     status = nx_igmp_enable(&client_ip);
     if (status) goto fail;
 
     status = nxd_ipv6_enable(&client_ip);
     if (status) goto fail;
-#endif  // #ifndef BOOTLOADER
 
     status =
         nx_mdns_create(&mdns, &client_ip, &client_pool, 3, pointer, mdns_stack_size, (UCHAR *)hostname, (VOID *)(pointer + mdns_service_cache_size),
                        mdns_service_cache_size, (VOID *)(pointer + mdns_service_cache_size + mdns_peer_service_cache_size), mdns_peer_service_cache_size, NULL);
-    if (status) goto fail;
-
     pointer = pointer + mdns_stack_size + mdns_service_cache_size + mdns_peer_service_cache_size;
+    if (status) goto fail;
+#endif  // #ifndef BOOTLOADER
 
     status = nx_ip_address_change_notify(&client_ip, client_ip_address_changed, 0);
     if (status) goto fail;
@@ -205,7 +204,9 @@ bool Network::start() {
 
     bool try_dhcp = true;
     bool try_autop = true;
+#ifndef BOOTLOADER
     bool try_settings = true;
+#endif  // #ifndef BOOTLOADER
 
     /* Wait for the link to come up.  */
     do {
@@ -213,10 +214,12 @@ bool Network::start() {
         HAL_Delay(10);
     } while (status != NX_SUCCESS);
 
+#ifndef BOOTLOADER
     if (!got_ip && try_settings) {
         nx_ip_address_set(&client_ip, IP_ADDRESS(192, 168, 1, 147), IP_ADDRESS(255, 255, 255, 0));
         got_ip = true;
     }
+#endif  // #ifndef BOOTLOADER
 
     if (!got_ip && try_dhcp) {
         /* Create the DHCP instance.  */
@@ -266,6 +269,7 @@ bool Network::start() {
         }
     }
 
+#ifndef BOOTLOADER
     if (got_ip) {
         status = nx_mdns_enable(&mdns, 0);
         if (status) {
@@ -287,6 +291,7 @@ bool Network::start() {
             return false;
         }
     }
+#endif  // #ifndef BOOTLOADER
 
     return true;
 }
