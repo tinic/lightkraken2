@@ -19,5 +19,5 @@
             "openOCDPreConfigLaunchCommands": ["gdb_breakpoint_override hard"],
             "showDevDebugOutput": "raw",
         }
-    ]
+    ],
 }

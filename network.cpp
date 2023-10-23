@@ -42,7 +42,6 @@ extern "C" const uint8_t *networkMACAddr(void);
 const uint8_t *networkMACAddr(void) { return Network::instance().MACAddr(); }
 
 void Network::init() {
-
     if (HAL_ICACHE_Disable() != 0) {
         while (1) {
         }
@@ -52,13 +51,13 @@ void Network::init() {
     uid[0] = HAL_GetUIDw0();
     uid[1] = HAL_GetUIDw1();
     uid[2] = HAL_GetUIDw2();
-    uint32_t unique_id = murmur3_32(reinterpret_cast<uint8_t *>(&uid[0]), sizeof(uid), 0x66cf8031);
 
     if (HAL_ICACHE_Enable() != 0) {
         while (1) {
         }
     }
 
+    uint32_t unique_id = murmur3_32(reinterpret_cast<uint8_t *>(&uid[0]), sizeof(uid), 0x66cf8031);
     macaddr[0] = 0x1E;
     macaddr[1] = 0xD5;
     macaddr[2] = uint8_t((unique_id >> 24) & 0xFF);
@@ -87,6 +86,9 @@ uint8_t *Network::setup(uint8_t *pointer) {
 
     const size_t ip_stack_size = 2048;
     const size_t auto_ip_stack_size = 1024;
+    const size_t mdns_stack_size = 2048;
+    const size_t mdns_service_cache_size = 2048;
+    const size_t mdns_peer_service_cache_size = 2048;
     const size_t arp_cache_size = 2048;
 
     nx_system_initialize();
@@ -128,6 +130,13 @@ uint8_t *Network::setup(uint8_t *pointer) {
     status = nxd_ipv6_enable(&client_ip);
     if (status) goto fail;
 #endif  // #ifndef BOOTLOADER
+
+    status =
+        nx_mdns_create(&mdns, &client_ip, &client_pool, 3, pointer, mdns_stack_size, (UCHAR *)hostname, (VOID *)(pointer + mdns_service_cache_size),
+                       mdns_service_cache_size, (VOID *)(pointer + mdns_service_cache_size + mdns_peer_service_cache_size), mdns_peer_service_cache_size, NULL);
+    if (status) goto fail;
+
+    pointer = pointer + mdns_stack_size + mdns_service_cache_size + mdns_peer_service_cache_size;
 
     status = nx_ip_address_change_notify(&client_ip, client_ip_address_changed, 0);
     if (status) goto fail;
@@ -243,6 +252,28 @@ bool Network::start() {
             if (status == NX_NOT_SUCCESSFUL) {
                 printf("No AutoIP address available.\n");
             }
+            return false;
+        }
+    }
+
+    if (got_ip) {
+        status = nx_mdns_enable(&mdns, 0);
+        if (status) {
+            return false;
+        }
+
+        status = nx_mdns_service_add(&mdns, (UCHAR *)hostname, (UCHAR *)"_http._tcp", NULL, NULL, 120, 0, 0, 80, NX_TRUE, 0);
+        if (status) {
+            return false;
+        }
+
+        status = nx_mdns_service_add(&mdns, (UCHAR *)hostname, (UCHAR *)"_artnet._udp", NULL, NULL, 120, 0, 0, 6454, NX_TRUE, 0);
+        if (status) {
+            return false;
+        }
+
+        status = nx_mdns_service_add(&mdns, (UCHAR *)hostname, (UCHAR *)"_sACN._udp", NULL, NULL, 120, 0, 0, 5568, NX_TRUE, 0);
+        if (status) {
             return false;
         }
     }

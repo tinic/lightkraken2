@@ -29,6 +29,7 @@ SOFTWARE.
 #include "nx_api.h"
 #include "nx_auto_ip.h"
 #include "nxd_dhcp_client.h"
+#include "nxd_mdns.h"
 #include "tx_api.h"
 
 class Network {
@@ -52,7 +53,8 @@ class Network {
     NX_AUTO_IP auto_ip{};
     NX_DHCP dhcp_client{};
     NX_PACKET_POOL client_pool{};
-
+    NX_MDNS mdns{};
+    
     uint32_t murmur3_32(const uint8_t* key, size_t len, uint32_t seed) const;
 
     static constexpr char hostname_base[] = "lightkraken-";
