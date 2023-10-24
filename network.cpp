@@ -305,6 +305,7 @@ bool Network::start() {
     } while (status != NX_SUCCESS);
 
 #ifndef BOOTLOADER
+
     // Create Link local ipv6 address
     status = nxd_ipv6_address_set(&client_ip, 0, NX_NULL, 10, NULL);
     if (status) {
@@ -325,13 +326,12 @@ bool Network::start() {
     if (!got_ipv6 && try_settings) {
         NXD_ADDRESS v6addr = {};
         NXD_ADDRESS v6zero = {};
-        UINT v6addr_index = 0;
         float prefix_length = 0;
         SettingsDB::instance().getIP(SettingsDB::kUserIPv6, &v6addr, &v6zero);
         SettingsDB::instance().getNumber(SettingsDB::kUserIPv6PrefixLen, &prefix_length, 0);
         if (v6addr.nxd_ip_version == NX_IP_VERSION_V6 && v6addr.nxd_ip_address.v6[0] != 0 && v6addr.nxd_ip_address.v6[1] != 0 &&
             v6addr.nxd_ip_address.v6[2] != 0 && v6addr.nxd_ip_address.v6[3] != 0 && prefix_length != 0) {
-            nxd_ipv6_address_set(&client_ip, 0, &v6addr, ULONG(prefix_length), &v6addr_index);
+            nxd_ipv6_address_set(&client_ip, 0, &v6addr, ULONG(prefix_length), NULL);
             got_ipv6 = true;
         }
     }
@@ -339,7 +339,7 @@ bool Network::start() {
 
 #ifndef BOOTLOADER
 
-#define DHCPV6_IANA_ID 0xABCDEFAB
+#define DHCPV6_IANA_ID 0x1ED51ED5
 #define DHCPV6_T1 NX_DHCPV6_INFINITE_LEASE
 #define DHCPV6_T2 NX_DHCPV6_INFINITE_LEASE
 #define DHCPV6_RENEW_TIME NX_DHCPV6_INFINITE_LEASE

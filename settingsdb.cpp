@@ -174,25 +174,25 @@ UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
                         char data_buf[256];
                         data_buf[data_size] = 0;
                         fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, data_buf, data_size)));
-                        emio::format_to(buf, "{}'{}':'{}'", comma, name_buf, data_buf).value();
+                        emio::format_to(buf, "{}\"{}\":\"{}\"", comma, name_buf, data_buf).value();
                         comma = ",";
                     } break;
                     case KEY_TYPE_BOOL_CHAR: {
                         bool value = false;
                         fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
-                        emio::format_to(buf, "{}'{}':{}", comma, name_buf, (value ? "true" : "false")).value();
+                        emio::format_to(buf, "{}\"{}\":{}", comma, name_buf, (value ? "true" : "false")).value();
                         comma = ",";
                     } break;
                     case KEY_TYPE_NUMBER_CHAR: {
                         float value = 0;
                         fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
-                        emio::format_to(buf, "{}'{}':{}", comma, name_buf, value).value();
+                        emio::format_to(buf, "{}\"{}\":{}", comma, name_buf, value).value();
                         comma = ",";
                     } break;
                     case KEY_TYPE_NULL_CHAR: {
                         char value = 0;
                         fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, &value, sizeof(value))));
-                        emio::format_to(buf, "{}'{}':null", comma, name_buf).value();
+                        emio::format_to(buf, "{}\"{}\":null", comma, name_buf).value();
                         comma = ",";
                     } break;
                     default:
