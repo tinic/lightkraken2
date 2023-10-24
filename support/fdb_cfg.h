@@ -38,7 +38,7 @@ SOFTWARE.
 #endif
 
 /* log print macro. default EF_PRINT macro is printf() */
-#define FDB_PRINT(...) printf(__VA_ARGS__)
+#define FDB_PRINT(...)
 
 /* print debug information */
 #define FDB_DEBUG_ENABLE
