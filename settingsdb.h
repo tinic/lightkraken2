@@ -32,14 +32,31 @@ SOFTWARE.
 
 #ifndef BOOTLOADER
 
+#define KEY_TYPE_NUMBER "@f"
+#define KEY_TYPE_STRING "@s"
+#define KEY_TYPE_BOOL "@b"
+#define KEY_TYPE_ARRAY_NUMBER "@F"
+#define KEY_TYPE_ARRAY_STRING "@S"
+#define KEY_TYPE_ARRAY_BOOL "@B"
+#define KEY_TYPE_NULL "@n"
+
+#define KEY_TYPE_NUMBER_CHAR 'f'
+#define KEY_TYPE_STRING_CHAR 's'
+#define KEY_TYPE_BOOL_CHAR 'b'
+#define KEY_TYPE_ARRAY_NUMBER_CHAR 'F'
+#define KEY_TYPE_ARRAY_STRING_CHAR 'S'
+#define KEY_TYPE_ARRAY_BOOL_CHAR 'B'
+#define KEY_TYPE_NULL_CHAR 'n'
+
 class SettingsDB {
    public:
     static SettingsDB &instance();
 
-    size_t getString(const char *key, char *value, size_t maxlen);
-    bool getBool(const char *key, bool *value);
-    bool getNumber(const char *key, float *value);
+    size_t getString(const char *key, char *value, size_t maxlen, const char *default_value = "");
+    bool getBool(const char *key, bool *value, bool default_value = false);
+    bool getNumber(const char *key, float *value, float default_value = 0);
     bool getNull(const char *key);
+    bool getIP(const char *key, NXD_ADDRESS *value, NXD_ADDRESS *default_value = 0);
 
     void setString(const char *key, const char *str);
     void setBool(const char *key, bool value);
@@ -47,7 +64,6 @@ class SettingsDB {
     void setNull(const char *key);
     void setIP(const char *key, const NXD_ADDRESS *addr);
 
-    void dump();
     void erase();
 
     UINT jsonGETRequest(NX_PACKET *packet_ptr);

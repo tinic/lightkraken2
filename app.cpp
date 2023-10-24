@@ -31,10 +31,6 @@ static TX_THREAD thread_startup{};
 void thread_startup_entry(ULONG thread_input) {
     NX_PARAMETER_NOT_USED(thread_input);
 
-#ifndef BOOTLOADER
-    SettingsDB::instance().dump();
-#endif  // #ifndef BOOTLOADER
-
     if (!Network::instance().start()) {
         return;
     }

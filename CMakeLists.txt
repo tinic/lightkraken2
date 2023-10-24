@@ -183,6 +183,7 @@ set(COMMON_SOURCES
     ${PROJECT_SOURCE_DIR}/support/fal_stm32h5xx.c
     ${PROJECT_SOURCE_DIR}/support/lan8742.c
     ${PROJECT_SOURCE_DIR}/support/hal_sys_init.c
+    ${PROJECT_SOURCE_DIR}/support/ipv6.c
     ${PROJECT_SOURCE_DIR}/support/nx_stm32_eth_driver.c
     ${PROJECT_SOURCE_DIR}/support/nx_stm32_phy_driver.c
     ${PROJECT_SOURCE_DIR}/support/startup_stm32h563xx.S
