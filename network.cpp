@@ -293,7 +293,7 @@ bool Network::start() {
     /* Wait for the link to come up.  */
     do {
         status = nx_ip_status_check(&client_ip, NX_IP_LINK_ENABLED, &actual_status, NX_IP_PERIODIC_RATE);
-        HAL_Delay(10);
+        tx_thread_sleep(NX_IP_PERIODIC_RATE / 10);
     } while (status != NX_SUCCESS);
 
 #ifndef BOOTLOADER
@@ -325,7 +325,7 @@ bool Network::start() {
 
 #ifndef BOOTLOADER
 
-#define DHCPV6_IANA_ID 0x1ED51ED5
+#define DHCPV6_IANA_ID 0xABCDEFAB
 #define DHCPV6_T1 NX_DHCPV6_INFINITE_LEASE
 #define DHCPV6_T2 NX_DHCPV6_INFINITE_LEASE
 #define DHCPV6_RENEW_TIME NX_DHCPV6_INFINITE_LEASE
