@@ -76,17 +76,20 @@ void Network::init() {
 static void client_ip_address_changed(NX_IP *ip_ptr, VOID *user) {
 #ifndef BOOTLOADER
     NXD_ADDRESS ipv4{};
-    ULONG netmask = 0;
+    NXD_ADDRESS mask{};
     ipv4.nxd_ip_version = NX_IP_VERSION_V4;
-    if (nx_ip_address_get(ip_ptr, &ipv4.nxd_ip_address.v4, &netmask) == NX_SUCCESS) {
-        SettingsDB::instance().setIP("last_ipv4", &ipv4);
+    mask.nxd_ip_version = NX_IP_VERSION_V4;
+    if (nx_ip_address_get(ip_ptr, &ipv4.nxd_ip_address.v4, &mask.nxd_ip_address.v4) == NX_SUCCESS) {
+        SettingsDB::instance().setIP(SettingsDB::kActiveIPv4, &ipv4);
+        SettingsDB::instance().setIP(SettingsDB::kActiveIPv4NetMask, &ipv4);
     }
 
     NXD_ADDRESS ipv6{};
     ULONG prefix = 0;
     UINT interface = 0;
     if (nxd_ipv6_address_get(ip_ptr, 0, &ipv6, &prefix, &interface) == NX_SUCCESS) {
-        SettingsDB::instance().setIP("last_ipv6", &ipv6);
+        SettingsDB::instance().setIP(SettingsDB::kActiveIPv6, &ipv6);
+        SettingsDB::instance().setNumber(SettingsDB::kActiveIPv6PrefixLen, float(prefix));
     }
 #endif  // #ifndef BOOTLOADER
 }
@@ -201,6 +204,9 @@ bool Network::start() {
     ULONG actual_status = 0;
 
     volatile bool got_ip = false;
+#ifndef BOOTLOADER
+    volatile bool got_ipv6 = false;
+#endif  // #ifndef BOOTLOADER
 
     bool try_dhcp = true;
     bool try_autop = true;
@@ -216,8 +222,28 @@ bool Network::start() {
 
 #ifndef BOOTLOADER
     if (!got_ip && try_settings) {
-        nx_ip_address_set(&client_ip, IP_ADDRESS(192, 168, 1, 147), IP_ADDRESS(255, 255, 255, 0));
-        got_ip = true;
+        NXD_ADDRESS v4addr = {};
+        NXD_ADDRESS v4mask = {};
+        NXD_ADDRESS v4zero = {};
+        SettingsDB::instance().getIP(SettingsDB::kUserIPv4, &v4addr, &v4zero);
+        SettingsDB::instance().getIP(SettingsDB::kUserIPv4NetMask, &v4mask, &v4zero);
+        if (v4addr.nxd_ip_version == NX_IP_VERSION_V4 && v4addr.nxd_ip_address.v4 != 0 && v4mask.nxd_ip_address.v4 != 0) {
+            nx_ip_address_set(&client_ip, v4addr.nxd_ip_address.v4, v4mask.nxd_ip_address.v4);
+            got_ip = true;
+        }
+    }
+    if (!got_ipv6 && try_settings) {
+        NXD_ADDRESS v6addr = {};
+        NXD_ADDRESS v6zero = {};
+        UINT v6addr_index = 0;
+        float prefix_length = 0;
+        SettingsDB::instance().getIP(SettingsDB::kUserIPv6, &v6addr, &v6zero);
+        SettingsDB::instance().getNumber(SettingsDB::kUserIPv6PrefixLen, &prefix_length, 0);
+        if (v6addr.nxd_ip_version == NX_IP_VERSION_V6 && v6addr.nxd_ip_address.v6[0] != 0 && v6addr.nxd_ip_address.v6[1] != 0 &&
+            v6addr.nxd_ip_address.v6[2] != 0 && v6addr.nxd_ip_address.v6[3] != 0 && prefix_length != 0) {
+            nxd_ipv6_address_set(&client_ip, 0, &v6addr, ULONG(prefix_length), &v6addr_index);
+            got_ipv6 = true;
+        }
     }
 #endif  // #ifndef BOOTLOADER
 
@@ -270,7 +296,7 @@ bool Network::start() {
     }
 
 #ifndef BOOTLOADER
-    if (got_ip) {
+    if (got_ip || got_ipv6) {
         status = nx_mdns_enable(&mdns, 0);
         if (status) {
             return false;

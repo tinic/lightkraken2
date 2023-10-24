@@ -113,14 +113,23 @@ void SettingsDB::init() {
 
     float boot_count = 0;
 
-    const char *last_ipv4 = "0.0.0.0";
-    const char *last_ipv6 = "::";
+    const char *ipv4 = "0.0.0.0";
+    const char *ipv6 = "::";
+    const float ipv6_prefix_length = 0;
 
     struct fdb_default_kv default_kv;
     static struct fdb_default_kv_node default_kv_table[] = {
-        {(char *)"boot_count" KEY_TYPE_NUMBER, &boot_count, sizeof(boot_count)},
-        {(char *)"last_ipv4" KEY_TYPE_STRING, &last_ipv4, sizeof(last_ipv4)},
-        {(char *)"last_ipv6" KEY_TYPE_STRING, &last_ipv6, sizeof(last_ipv6)},
+        {(char *)"boot_count" KEY_TYPE_NUMBER, (void *)&boot_count, sizeof(boot_count)},
+
+        {(char *)(SettingsDB::kActiveIPv4_t), (void *)ipv4, strlen(ipv4)},
+        {(char *)(SettingsDB::kActiveIPv4NetMask_t), (void *)ipv4, strlen(ipv4)},
+        {(char *)(SettingsDB::kActiveIPv6_t), (void *)ipv6, strlen(ipv6)},
+        {(char *)(SettingsDB::kActiveIPv6PrefixLen_t), (void *)&ipv6_prefix_length, sizeof(ipv6_prefix_length)},
+
+        {(char *)(SettingsDB::kUserIPv4_t), (void *)ipv4, strlen(ipv4)},
+        {(char *)(SettingsDB::kUserIPv4NetMask_t), (void *)ipv4, strlen(ipv4)},
+        {(char *)(SettingsDB::kUserIPv6_t), (void *)ipv6, strlen(ipv6)},
+        {(char *)(SettingsDB::kUserIPv6PrefixLen_t), (void *)&ipv6_prefix_length, sizeof(ipv6_prefix_length)},
     };
     default_kv.kvs = default_kv_table;
     default_kv.num = sizeof(default_kv_table) / sizeof(default_kv_table[0]);
