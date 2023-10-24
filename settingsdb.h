@@ -69,25 +69,19 @@ class SettingsDB {
     UINT jsonGETRequest(NX_PACKET *packet_ptr);
     UINT jsonPUTRequest(NX_PACKET *packet_ptr);
 
-    static constexpr const char *kUserIPv4 = "user_ipv4_addr";
-    static constexpr const char *kUserIPv4NetMask = "user_ipv4_netmask";
-    static constexpr const char *kUserIPv6 = "user_ipv6_addr";
-    static constexpr const char *kUserIPv6PrefixLen = "user_ipv6_prefix_len";
+#define KEY_DEFINE_STRING(KEY, STRING) \
+    static constexpr const char *KEY = STRING; \
+    static constexpr const char *KEY##_t = STRING KEY_TYPE_STRING;
 
-    static constexpr const char *kUserIPv4_t = "user_ipv4_addr" KEY_TYPE_STRING;
-    static constexpr const char *kUserIPv4NetMask_t = "user_ipv4_netmask" KEY_TYPE_STRING;
-    static constexpr const char *kUserIPv6_t = "user_ipv6_addr" KEY_TYPE_STRING;
-    static constexpr const char *kUserIPv6PrefixLen_t = "user_ipv6_prefix_len" KEY_TYPE_STRING;
+    KEY_DEFINE_STRING(kUserIPv4, "user_ipv4_addr")
+    KEY_DEFINE_STRING(kUserIPv4NetMask, "user_ipv4_netmask")
+    KEY_DEFINE_STRING(kUserIPv6, "user_ipv6_addr")
+    KEY_DEFINE_STRING(kUserIPv6PrefixLen, "user_ipv6_prefix_len")
 
-    static constexpr const char *kActiveIPv4 = "active_ipv4_addr";
-    static constexpr const char *kActiveIPv4NetMask = "active_ipv4_netmask";
-    static constexpr const char *kActiveIPv6 = "active_ipv6_addr";
-    static constexpr const char *kActiveIPv6PrefixLen = "active_ipv6_prefix_len";
-
-    static constexpr const char *kActiveIPv4_t = "active_ipv4_addr" KEY_TYPE_STRING;
-    static constexpr const char *kActiveIPv4NetMask_t = "active_ipv4_netmask" KEY_TYPE_STRING;
-    static constexpr const char *kActiveIPv6_t = "active_ipv6_addr" KEY_TYPE_STRING;
-    static constexpr const char *kActiveIPv6PrefixLen_t = "active_ipv6_prefix_len" KEY_TYPE_STRING;
+    KEY_DEFINE_STRING(kActiveIPv4, "active_ipv4_addr")
+    KEY_DEFINE_STRING(kActiveIPv4NetMask, "active_ipv4_netmask")
+    KEY_DEFINE_STRING(kActiveIPv6, "active_ipv6_addr")
+    KEY_DEFINE_STRING(kActiveIPv6PrefixLen, "active_ipv6_prefix_len")
 
    private:
     void init();
