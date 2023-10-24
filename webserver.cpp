@@ -23,6 +23,7 @@ SOFTWARE.
 */
 #include "webserver.h"
 
+#include "app.h"
 #include "network.h"
 #include "settingsdb.h"
 #include "stm32h5xx_hal.h"
@@ -80,6 +81,13 @@ UINT WebServer::requestNotify(NX_HTTP_SERVER *server_ptr, UINT request_type, CHA
         case NX_HTTP_SERVER_POST_REQUEST:
         case NX_HTTP_SERVER_PUT_REQUEST: {
 #ifndef BOOTLOADER
+            if (strcmp(resource, "/reset") == 0) {
+                App::instance().scheduleReset();
+                nx_packet_release(packet_ptr);
+                nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, NX_NULL, NX_NULL,
+                                                               0);
+                return (NX_HTTP_CALLBACK_COMPLETED);
+            }
             if (strcmp(resource, "/settings") == 0) {
                 return SettingsDB::instance().jsonPUTRequest(packet_ptr);
             }
@@ -94,8 +102,22 @@ UINT WebServer::requestNotify(NX_HTTP_SERVER *server_ptr, UINT request_type, CHA
                                                            NX_NULL, 0, NX_NULL, 0);
             return (NX_HTTP_CALLBACK_COMPLETED);
         } break;
-        case NX_HTTP_SERVER_HEAD_REQUEST:
         case NX_HTTP_SERVER_DELETE_REQUEST: {
+#ifndef BOOTLOADER
+            if (strcmp(resource, "/settings") == 0) {
+                SettingsDB::instance().erase();
+                nx_packet_release(packet_ptr);
+                nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, NX_NULL, NX_NULL,
+                                                               0);
+                return (NX_HTTP_CALLBACK_COMPLETED);
+            }
+#endif  // #ifndef BOOTLOADER
+            nx_packet_release(packet_ptr);
+            nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_METHOD_NOT_ALLOWED, sizeof(NX_HTTP_STATUS_METHOD_NOT_ALLOWED) - 1,
+                                                           NX_NULL, 0, NX_NULL, 0);
+            return (NX_HTTP_CALLBACK_COMPLETED);
+        } break;
+        case NX_HTTP_SERVER_HEAD_REQUEST: {
             nx_packet_release(packet_ptr);
             nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_METHOD_NOT_ALLOWED, sizeof(NX_HTTP_STATUS_METHOD_NOT_ALLOWED) - 1,
                                                            NX_NULL, 0, NX_NULL, 0);

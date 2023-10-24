@@ -25,6 +25,7 @@ SOFTWARE.
 #include "hal_sys_init.h"
 
 #include <memory.h>
+#include <stdio.h>
 
 #include "stm32h5xx_hal.h"
 
@@ -113,8 +114,11 @@ void HAL_SuspendTick(void) { __HAL_TIM_DISABLE_IT(&htim1, TIM_IT_UPDATE); }
 
 void HAL_ResumeTick(void) { __HAL_TIM_ENABLE_IT(&htim1, TIM_IT_UPDATE); }
 
+void app_tickhandler(void);
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     if (htim->Instance == TIM1) {
+        app_tickhandler();
         HAL_IncTick();
     }
 }
@@ -379,7 +383,6 @@ void HAL_ETH_MspInit(ETH_HandleTypeDef *heth) {
 const uint8_t *networkMACAddr(void);
 
 static void MX_ETH_Init(void) {
-
     heth.Instance = ETH;
     heth.Init.MACAddr = (uint8_t *)networkMACAddr();
     heth.Init.MediaInterface = HAL_ETH_RMII_MODE;
@@ -404,8 +407,12 @@ void SYS_Init() {
     SystemClock_Config();
     SystemCoreClockUpdate();
 
+    MX_USART3_UART_Init();
+
+    printf("======================================================================\n");
+    printf("Lightkraken2 startup.\n");
+
     MX_ICACHE_Init();
     MX_GPIO_Init();
-    MX_USART3_UART_Init();
     MX_ETH_Init();
 }

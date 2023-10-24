@@ -103,11 +103,12 @@ SettingsDB &SettingsDB::instance() {
     return settingsDB;
 }
 
-void SettingsDB::erase() { nor_flash0.ops.erase(0, FLASH_DB_LENGTH); }
+void SettingsDB::erase() {
+    nor_flash0.ops.erase(0, FLASH_DB_LENGTH);
+    printf("SettingsDB: Database erased!\n");
+}
 
 void SettingsDB::init() {
-    // erase();
-
     fdb_kvdb_control(&kvdb, FDB_KVDB_CTRL_SET_LOCK, (void *)lock);
     fdb_kvdb_control(&kvdb, FDB_KVDB_CTRL_SET_UNLOCK, (void *)unlock);
 

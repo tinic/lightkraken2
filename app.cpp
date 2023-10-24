@@ -21,11 +21,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+#include "app.h"
+
 #include <stdio.h>
 
 #include "network.h"
 #include "settingsdb.h"
 #include "webserver.h"
+
+#include "stm32h5xx_hal.h"
+
+extern "C" void app_tickhandler(void) {
+    App::instance().checkReset();
+}
 
 static TX_THREAD thread_startup{};
 void thread_startup_entry(ULONG thread_input) {
@@ -46,8 +54,6 @@ extern "C" void tx_application_define(void *first_unused_memory);
 void tx_application_define(void *first_unused_memory) {
     uint8_t *pointer = (uint8_t *)first_unused_memory;
 
-    printf("Lightkraken startup.\n");
-
     const size_t startup_stack_size = 8192;
     tx_thread_create(&thread_startup, (CHAR *)"startup", thread_startup_entry, 0, pointer, startup_stack_size, 1, 1, TX_NO_TIME_SLICE, TX_AUTO_START);
     pointer = pointer + startup_stack_size;
@@ -57,4 +63,24 @@ void tx_application_define(void *first_unused_memory) {
     pointer = WebServer::instance().setup(pointer);
 
     printf("Consumed %d bytes of RAM.\n", (int)(pointer - (uint8_t *)first_unused_memory));
+}
+
+App &App::instance() {
+    static App app;
+    if (!app.initialized) {
+        app.initialized = true;
+        app.init();
+    }
+    return app;
+}
+
+void App::init() {}
+
+void App::checkReset() { 
+    if (resetCount <= 0) {
+        return;
+    }
+    if (--resetCount <= 0) {
+        NVIC_SystemReset(); 
+    }
 }
