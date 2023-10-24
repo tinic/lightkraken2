@@ -186,12 +186,19 @@ static void client_ip_address_changed(NX_IP *ip_ptr, VOID *user) {
     NXD_ADDRESS ipv6{};
     ULONG prefix = 0;
     UINT interface = 0;
-    if (nxd_ipv6_address_get(ip_ptr, 0, &ipv6, &prefix, &interface) == NX_SUCCESS) {
-        SettingsDB::instance().setIP(SettingsDB::kActiveIPv6, &ipv6);
-        SettingsDB::instance().setNumber(SettingsDB::kActiveIPv6PrefixLen, float(prefix));
-        char ipv6str[64];
-        SettingsDB::instance().getString(SettingsDB::kActiveIPv6, ipv6str, sizeof(ipv6str));
-        printf("IPv6: addr(%s) prefix(%d)\n", ipv6str, int(prefix));
+    for (size_t c = 0;; c++) {
+        if (nxd_ipv6_address_get(ip_ptr, c, &ipv6, &prefix, &interface) == NX_SUCCESS) {
+            if (prefix != 10) {
+                SettingsDB::instance().setIP(SettingsDB::kActiveIPv6, &ipv6);
+                SettingsDB::instance().setNumber(SettingsDB::kActiveIPv6PrefixLen, float(prefix));
+                char ipv6str[64];
+                SettingsDB::instance().getString(SettingsDB::kActiveIPv6, ipv6str, sizeof(ipv6str));
+                printf("IPv6: addr(%s) prefix(%d)\n", ipv6str, int(prefix));
+                break;
+            }
+        } else {
+            break;
+        }
     }
 #endif  // #ifndef BOOTLOADER
 }
@@ -289,6 +296,12 @@ bool Network::start() {
 #ifndef BOOTLOADER
     bool try_settings = true;
 #endif  // #ifndef BOOTLOADER
+
+    // Create Link local ipv6 address
+    status = nxd_ipv6_address_set(&client_ip, 0, NX_NULL, 10, NULL);
+    if (status) {
+        return false;
+    }
 
     /* Wait for the link to come up.  */
     do {
