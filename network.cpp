@@ -82,6 +82,91 @@ void Network::init() {
 #endif  // #ifndef BOOTLOADER
 }
 
+#ifndef BOOTLOADER
+static void dhcpv6_state_change(struct NX_DHCPV6_STRUCT *dhcpv6_ptr, UINT old_state, UINT new_state) {
+    NX_PARAMETER_NOT_USED(dhcpv6_ptr);
+    NX_PARAMETER_NOT_USED(new_state);
+
+    switch (new_state) {
+        case NX_DHCPV6_STATE_INIT: {
+            printf("dhcpv6_state_change NX_DHCPV6_STATE_INIT");
+        } break;
+        case NX_DHCPV6_STATE_SENDING_SOLICIT: {
+            printf("dhcpv6_state_change NX_DHCPV6_STATE_SENDING_SOLICIT");
+        } break;
+        case NX_DHCPV6_STATE_SENDING_REQUEST: {
+            printf("dhcpv6_state_change NX_DHCPV6_STATE_SENDING_REQUEST");
+        } break;
+        case NX_DHCPV6_STATE_SENDING_RENEW: {
+            printf("dhcpv6_state_change NX_DHCPV6_STATE_SENDING_RENEW");
+        } break;
+        case NX_DHCPV6_STATE_SENDING_REBIND: {
+            printf("dhcpv6_state_change NX_DHCPV6_STATE_SENDING_REBIND");
+        } break;
+        case NX_DHCPV6_STATE_SENDING_DECLINE: {
+            printf("dhcpv6_state_change NX_DHCPV6_STATE_SENDING_DECLINE");
+        } break;
+        case NX_DHCPV6_STATE_SENDING_CONFIRM: {
+            printf("dhcpv6_state_change NX_DHCPV6_STATE_SENDING_CONFIRM");
+        } break;
+        case NX_DHCPV6_STATE_SENDING_INFORM_REQUEST: {
+            printf("dhcpv6_state_change NX_DHCPV6_STATE_SENDING_INFORM_REQUEST");
+        } break;
+        case NX_DHCPV6_STATE_SENDING_RELEASE: {
+            printf("dhcpv6_state_change NX_DHCPV6_STATE_SENDING_RELEASE");
+        } break;
+        case NX_DHCPV6_STATE_BOUND_TO_ADDRESS: {
+            printf("dhcpv6_state_change NX_DHCPV6_STATE_BOUND_TO_ADDRESS");
+        } break;
+    }
+}
+
+static void dhcpv6_server_error(struct NX_DHCPV6_STRUCT *dhcpv6_ptr, UINT op_code, UINT status_code, UINT message_type) {
+    NX_PARAMETER_NOT_USED(dhcpv6_ptr);
+    NX_PARAMETER_NOT_USED(op_code);
+    NX_PARAMETER_NOT_USED(status_code);
+    NX_PARAMETER_NOT_USED(message_type);
+    printf("dhcpv6_server_error %08x %08x %08x\n", op_code, status_code, message_type);
+}
+#endif  // #ifndef BOOTLOADER
+
+static void dhcp_state_change(NX_DHCP *dhcp_ptr, UCHAR new_state) {
+    NX_PARAMETER_NOT_USED(dhcp_ptr);
+
+    switch (new_state) {
+        case NX_DHCP_STATE_NOT_STARTED:
+            printf("dhcp_state_change NX_DHCP_STATE_NOT_STARTED\n");
+            break;
+        case NX_DHCP_STATE_BOOT:
+            printf("dhcp_state_change NX_DHCP_STATE_BOOT\n");
+            break;
+        case NX_DHCP_STATE_INIT:
+            printf("dhcp_state_change NX_DHCP_STATE_INIT\n");
+            break;
+        case NX_DHCP_STATE_SELECTING:
+            printf("dhcp_state_change NX_DHCP_STATE_SELECTING\n");
+            break;
+        case NX_DHCP_STATE_REQUESTING:
+            printf("dhcp_state_change NX_DHCP_STATE_REQUESTING\n");
+            break;
+        case NX_DHCP_STATE_BOUND:
+            printf("dhcp_state_change NX_DHCP_STATE_BOUND\n");
+            break;
+        case NX_DHCP_STATE_RENEWING:
+            printf("dhcp_state_change NX_DHCP_STATE_RENEWING\n");
+            break;
+        case NX_DHCP_STATE_REBINDING:
+            printf("dhcp_state_change NX_DHCP_STATE_REBINDING\n");
+            break;
+        case NX_DHCP_STATE_FORCERENEW:
+            printf("dhcp_state_change NX_DHCP_STATE_FORCERENEW\n");
+            break;
+        case NX_DHCP_STATE_ADDRESS_PROBING:
+            printf("dhcp_state_change NX_DHCP_STATE_ADDRESS_PROBING\n");
+            break;
+    }
+}
+
 static void client_ip_address_changed(NX_IP *ip_ptr, VOID *user) {
 #ifndef BOOTLOADER
     NXD_ADDRESS ipv4{};
@@ -122,6 +207,7 @@ uint8_t *Network::setup(uint8_t *pointer) {
     const size_t mdns_stack_size = 2048;
     const size_t mdns_service_cache_size = 2048;
     const size_t mdns_peer_service_cache_size = 2048;
+    const size_t dhcpv6_client_stack_size = 2048;
 #endif  // #ifndef BOOTLOADER
     const size_t arp_cache_size = 2048;
 
@@ -167,6 +253,12 @@ uint8_t *Network::setup(uint8_t *pointer) {
                        mdns_service_cache_size, (VOID *)(pointer + mdns_service_cache_size + mdns_peer_service_cache_size), mdns_peer_service_cache_size, NULL);
     pointer = pointer + mdns_stack_size + mdns_service_cache_size + mdns_peer_service_cache_size;
     if (status) goto fail;
+
+    status = nx_dhcpv6_client_create(&dhcpv6_client, &client_ip, (CHAR *)hostname, &client_pool, pointer, dhcpv6_client_stack_size, dhcpv6_state_change,
+                                     dhcpv6_server_error);
+    pointer = pointer + dhcpv6_client_stack_size;
+    if (status) goto fail;
+
 #endif  // #ifndef BOOTLOADER
 
     status = nx_ip_address_change_notify(&client_ip, client_ip_address_changed, 0);
@@ -176,43 +268,6 @@ uint8_t *Network::setup(uint8_t *pointer) {
 
 fail:
     while (1) {
-    }
-}
-
-static void dhcp_state_change(NX_DHCP *dhcp_ptr, UCHAR new_state) {
-    NX_PARAMETER_NOT_USED(dhcp_ptr);
-
-    switch (new_state) {
-        case NX_DHCP_STATE_NOT_STARTED:
-            printf("dhcp_state_change NX_DHCP_STATE_NOT_STARTED\n");
-            break;
-        case NX_DHCP_STATE_BOOT:
-            printf("dhcp_state_change NX_DHCP_STATE_BOOT\n");
-            break;
-        case NX_DHCP_STATE_INIT:
-            printf("dhcp_state_change NX_DHCP_STATE_INIT\n");
-            break;
-        case NX_DHCP_STATE_SELECTING:
-            printf("dhcp_state_change NX_DHCP_STATE_SELECTING\n");
-            break;
-        case NX_DHCP_STATE_REQUESTING:
-            printf("dhcp_state_change NX_DHCP_STATE_REQUESTING\n");
-            break;
-        case NX_DHCP_STATE_BOUND:
-            printf("dhcp_state_change NX_DHCP_STATE_BOUND\n");
-            break;
-        case NX_DHCP_STATE_RENEWING:
-            printf("dhcp_state_change NX_DHCP_STATE_RENEWING\n");
-            break;
-        case NX_DHCP_STATE_REBINDING:
-            printf("dhcp_state_change NX_DHCP_STATE_REBINDING\n");
-            break;
-        case NX_DHCP_STATE_FORCERENEW:
-            printf("dhcp_state_change NX_DHCP_STATE_FORCERENEW\n");
-            break;
-        case NX_DHCP_STATE_ADDRESS_PROBING:
-            printf("dhcp_state_change NX_DHCP_STATE_ADDRESS_PROBING\n");
-            break;
     }
 }
 
@@ -226,7 +281,11 @@ bool Network::start() {
 #endif  // #ifndef BOOTLOADER
 
     bool try_dhcp = true;
+#ifndef BOOTLOADER
+    bool try_dhcpv6 = true;
+#endif  // #ifndef BOOTLOADER
     bool try_autop = true;
+
 #ifndef BOOTLOADER
     bool try_settings = true;
 #endif  // #ifndef BOOTLOADER
@@ -264,6 +323,42 @@ bool Network::start() {
     }
 #endif  // #ifndef BOOTLOADER
 
+#ifndef BOOTLOADER
+
+#define DHCPV6_IANA_ID 0x1ED51ED5
+#define DHCPV6_T1 NX_DHCPV6_INFINITE_LEASE
+#define DHCPV6_T2 NX_DHCPV6_INFINITE_LEASE
+#define DHCPV6_RENEW_TIME NX_DHCPV6_INFINITE_LEASE
+#define DHCPV6_REBIND_TIME NX_DHCPV6_INFINITE_LEASE
+
+    if (!got_ipv6 && try_dhcpv6) {
+        status = nx_dhcpv6_create_client_duid(&dhcpv6_client, NX_DHCPV6_DUID_TYPE_LINK_TIME, NX_DHCPV6_CLIENT_HARDWARE_TYPE_ETHERNET, 0);
+        if (status) {
+            return false;
+        }
+
+        status = nx_dhcpv6_create_client_iana(&dhcpv6_client, DHCPV6_IANA_ID, DHCPV6_T1, DHCPV6_T2);
+        if (status) {
+            return false;
+        }
+
+        nx_dhcpv6_request_option_timezone(&dhcpv6_client, NX_TRUE);
+        nx_dhcpv6_request_option_DNS_server(&dhcpv6_client, NX_TRUE);
+        nx_dhcpv6_request_option_time_server(&dhcpv6_client, NX_TRUE);
+        nx_dhcpv6_request_option_domain_name(&dhcpv6_client, NX_TRUE);
+
+        status = nx_dhcpv6_start(&dhcpv6_client);
+        if (status) {
+            return false;
+        }
+
+        status = nx_dhcpv6_request_solicit(&dhcpv6_client);
+        if (status) {
+            return false;
+        }
+    }
+#endif  // #ifndef BOOTLOADER
+
     if (!got_ip && try_dhcp) {
         /* Create the DHCP instance.  */
         status = nx_dhcp_create(&dhcp_client, &client_ip, (CHAR *)hostname);
@@ -282,12 +377,21 @@ bool Network::start() {
         if (status) {
             return false;
         }
+    }
 
+    if ((!got_ip && try_dhcp)
+#ifndef BOOTLOADER
+        || (!got_ipv6 && try_dhcpv6)
+#endif  // #ifndef BOOTLOADER
+    ) {
         status = nx_ip_status_check(&client_ip, NX_IP_ADDRESS_RESOLVED, (ULONG *)&actual_status, NX_IP_PERIODIC_RATE * 60);
         if (status == NX_SUCCESS) {
             got_ip = true;
         } else {
             nx_dhcp_stop(&dhcp_client);
+#ifndef BOOTLOADER
+            nx_dhcpv6_stop(&dhcpv6_client);
+#endif  // #ifndef BOOTLOADER
             if (status == NX_NOT_SUCCESSFUL) {
                 printf("No DHCP address available.\n");
             }
