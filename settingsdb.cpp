@@ -439,7 +439,6 @@ void SettingsDB::setString(const char *key, const char *str) {
             return;
         }
     }
-    printf("setString <%s> <%s>\n", key, str);
     char keyS[256]{};
     strncpy(keyS, key, sizeof(keyS) - 3);
     strcat(keyS, KEY_TYPE_STRING);
@@ -456,7 +455,6 @@ void SettingsDB::setBool(const char *key, bool value) {
             return;
         }
     }
-    printf("setBool <%s> <%s>\n", key, value ? "true" : "false");
     char keyB[256]{};
     strncpy(keyB, key, sizeof(keyB) - 3);
     strcat(keyB, KEY_TYPE_BOOL);
@@ -474,7 +472,6 @@ void SettingsDB::setNumber(const char *key, float value) {
             return;
         }
     }
-    printf("setNumber <%s> <%f>\n", key, double(value));
     char keyF[256]{};
     strncpy(keyF, key, sizeof(keyF) - 3);
     strcat(keyF, KEY_TYPE_NUMBER);
@@ -489,7 +486,6 @@ void SettingsDB::setNull(const char *key) {
     if (getNull(key)) {
         return;
     }
-    printf("setNull <%s>\n", key);
     char keyN[256]{};
     strncpy(keyN, key, sizeof(keyN) - 3);
     strcat(keyN, KEY_TYPE_NULL);
