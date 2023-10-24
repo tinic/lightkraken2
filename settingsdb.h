@@ -32,22 +32,6 @@ SOFTWARE.
 
 #ifndef BOOTLOADER
 
-#define KEY_TYPE_NUMBER "@f"
-#define KEY_TYPE_STRING "@s"
-#define KEY_TYPE_BOOL "@b"
-#define KEY_TYPE_ARRAY_NUMBER "@F"
-#define KEY_TYPE_ARRAY_STRING "@S"
-#define KEY_TYPE_ARRAY_BOOL "@B"
-#define KEY_TYPE_NULL "@n"
-
-#define KEY_TYPE_NUMBER_CHAR 'f'
-#define KEY_TYPE_STRING_CHAR 's'
-#define KEY_TYPE_BOOL_CHAR 'b'
-#define KEY_TYPE_ARRAY_NUMBER_CHAR 'F'
-#define KEY_TYPE_ARRAY_STRING_CHAR 'S'
-#define KEY_TYPE_ARRAY_BOOL_CHAR 'B'
-#define KEY_TYPE_NULL_CHAR 'n'
-
 class SettingsDB {
    public:
     static SettingsDB &instance();
@@ -69,9 +53,27 @@ class SettingsDB {
     UINT jsonGETRequest(NX_PACKET *packet_ptr);
     UINT jsonPUTRequest(NX_PACKET *packet_ptr);
 
-#define KEY_DEFINE_STRING(KEY, STRING) \
-    static constexpr const char *KEY = STRING; \
-    static constexpr const char *KEY##_t = STRING KEY_TYPE_STRING;
+#define KEY_TYPE_NUMBER "@f"
+#define KEY_TYPE_STRING "@s"
+#define KEY_TYPE_BOOL "@b"
+#define KEY_TYPE_ARRAY_NUMBER "@F"
+#define KEY_TYPE_ARRAY_STRING "@S"
+#define KEY_TYPE_ARRAY_BOOL "@B"
+#define KEY_TYPE_NULL "@n"
+
+#define KEY_TYPE_NUMBER_CHAR 'f'
+#define KEY_TYPE_STRING_CHAR 's'
+#define KEY_TYPE_BOOL_CHAR 'b'
+#define KEY_TYPE_ARRAY_NUMBER_CHAR 'F'
+#define KEY_TYPE_ARRAY_STRING_CHAR 'S'
+#define KEY_TYPE_ARRAY_BOOL_CHAR 'B'
+#define KEY_TYPE_NULL_CHAR 'n'
+
+#define KEY_DEFINE_STRING(KEY_CONSTANT, KEY_STRING)         \
+    static constexpr const char *KEY_CONSTANT = KEY_STRING; \
+    static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_STRING;
+
+    KEY_DEFINE_STRING(kHostname, "hostname")
 
     KEY_DEFINE_STRING(kUserIPv4, "user_ipv4_addr")
     KEY_DEFINE_STRING(kUserIPv4NetMask, "user_ipv4_netmask")
@@ -82,6 +84,16 @@ class SettingsDB {
     KEY_DEFINE_STRING(kActiveIPv4NetMask, "active_ipv4_netmask")
     KEY_DEFINE_STRING(kActiveIPv6, "active_ipv6_addr")
     KEY_DEFINE_STRING(kActiveIPv6PrefixLen, "active_ipv6_prefix_len")
+
+#define KEY_DEFINE_NUMBER(KEY_CONSTANT, KEY_STRING)         \
+    static constexpr const char *KEY_CONSTANT = KEY_STRING; \
+    static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_NUMBER;
+
+    KEY_DEFINE_NUMBER(kBootCount, "boot_count")
+
+#define KEY_DEFINE_BOOL(KEY_CONSTANT, KEY_STRING)           \
+    static constexpr const char *KEY_CONSTANT = KEY_STRING; \
+    static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_BOOL;
 
    private:
     void init();

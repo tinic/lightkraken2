@@ -119,7 +119,7 @@ void SettingsDB::init() {
 
     struct fdb_default_kv default_kv;
     static struct fdb_default_kv_node default_kv_table[] = {
-        {(char *)"boot_count" KEY_TYPE_NUMBER, (void *)&boot_count, sizeof(boot_count)},
+        {(char *)(SettingsDB::kBootCount_t), (void *)&boot_count, sizeof(boot_count)},
 
         {(char *)(SettingsDB::kActiveIPv4_t), (void *)ipv4, strlen(ipv4)},
         {(char *)(SettingsDB::kActiveIPv4NetMask_t), (void *)ipv4, strlen(ipv4)},
@@ -141,9 +141,9 @@ void SettingsDB::init() {
     }
 
     struct fdb_blob blob {};
-    fdb_kv_get_blob(&kvdb, "boot_count" KEY_TYPE_NUMBER, fdb_blob_make(&blob, &boot_count, sizeof(boot_count)));
+    fdb_kv_get_blob(&kvdb, SettingsDB::kBootCount_t, fdb_blob_make(&blob, &boot_count, sizeof(boot_count)));
     boot_count++;
-    fdb_kv_set_blob(&kvdb, "boot_count" KEY_TYPE_NUMBER, fdb_blob_make(&blob, &boot_count, sizeof(boot_count)));
+    fdb_kv_set_blob(&kvdb, SettingsDB::kBootCount_t, fdb_blob_make(&blob, &boot_count, sizeof(boot_count)));
 }
 
 void SettingsDB::lock() { __disable_irq(); }
@@ -432,6 +432,12 @@ void SettingsDB::setString(const char *key, const char *str) {
     if (!str || !key) {
         return;
     }
+    char checkStr[256]{};
+    if (getString(key, checkStr, 256)) {
+        if (strcmp(str, checkStr) == 0) {
+            return;
+        }
+    }
     printf("setString <%s> <%s>\n", key, str);
     char keyS[256]{};
     strncpy(keyS, key, sizeof(keyS) - 3);
@@ -442,6 +448,12 @@ void SettingsDB::setString(const char *key, const char *str) {
 void SettingsDB::setBool(const char *key, bool value) {
     if (!key) {
         return;
+    }
+    bool checkBool = false;
+    if (getBool(key, &checkBool)) {
+        if (value == checkBool) {
+            return;
+        }
     }
     printf("setBool <%s> <%s>\n", key, value ? "true" : "false");
     char keyB[256]{};
@@ -455,6 +467,12 @@ void SettingsDB::setNumber(const char *key, float value) {
     if (!key) {
         return;
     }
+    float checkNumber = false;
+    if (getNumber(key, &checkNumber)) {
+        if (value == checkNumber) {
+            return;
+        }
+    }
     printf("setNumber <%s> <%f>\n", key, double(value));
     char keyF[256]{};
     strncpy(keyF, key, sizeof(keyF) - 3);
@@ -465,6 +483,9 @@ void SettingsDB::setNumber(const char *key, float value) {
 
 void SettingsDB::setNull(const char *key) {
     if (!key) {
+        return;
+    }
+    if (getNull(key)) {
         return;
     }
     printf("setNull <%s>\n", key);
@@ -502,7 +523,14 @@ void SettingsDB::setIP(const char *key, const NXD_ADDRESS *value) {
         ip.address.components[6] = uint16_t((value->nxd_ip_address.v6[3] >> 16) & 0xFFFF);
         ip.address.components[7] = uint16_t((value->nxd_ip_address.v6[3] >> 0) & 0xFFFF);
     }
+
     ipv6_to_str(&ip, ip_str, sizeof(ip_str));
+    char checkStr[64]{};
+    if (getString(key, checkStr, 64)) {
+        if (strcmp(ip_str, checkStr) == 0) {
+            return;
+        }
+    }
     fdb_kv_set_blob(&kvdb, keyS, fdb_blob_make(&blob, reinterpret_cast<const void *>(ip_str), sizeof(ip_str)));
 }
 

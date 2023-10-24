@@ -23,6 +23,10 @@ SOFTWARE.
 */
 #include "network.h"
 
+#ifndef BOOTLOADER
+#include <emio/format.hpp>
+#endif  // #ifndef BOOTLOADER
+
 #include "nx_stm32_eth_driver.h"
 #include "settingsdb.h"
 #include "stm32h5xx_hal.h"
@@ -71,6 +75,11 @@ void Network::init() {
     for (size_t c = 0; c < id_length; c++) {
         hostname[c + sizeof(hostname_base) - 1] = hex_table[(unique_id >> (32 - ((c + 1) * 4))) & 0xF];
     }
+
+#ifndef BOOTLOADER
+    SettingsDB::instance().setString(SettingsDB::kHostname, hostname);
+    printf("Hostname: '%s'\n", hostname);
+#endif  // #ifndef BOOTLOADER
 }
 
 static void client_ip_address_changed(NX_IP *ip_ptr, VOID *user) {
@@ -81,7 +90,12 @@ static void client_ip_address_changed(NX_IP *ip_ptr, VOID *user) {
     mask.nxd_ip_version = NX_IP_VERSION_V4;
     if (nx_ip_address_get(ip_ptr, &ipv4.nxd_ip_address.v4, &mask.nxd_ip_address.v4) == NX_SUCCESS) {
         SettingsDB::instance().setIP(SettingsDB::kActiveIPv4, &ipv4);
-        SettingsDB::instance().setIP(SettingsDB::kActiveIPv4NetMask, &ipv4);
+        SettingsDB::instance().setIP(SettingsDB::kActiveIPv4NetMask, &mask);
+        char ipv4str[64];
+        SettingsDB::instance().getString(SettingsDB::kActiveIPv4, ipv4str, sizeof(ipv4str));
+        char ipv4maskstr[64];
+        SettingsDB::instance().getString(SettingsDB::kActiveIPv4NetMask, ipv4maskstr, sizeof(ipv4maskstr));
+        printf("IPv4: addr(%s) mask(%s)\n", ipv4str, ipv4maskstr);
     }
 
     NXD_ADDRESS ipv6{};
@@ -90,6 +104,9 @@ static void client_ip_address_changed(NX_IP *ip_ptr, VOID *user) {
     if (nxd_ipv6_address_get(ip_ptr, 0, &ipv6, &prefix, &interface) == NX_SUCCESS) {
         SettingsDB::instance().setIP(SettingsDB::kActiveIPv6, &ipv6);
         SettingsDB::instance().setNumber(SettingsDB::kActiveIPv6PrefixLen, float(prefix));
+        char ipv6str[64];
+        SettingsDB::instance().getString(SettingsDB::kActiveIPv6, ipv6str, sizeof(ipv6str));
+        printf("IPv6: addr(%s) prefix(%d)\n", ipv6str, int(prefix));
     }
 #endif  // #ifndef BOOTLOADER
 }
