@@ -74,6 +74,7 @@ class SettingsDB {
     static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_STRING;
 
     KEY_DEFINE_STRING(kHostname, "hostname")
+    KEY_DEFINE_STRING(kMacAddress, "mac_address")
 
     KEY_DEFINE_STRING(kUserIPv4, "user_ipv4_addr")
     KEY_DEFINE_STRING(kUserIPv4NetMask, "user_ipv4_netmask")

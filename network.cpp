@@ -77,6 +77,10 @@ void Network::init() {
     }
 
 #ifndef BOOTLOADER
+    emio::static_buffer<64> macAddr{};
+    emio::format_to(macAddr, "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}", macaddr[0], macaddr[1], macaddr[2], macaddr[3], macaddr[4], macaddr[5]).value();
+    SettingsDB::instance().setString(SettingsDB::kMacAddress, macAddr.str().c_str());
+
     SettingsDB::instance().setString(SettingsDB::kHostname, hostname);
     printf("Hostname: '%s'\n", hostname);
 #endif  // #ifndef BOOTLOADER
@@ -351,11 +355,6 @@ bool Network::start() {
         if (status) {
             return false;
         }
-
-        nx_dhcpv6_request_option_timezone(&dhcpv6_client, NX_TRUE);
-        nx_dhcpv6_request_option_DNS_server(&dhcpv6_client, NX_TRUE);
-        nx_dhcpv6_request_option_time_server(&dhcpv6_client, NX_TRUE);
-        nx_dhcpv6_request_option_domain_name(&dhcpv6_client, NX_TRUE);
 
         status = nx_dhcpv6_start(&dhcpv6_client);
         if (status) {
