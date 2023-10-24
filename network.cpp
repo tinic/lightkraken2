@@ -30,6 +30,7 @@ SOFTWARE.
 #include "nx_stm32_eth_driver.h"
 #include "settingsdb.h"
 #include "stm32h5xx_hal.h"
+#include "utils.h"
 
 #define NX_PACKET_POOL_SIZE (ETH_MAX_PACKET_SIZE * 32)
 
@@ -82,7 +83,7 @@ void Network::init() {
     SettingsDB::instance().setString(SettingsDB::kMacAddress, macAddr.str().c_str());
 
     SettingsDB::instance().setString(SettingsDB::kHostname, hostname);
-    printf("Hostname: '%s'\n", hostname);
+    printf(ESCAPE_FG_GREEN "Hostname: '%s'\n" ESCAPE_RESET, hostname);
 #endif  // #ifndef BOOTLOADER
 }
 
@@ -130,7 +131,7 @@ static void dhcpv6_server_error(struct NX_DHCPV6_STRUCT *dhcpv6_ptr, UINT op_cod
     NX_PARAMETER_NOT_USED(op_code);
     NX_PARAMETER_NOT_USED(status_code);
     NX_PARAMETER_NOT_USED(message_type);
-    printf("dhcpv6_server_error %08x %08x %08x\n", op_code, status_code, message_type);
+    printf(ESCAPE_FG_RED "dhcpv6_server_error %08x %08x %08x\n" ESCAPE_RESET, op_code, status_code, message_type);
 }
 #endif  // #ifndef BOOTLOADER
 
@@ -184,7 +185,7 @@ static void client_ip_address_changed(NX_IP *ip_ptr, VOID *user) {
         SettingsDB::instance().getString(SettingsDB::kActiveIPv4, ipv4str, sizeof(ipv4str));
         char ipv4maskstr[64];
         SettingsDB::instance().getString(SettingsDB::kActiveIPv4NetMask, ipv4maskstr, sizeof(ipv4maskstr));
-        printf("IPv4: addr(%s) mask(%s)\n", ipv4str, ipv4maskstr);
+        printf(ESCAPE_FG_GREEN "IPv4: addr(%s) mask(%s)\n" ESCAPE_RESET, ipv4str, ipv4maskstr);
     }
 
     NXD_ADDRESS ipv6{};
@@ -196,7 +197,7 @@ static void client_ip_address_changed(NX_IP *ip_ptr, VOID *user) {
             SettingsDB::instance().setNumber(SettingsDB::kActiveIPv6PrefixLen, float(prefix));
             char ipv6str[64];
             SettingsDB::instance().getString(SettingsDB::kActiveIPv6, ipv6str, sizeof(ipv6str));
-            printf("IPv6: idx(%d) addr(%s) prefix(%d)\n", int(c), ipv6str, int(prefix));
+            printf(ESCAPE_FG_GREEN "IPv6: idx(%d) addr(%s) prefix(%d)\n" ESCAPE_RESET, int(c), ipv6str, int(prefix));
         } else {
             break;
         }
@@ -403,7 +404,7 @@ bool Network::start() {
             nx_dhcpv6_stop(&dhcpv6_client);
 #endif  // #ifndef BOOTLOADER
             if (status == NX_NOT_SUCCESSFUL) {
-                printf("No DHCP address available.\n");
+                printf(ESCAPE_FG_RED "No DHCP address available.\n" ESCAPE_RESET);
             }
         }
     }
@@ -420,7 +421,7 @@ bool Network::start() {
         } else {
             nx_auto_ip_stop(&auto_ip);
             if (status == NX_NOT_SUCCESSFUL) {
-                printf("No AutoIP address available.\n");
+                printf(ESCAPE_FG_RED "No AutoIP address available.\n" ESCAPE_RESET);
             }
             return false;
         }

@@ -34,6 +34,7 @@ SOFTWARE.
 #include "stm32h5xx_hal.h"
 #include "stm32h5xx_ll_utils.h"
 #include "webserver.h"
+#include "utils.h"
 
 extern "C" void app_tickhandler(void) { App::instance().checkReset(); }
 
@@ -48,6 +49,8 @@ void thread_startup_entry(ULONG thread_input) {
     if (!WebServer::instance().start()) {
         return;
     }
+                           
+    printf(ESCAPE_FG_BLUE "----------------------------------------------------------------------\n" ESCAPE_RESET);
 
     tx_thread_relinquish();
 }
@@ -64,7 +67,7 @@ void tx_application_define(void *first_unused_memory) {
 
     pointer = WebServer::instance().setup(pointer);
 
-    printf("Consumed %d bytes of RAM.\n", (int)(pointer - (uint8_t *)first_unused_memory));
+    printf(ESCAPE_FG_CYAN "Consumed %d bytes of RAM.\n" ESCAPE_RESET, (int)(pointer - (uint8_t *)first_unused_memory));
 }
 
 App &App::instance() {

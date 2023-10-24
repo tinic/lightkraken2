@@ -26,6 +26,12 @@ SOFTWARE.
 
 #include <flashdb.h>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weffc++"
+#include <fixed_containers/fixed_string.hpp>
+#include <fixed_containers/fixed_vector.hpp>
+#pragma GCC diagnostic pop
+
 #include "lwjson/lwjson.h"
 #include "nx_api.h"
 #include "tx_api.h"
@@ -34,6 +40,8 @@ SOFTWARE.
 
 class SettingsDB {
    public:
+    SettingsDB() : float_vector(), bool_vector(), string_vector() {}
+
     static SettingsDB &instance();
 
     size_t getString(const char *key, char *value, size_t maxlen, const char *default_value = "");
@@ -52,6 +60,9 @@ class SettingsDB {
 
     UINT jsonGETRequest(NX_PACKET *packet_ptr);
     UINT jsonPUTRequest(NX_PACKET *packet_ptr);
+
+    static constexpr size_t max_array_size = 32;
+    static constexpr size_t max_string_size = 64;
 
 #define KEY_TYPE_NUMBER "@f"
 #define KEY_TYPE_STRING "@s"
@@ -110,6 +121,13 @@ class SettingsDB {
     static void unlock();
 
     struct fdb_kvdb kvdb {};
+
+    bool in_array = false;
+    int32_t in_array_type = -1;
+
+    fixed_containers::FixedVector<float, max_array_size> float_vector;
+    fixed_containers::FixedVector<bool, max_array_size> bool_vector;
+    fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> string_vector;
 };
 
 #endif  // #ifndef BOOTLOADER

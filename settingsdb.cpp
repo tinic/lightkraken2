@@ -30,10 +30,13 @@ SOFTWARE.
 
 #include <emio/buffer.hpp>
 #include <emio/format.hpp>
+#include <fixed_containers/fixed_string.hpp>
+#include <fixed_containers/fixed_vector.hpp>
 
 #include "ipv6.h"
 #include "stm32h5xx_hal.h"
 #include "webserver.h"
+#include "utils.h"
 
 namespace emio {
 
@@ -105,7 +108,7 @@ SettingsDB &SettingsDB::instance() {
 
 void SettingsDB::erase() {
     nor_flash0.ops.erase(0, FLASH_DB_LENGTH);
-    printf("SettingsDB: Database erased!\n");
+    printf(ESCAPE_FG_MAGENTA "SettingsDB: Database erased!\n" ESCAPE_RESET);
 }
 
 void SettingsDB::init() {
@@ -166,12 +169,12 @@ UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
 
             size_t name_len = strlen(cur_kv->name);
             if (name_len > 2 && cur_kv->name[name_len - 2] == '@') {
-                char name_buf[256];
+                char name_buf[max_string_size];
                 strcpy(name_buf, cur_kv->name);
                 name_buf[name_len - 2] = 0;
                 switch (cur_kv->name[name_len - 1]) {
                     case KEY_TYPE_STRING_CHAR: {
-                        char data_buf[256];
+                        char data_buf[max_string_size];
                         data_buf[data_size] = 0;
                         fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, data_buf, data_size)));
                         emio::format_to(buf, "{}\"{}\":\"{}\"", comma, name_buf, data_buf).value();
@@ -232,8 +235,6 @@ void SettingsDB::jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_t
         return;
     }
 
-    static bool in_array = false;
-
     // Top level values only, no nesting
     if (!((jsp->stack_pos == 2) || (jsp->stack_pos == 3 && in_array))) {
         return;
@@ -244,19 +245,55 @@ void SettingsDB::jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_t
 
     switch (type) {
         case LWJSON_STREAM_TYPE_STRING:
-            SettingsDB::instance().setString(key_name, data_buf);
+            if (in_array) {
+                if (in_array_type == -1) {
+                    in_array_type = LWJSON_STREAM_TYPE_STRING;
+                }
+                if (in_array_type == LWJSON_STREAM_TYPE_STRING && string_vector.size() < max_array_size) {
+                    string_vector.push_back(data_buf);
+                }
+            } else {
+                SettingsDB::instance().setString(key_name, data_buf);
+            }
             break;
         case LWJSON_STREAM_TYPE_TRUE:
-            SettingsDB::instance().setBool(key_name, true);
+            if (in_array) {
+                if (in_array_type == -1) {
+                    in_array_type = LWJSON_STREAM_TYPE_TRUE;
+                }
+                if (in_array_type == LWJSON_STREAM_TYPE_TRUE && bool_vector.size() < max_array_size) {
+                    bool_vector.push_back(true);
+                }
+            } else {
+                SettingsDB::instance().setBool(key_name, true);
+            }
             break;
         case LWJSON_STREAM_TYPE_FALSE:
-            SettingsDB::instance().setBool(key_name, false);
+            if (in_array) {
+                if (in_array_type == -1) {
+                    in_array_type = LWJSON_STREAM_TYPE_TRUE;
+                }
+                if (in_array_type == LWJSON_STREAM_TYPE_TRUE && bool_vector.size() < max_array_size) {
+                    bool_vector.push_back(false);
+                }
+            } else {
+                SettingsDB::instance().setBool(key_name, false);
+            }
             break;
         case LWJSON_STREAM_TYPE_NULL:
             SettingsDB::instance().setNull(key_name);
             break;
         case LWJSON_STREAM_TYPE_NUMBER: {
-            SettingsDB::instance().setNumber(key_name, strtof(data_buf, NULL));
+            if (in_array) {
+                if (in_array_type == -1) {
+                    in_array_type = LWJSON_STREAM_TYPE_NUMBER;
+                }
+                if (in_array_type == LWJSON_STREAM_TYPE_NUMBER && float_vector.size() < max_array_size) {
+                    float_vector.push_back(strtof(data_buf, NULL));
+                }
+            } else {
+                SettingsDB::instance().setNumber(key_name, strtof(data_buf, NULL));
+            }
         } break;
         case LWJSON_STREAM_TYPE_NONE:
         case LWJSON_STREAM_TYPE_KEY:
@@ -264,9 +301,28 @@ void SettingsDB::jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_t
         case LWJSON_STREAM_TYPE_OBJECT_END:
         case LWJSON_STREAM_TYPE_ARRAY: {
             in_array = true;
+            in_array_type = -1;
+            float_vector.clear();
+            bool_vector.clear();
+            string_vector.clear();
         } break;
         case LWJSON_STREAM_TYPE_ARRAY_END: {
+            switch (in_array_type) {
+                case LWJSON_STREAM_TYPE_STRING: {
+                } break;
+                case LWJSON_STREAM_TYPE_TRUE: {
+                } break;
+                case LWJSON_STREAM_TYPE_NUMBER: {
+                } break;
+                default:
+                    break;
+            }
+
             in_array = false;
+            in_array_type = -1;
+            float_vector.clear();
+            bool_vector.clear();
+            string_vector.clear();
         } break;
         default:
             // not supported
@@ -334,12 +390,10 @@ size_t SettingsDB::getString(const char *key, char *value, size_t maxlen, const 
     if (!value || !key) {
         return 0;
     }
-    char keyS[256]{};
-    strncpy(keyS, key, sizeof(keyS) - 3);
-    strcat(keyS, KEY_TYPE_STRING);
+    fixed_containers::FixedString<max_string_size> keyS(key); keyS.append(KEY_TYPE_STRING);
     struct fdb_blob blob {};
     size_t len = 0;
-    if ((len = fdb_kv_get_blob(&kvdb, keyS, fdb_blob_make(&blob, reinterpret_cast<const void *>(value), maxlen))) > 0) {
+    if ((len = fdb_kv_get_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(value), maxlen))) > 0) {
         value[maxlen - 1] = 0;
         return len;
     }
@@ -355,11 +409,9 @@ bool SettingsDB::getBool(const char *key, bool *value, bool default_value) {
     if (!value || !key) {
         return 0;
     }
-    char keyB[256]{};
-    strncpy(keyB, key, sizeof(keyB) - 3);
-    strcat(keyB, KEY_TYPE_BOOL);
+    fixed_containers::FixedString<max_string_size> keyB(key); keyB.append(KEY_TYPE_BOOL);
     struct fdb_blob blob {};
-    if (fdb_kv_get_blob(&kvdb, keyB, fdb_blob_make(&blob, reinterpret_cast<const void *>(value), sizeof(bool))) == sizeof(bool)) {
+    if (fdb_kv_get_blob(&kvdb, keyB.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(value), sizeof(bool))) == sizeof(bool)) {
         return true;
     }
     *value = default_value;
@@ -370,11 +422,9 @@ bool SettingsDB::getNumber(const char *key, float *value, float default_value) {
     if (!value || !key) {
         return 0;
     }
-    char keyF[256]{};
-    strncpy(keyF, key, sizeof(keyF) - 3);
-    strcat(keyF, KEY_TYPE_NUMBER);
+    fixed_containers::FixedString<max_string_size> keyF(key); keyF.append(KEY_TYPE_NUMBER);
     struct fdb_blob blob {};
-    if (fdb_kv_get_blob(&kvdb, keyF, fdb_blob_make(&blob, reinterpret_cast<const void *>(value), sizeof(float))) == sizeof(float)) {
+    if (fdb_kv_get_blob(&kvdb, keyF.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(value), sizeof(float))) == sizeof(float)) {
         return true;
     }
     *value = default_value;
@@ -385,12 +435,10 @@ bool SettingsDB::getNull(const char *key) {
     if (!key) {
         return 0;
     }
-    char keyN[256]{};
-    strncpy(keyN, key, sizeof(keyN) - 3);
-    strcat(keyN, KEY_TYPE_NULL);
+    fixed_containers::FixedString<max_string_size> keyN(key); keyN.append(KEY_TYPE_NULL);
     char value = 0;
     struct fdb_blob blob {};
-    if (fdb_kv_get_blob(&kvdb, keyN, fdb_blob_make(&blob, reinterpret_cast<const void *>(&value), sizeof(char))) == sizeof(char)) {
+    if (fdb_kv_get_blob(&kvdb, keyN.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(&value), sizeof(char))) == sizeof(char)) {
         return true;
     }
     return false;
@@ -400,13 +448,11 @@ bool SettingsDB::getIP(const char *key, NXD_ADDRESS *value, const NXD_ADDRESS *d
     if (!value || !key) {
         return 0;
     }
-    char keyS[256]{};
-    strncpy(keyS, key, sizeof(keyS) - 3);
-    strcat(keyS, KEY_TYPE_STRING);
+    fixed_containers::FixedString<max_string_size> keyS(key); keyS.append(KEY_TYPE_STRING);
     struct fdb_blob blob {};
     size_t len = 0;
-    char ipStr[64] = {};
-    if ((len = fdb_kv_get_blob(&kvdb, keyS, fdb_blob_make(&blob, reinterpret_cast<const void *>(ipStr), sizeof(ipStr)))) > 0) {
+    char ipStr[max_string_size] = {};
+    if ((len = fdb_kv_get_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(ipStr), sizeof(ipStr)))) > 0) {
         ipStr[sizeof(ipStr) - 1] = 0;
         ipv6_address_full_t ip{};
         if (ipv6_from_str(ipStr, len, &ip)) {
@@ -433,16 +479,14 @@ void SettingsDB::setString(const char *key, const char *str) {
     if (!str || !key) {
         return;
     }
-    char checkStr[256]{};
-    if (getString(key, checkStr, 256)) {
+    char checkStr[max_string_size]{};
+    if (getString(key, checkStr, max_string_size)) {
         if (strcmp(str, checkStr) == 0) {
             return;
         }
     }
-    char keyS[256]{};
-    strncpy(keyS, key, sizeof(keyS) - 3);
-    strcat(keyS, KEY_TYPE_STRING);
-    fdb_kv_set(&kvdb, keyS, str);
+    fixed_containers::FixedString<max_string_size> keyS(key); keyS.append(KEY_TYPE_STRING);
+    fdb_kv_set(&kvdb, keyS.c_str(), str);
 }
 
 void SettingsDB::setBool(const char *key, bool value) {
@@ -455,11 +499,9 @@ void SettingsDB::setBool(const char *key, bool value) {
             return;
         }
     }
-    char keyB[256]{};
-    strncpy(keyB, key, sizeof(keyB) - 3);
-    strcat(keyB, KEY_TYPE_BOOL);
+    fixed_containers::FixedString<max_string_size> keyB(key); keyB.append(KEY_TYPE_BOOL);
     struct fdb_blob blob {};
-    fdb_kv_set_blob(&kvdb, keyB, fdb_blob_make(&blob, reinterpret_cast<const void *>(&value), sizeof(value)));
+    fdb_kv_set_blob(&kvdb, keyB.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(&value), sizeof(value)));
 }
 
 void SettingsDB::setNumber(const char *key, float value) {
@@ -472,11 +514,9 @@ void SettingsDB::setNumber(const char *key, float value) {
             return;
         }
     }
-    char keyF[256]{};
-    strncpy(keyF, key, sizeof(keyF) - 3);
-    strcat(keyF, KEY_TYPE_NUMBER);
+    fixed_containers::FixedString<max_string_size> keyF(key); keyF.append(KEY_TYPE_NUMBER);
     struct fdb_blob blob {};
-    fdb_kv_set_blob(&kvdb, keyF, fdb_blob_make(&blob, reinterpret_cast<const void *>(&value), sizeof(value)));
+    fdb_kv_set_blob(&kvdb, keyF.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(&value), sizeof(value)));
 }
 
 void SettingsDB::setNull(const char *key) {
@@ -486,12 +526,10 @@ void SettingsDB::setNull(const char *key) {
     if (getNull(key)) {
         return;
     }
-    char keyN[256]{};
-    strncpy(keyN, key, sizeof(keyN) - 3);
-    strcat(keyN, KEY_TYPE_NULL);
+    fixed_containers::FixedString<max_string_size> keyN(key); keyN.append(KEY_TYPE_NULL);
     char value = 0;
     struct fdb_blob blob {};
-    fdb_kv_set_blob(&kvdb, keyN, fdb_blob_make(&blob, reinterpret_cast<const void *>(&value), sizeof(value)));
+    fdb_kv_set_blob(&kvdb, keyN.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(&value), sizeof(value)));
 }
 
 void SettingsDB::setIP(const char *key, const NXD_ADDRESS *value) {
@@ -499,12 +537,10 @@ void SettingsDB::setIP(const char *key, const NXD_ADDRESS *value) {
         return;
     }
 
-    char keyS[256]{};
-    strncpy(keyS, key, sizeof(keyS) - 3);
-    strcat(keyS, KEY_TYPE_STRING);
+    fixed_containers::FixedString<max_string_size> keyS(key); keyS.append(KEY_TYPE_STRING);
     struct fdb_blob blob {};
 
-    char ip_str[64] = {};
+    char ip_str[max_string_size] = {};
     ipv6_address_full_t ip{};
     if (value->nxd_ip_version == NX_IP_VERSION_V4) {
         ip.address.components[0] = uint16_t((value->nxd_ip_address.v4 >> 16) & 0xFFFF);
@@ -522,13 +558,13 @@ void SettingsDB::setIP(const char *key, const NXD_ADDRESS *value) {
     }
 
     ipv6_to_str(&ip, ip_str, sizeof(ip_str));
-    char checkStr[64]{};
-    if (getString(key, checkStr, 64)) {
+    char checkStr[max_string_size]{};
+    if (getString(key, checkStr, max_string_size)) {
         if (strcmp(ip_str, checkStr) == 0) {
             return;
         }
     }
-    fdb_kv_set_blob(&kvdb, keyS, fdb_blob_make(&blob, reinterpret_cast<const void *>(ip_str), sizeof(ip_str)));
+    fdb_kv_set_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(ip_str), sizeof(ip_str)));
 }
 
 #endif  // #ifndef BOOTLOADER

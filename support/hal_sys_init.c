@@ -28,6 +28,7 @@ SOFTWARE.
 #include <stdio.h>
 
 #include "stm32h5xx_hal.h"
+#include "utils.h"
 
 void WWDG_IRQHandler() {
     while (1) {
@@ -409,8 +410,8 @@ void SYS_Init() {
 
     MX_USART3_UART_Init();
 
-    printf("======================================================================\n");
-    printf("Lightkraken2 startup.\n");
+    printf(ESCAPE_FG_BLUE "======================================================================\n" ESCAPE_RESET);
+    printf(ESCAPE_FG_GREEN "Lightkraken2 is starting up.\n" ESCAPE_RESET);
 
     MX_ICACHE_Init();
     MX_GPIO_Init();

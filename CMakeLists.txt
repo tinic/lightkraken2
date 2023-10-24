@@ -71,6 +71,8 @@ set(NETXDUO_DIR ${PROJECT_SOURCE_DIR}/netxduo)
 set(LWJSON_DIR ${PROJECT_SOURCE_DIR}/lwjson)
 set(FLASHDB_DIR ${PROJECT_SOURCE_DIR}/FlashDB)
 set(EMIO_DIR ${PROJECT_SOURCE_DIR}/emio)
+set(MAGIC_ENUM_DIR ${PROJECT_SOURCE_DIR}/magic_enum)
+set(FIXED_CONTRAINERS_DIR ${PROJECT_SOURCE_DIR}/fixed-containers)
 
 set(LD_SCRIPT_RUNTIME ${PROJECT_SOURCE_DIR}/support/STM32H563xx_FLASH.ld)
 set(LD_SCRIPT_BOOTLOADER ${PROJECT_SOURCE_DIR}/support/STM32H563xx_FLASH_BOOTLOADER.ld)
@@ -359,6 +361,16 @@ target_compile_options(stm32hal PRIVATE "$<$<COMPILE_LANGUAGE:ASM>:${CC_COMMON_F
 target_compile_options(stm32hal PRIVATE "$<$<COMPILE_LANGUAGE:C>:${CC_COMMON_FLAGS}>")
 target_compile_options(stm32hal PRIVATE "$<$<CONFIG:DEBUG>:${CC_DEBUG_FLAGS}>")
 target_compile_options(stm32hal PRIVATE "$<$<CONFIG:RELEASE>:${CC_RELEASE_FLAGS}>")
+
+# magic_enum
+add_subdirectory(${MAGIC_ENUM_DIR})
+target_link_libraries(${TARGET_NAME_RUNTIME} magic_enum::magic_enum)
+target_link_libraries(${TARGET_NAME_BOOTLOADER} magic_enum::magic_enum)
+
+# fixed-containers
+add_subdirectory(${FIXED_CONTRAINERS_DIR})
+target_link_libraries(${TARGET_NAME_RUNTIME} fixed_containers::fixed_containers)
+target_link_libraries(${TARGET_NAME_BOOTLOADER} fixed_containers::fixed_containers)
 
 # emio
 add_subdirectory(${EMIO_DIR})

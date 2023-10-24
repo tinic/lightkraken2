@@ -1,8 +1,5 @@
-
-#ifndef _APP_H_
-#define _APP_H_
-
-#include <stdint.h>
+#ifndef _UTILS_H_
+#define _UTILS_H_
 
 #define ESCAPE_RESET "\u001b[0m"
 
@@ -47,18 +44,4 @@
 #define ESCAPE_RIGHT(N) "\u001b[N##C"
 #define ESCAPE_LEFT(N) "\u001b[N##D"
 
-class App {
-   public:
-    static App &instance();
-
-    void scheduleReset(int32_t count = 2000) { resetCount = count; };
-    void checkReset();
-
-   private:
-    void init();
-    bool initialized = false;
-
-    int32_t resetCount = 0;
-};
-
-#endif  // #ifndef _APP_H_
+#endif  // #ifndef _UTILS_H_
