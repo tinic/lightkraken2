@@ -31,14 +31,11 @@ SOFTWARE.
 
 #include "network.h"
 #include "settingsdb.h"
-#include "webserver.h"
-
 #include "stm32h5xx_hal.h"
 #include "stm32h5xx_ll_utils.h"
+#include "webserver.h"
 
-extern "C" void app_tickhandler(void) {
-    App::instance().checkReset();
-}
+extern "C" void app_tickhandler(void) { App::instance().checkReset(); }
 
 static TX_THREAD thread_startup{};
 void thread_startup_entry(ULONG thread_input) {
@@ -80,7 +77,6 @@ App &App::instance() {
 }
 
 void App::init() {
-
 #ifndef BOOTLOADER
     if (HAL_ICACHE_Disable() != 0) {
         while (1) {
@@ -106,24 +102,24 @@ void App::init() {
 
     emio::static_buffer<64> packageTypeStr{};
     static const char *packageNames[] = {
-        "LQFP64", // 00
-        "VFQFPN68", // 01
-        "LQFP100", // 02
-        "UFBGA176", // 03
-        "LQFP144", // 04
-        "LQFP48", // 05
-        "UFBGA169", // 06
-        "LQFP176", // 07 
-        "undefined", // 08
-        "UFQFPN32", // 09
-        "LQFP100_SMPS", // 0A 
-        "UFBGA176_SMPS", // 0B
-        "LQFP144_SMPS", // 0C
-        "LQFP176_SMPS", // 0D
-        "UFBGA169_SMPS", // 0E
-        "WLCSP25", // 0F
-        "UFQFPN48", // 10
-        "unknown" // 11
+        "LQFP64",         // 00
+        "VFQFPN68",       // 01
+        "LQFP100",        // 02
+        "UFBGA176",       // 03
+        "LQFP144",        // 04
+        "LQFP48",         // 05
+        "UFBGA169",       // 06
+        "LQFP176",        // 07
+        "undefined",      // 08
+        "UFQFPN32",       // 09
+        "LQFP100_SMPS",   // 0A
+        "UFBGA176_SMPS",  // 0B
+        "LQFP144_SMPS",   // 0C
+        "LQFP176_SMPS",   // 0D
+        "UFBGA169_SMPS",  // 0E
+        "WLCSP25",        // 0F
+        "UFQFPN48",       // 10
+        "unknown"         // 11
     };
     emio::format_to(packageTypeStr, "{}", packageNames[packageType >= 0x11 ? 0x11 : packageType]).value();
     SettingsDB::instance().setString(SettingsDB::kPackageType, packageTypeStr.str().c_str());
@@ -132,14 +128,13 @@ void App::init() {
     emio::format_to(flashSizeStr, "{}k", flashSize).value();
     SettingsDB::instance().setString(SettingsDB::kFlashSize, flashSizeStr.str().c_str());
 #endif  // #ifndef BOOTLOADER
-
 }
 
-void App::checkReset() { 
+void App::checkReset() {
     if (resetCount <= 0) {
         return;
     }
     if (--resetCount <= 0) {
-        NVIC_SystemReset(); 
+        NVIC_SystemReset();
     }
 }
