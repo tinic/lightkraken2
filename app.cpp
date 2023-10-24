@@ -25,11 +25,16 @@ SOFTWARE.
 
 #include <stdio.h>
 
+#ifndef BOOTLOADER
+#include <emio/format.hpp>
+#endif  // #ifndef BOOTLOADER
+
 #include "network.h"
 #include "settingsdb.h"
 #include "webserver.h"
 
 #include "stm32h5xx_hal.h"
+#include "stm32h5xx_ll_utils.h"
 
 extern "C" void app_tickhandler(void) {
     App::instance().checkReset();
@@ -74,7 +79,61 @@ App &App::instance() {
     return app;
 }
 
-void App::init() {}
+void App::init() {
+
+#ifndef BOOTLOADER
+    if (HAL_ICACHE_Disable() != 0) {
+        while (1) {
+        }
+    }
+
+    uint32_t uid[3];
+    uid[0] = HAL_GetUIDw0();
+    uid[1] = HAL_GetUIDw1();
+    uid[2] = HAL_GetUIDw2();
+
+    uint32_t flashSize = LL_GetFlashSize();
+    uint32_t packageType = LL_GetPackageType();
+
+    if (HAL_ICACHE_Enable() != 0) {
+        while (1) {
+        }
+    }
+
+    emio::static_buffer<64> uID{};
+    emio::format_to(uID, "{:08x}:{:08x}:{:08x}", uid[0], uid[1], uid[2]).value();
+    SettingsDB::instance().setString(SettingsDB::kUID, uID.str().c_str());
+
+    emio::static_buffer<64> packageTypeStr{};
+    static const char *packageNames[] = {
+        "LQFP64", // 00
+        "VFQFPN68", // 01
+        "LQFP100", // 02
+        "UFBGA176", // 03
+        "LQFP144", // 04
+        "LQFP48", // 05
+        "UFBGA169", // 06
+        "LQFP176", // 07 
+        "undefined", // 08
+        "UFQFPN32", // 09
+        "LQFP100_SMPS", // 0A 
+        "UFBGA176_SMPS", // 0B
+        "LQFP144_SMPS", // 0C
+        "LQFP176_SMPS", // 0D
+        "UFBGA169_SMPS", // 0E
+        "WLCSP25", // 0F
+        "UFQFPN48", // 10
+        "unknown" // 11
+    };
+    emio::format_to(packageTypeStr, "{}", packageNames[packageType >= 0x11 ? 0x11 : packageType]).value();
+    SettingsDB::instance().setString(SettingsDB::kPackageType, packageTypeStr.str().c_str());
+
+    emio::static_buffer<64> flashSizeStr{};
+    emio::format_to(flashSizeStr, "{}k", flashSize).value();
+    SettingsDB::instance().setString(SettingsDB::kFlashSize, flashSizeStr.str().c_str());
+#endif  // #ifndef BOOTLOADER
+
+}
 
 void App::checkReset() { 
     if (resetCount <= 0) {

@@ -75,6 +75,9 @@ class SettingsDB {
 
     KEY_DEFINE_STRING(kHostname, "hostname")
     KEY_DEFINE_STRING(kMacAddress, "mac_address")
+    KEY_DEFINE_STRING(kUID, "uid")
+    KEY_DEFINE_STRING(kPackageType, "package_type")
+    KEY_DEFINE_STRING(kFlashSize, "flash_size")
 
     KEY_DEFINE_STRING(kUserIPv4, "user_ipv4_addr")
     KEY_DEFINE_STRING(kUserIPv4NetMask, "user_ipv4_netmask")
