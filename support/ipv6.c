@@ -114,7 +114,6 @@ typedef struct ipv6_reader_state_t {
     int32_t                     components;         // index of current component left to right
     int32_t                     token_position;     // position of token for current state
     int32_t                     token_len;          // length in characters of token
-    int32_t                     separator;          // separator count
     int32_t                     brackets;           // bracket count, should go to 1 then 0 for [::1] address notation
     int32_t                     zerorun;            // component where run of zeros was begun ::1 would be 0, 1::2 would be 1
     int32_t                     v4_embedding;       // index where v4_embedding occurred
@@ -178,7 +177,7 @@ static const char* eventclass_str (eventclass_t input)
     state->current = value;
 
 #define BEGIN_TOKEN(offset) \
-    IPV6_TRACE("  * %s: token begin at %u\n", state_str(state->current), state->position + offset); \
+    IPV6_TRACE("  * %s: token begin at %u\n", state_str(state->current), (uint32_t)(state->position + offset)); \
     state->token_position = state->position + offset; \
     state->token_len = 0; \
 
@@ -580,7 +579,6 @@ static void ipv6_state_transition (
                     break;
 
                 case EC_CIDR_MASK:
-                    BEGIN_TOKEN(0);
                     CHANGE_STATE(STATE_CIDR);
                     BEGIN_TOKEN(1);
                     break;
@@ -731,20 +729,20 @@ bool IPV6_API_DEF(ipv6_from_str_diag) (
     ipv6_diag_func_t func,
     void* user_data)
 {
-    const char *cp = input;
-    const char* ep = input + input_bytes;
     ipv6_reader_state_t state;
-
     memset(&state, 0, sizeof(state));
-
-    state.diag_func = func;
-    state.user_data = user_data;
 
     if (!input || !*input || !out) {
         ipv6_error(&state, IPV6_DIAG_INVALID_INPUT,
             "Invalid input");
         return false;
     }
+
+    const char *cp = input;
+    const char* ep = input + input_bytes;
+
+    state.diag_func = func;
+    state.user_data = user_data;
 
     if (input_bytes > IPV6_STRING_SIZE) {
         ipv6_error(&state, IPV6_DIAG_STRING_SIZE_EXCEEDED,
@@ -871,7 +869,7 @@ bool IPV6_API_DEF(ipv6_from_str_diag) (
     }
 
     uint16_t dst[IPV6_NUM_COMPONENTS] = {0, };
-    uint16_t* src = out->address.components;
+    const uint16_t* src = out->address.components;
 
     // Number of components moving
     int32_t move_count = state.components - state.zerorun;

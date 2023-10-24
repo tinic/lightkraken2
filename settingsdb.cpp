@@ -396,7 +396,7 @@ bool SettingsDB::getNull(const char *key) {
     return false;
 }
 
-bool SettingsDB::getIP(const char *key, NXD_ADDRESS *value, NXD_ADDRESS *default_value) {
+bool SettingsDB::getIP(const char *key, NXD_ADDRESS *value, const NXD_ADDRESS *default_value) {
     if (!value || !key) {
         return 0;
     }
@@ -466,7 +466,7 @@ void SettingsDB::setNumber(const char *key, float value) {
     if (!key) {
         return;
     }
-    float checkNumber = false;
+    float checkNumber = 0;
     if (getNumber(key, &checkNumber)) {
         if (value == checkNumber) {
             return;

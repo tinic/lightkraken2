@@ -116,7 +116,7 @@ void HAL_ResumeTick(void) { __HAL_TIM_ENABLE_IT(&htim1, TIM_IT_UPDATE); }
 
 void app_tickhandler(void);
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) { // cppcheck-suppress constParameterPointer
     if (htim->Instance == TIM1) {
         app_tickhandler();
         HAL_IncTick();
@@ -221,7 +221,7 @@ static void SystemClock_Config(void) {
 }
 
 UART_HandleTypeDef huart3;
-void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
+void HAL_UART_MspInit(UART_HandleTypeDef *huart) { // cppcheck-suppress constParameterPointer
 #define ARD_D1_TX_Pin GPIO_PIN_6
 #define ARD_D1_TX_GPIO_Port GPIOB
 #define ARD_D0_RX_Pin GPIO_PIN_7
@@ -306,7 +306,7 @@ ETH_HandleTypeDef heth;
 
 void ETH_IRQHandler(void) { HAL_ETH_IRQHandler(&heth); }
 
-void HAL_ETH_MspInit(ETH_HandleTypeDef *heth) {
+void HAL_ETH_MspInit(ETH_HandleTypeDef *heth) { // cppcheck-suppress constParameterPointer
 #define RMII_TXT_EN_Pin GPIO_PIN_11
 #define RMII_TXT_EN_GPIO_Port GPIOG
 #define RMII_RXD0_Pin GPIO_PIN_4

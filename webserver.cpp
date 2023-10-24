@@ -21,12 +21,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+
 #include "webserver.h"
 
 #include "app.h"
 #include "network.h"
 #include "settingsdb.h"
 #include "stm32h5xx_hal.h"
+
+typedef UINT (*requestNotifyFunc)(NX_HTTP_SERVER *server_ptr, UINT request_type, CHAR *resource, NX_PACKET *packet_ptr);
 
 WebServer &WebServer::instance() {
     static WebServer webserver;
@@ -40,7 +43,7 @@ WebServer &WebServer::instance() {
 void WebServer::init() {}
 
 #ifdef BOOTLOADER
-UINT WebServer::postRequestUpload(NX_HTTP_SERVER *server_ptr, UINT request_type, CHAR *resource, NX_PACKET *packet_ptr) {
+UINT WebServer::postRequestUpload(NX_HTTP_SERVER *server_ptr, UINT request_type, const CHAR *resource, NX_PACKET *packet_ptr) {
     ULONG offset = 0, chunk_length = 0, total_length = 0;
     UCHAR buffer[ETH_MAX_PAYLOAD + 1];  // plus 1 for null termination
     while (nx_http_server_get_entity_header(server_ptr, &packet_ptr, buffer, sizeof(buffer)) == NX_SUCCESS) {
@@ -58,11 +61,11 @@ UINT WebServer::postRequestUpload(NX_HTTP_SERVER *server_ptr, UINT request_type,
 }
 #endif  // #ifdef BOOTLOADER
 
-UINT WebServer::requestNotifyCallback(NX_HTTP_SERVER *server_ptr, UINT request_type, CHAR *resource, NX_PACKET *packet_ptr) {
+UINT WebServer::requestNotifyCallback(NX_HTTP_SERVER *server_ptr, UINT request_type, const CHAR *resource, NX_PACKET *packet_ptr) {
     return WebServer::instance().requestNotify(server_ptr, request_type, resource, packet_ptr);
 }
 
-UINT WebServer::requestNotify(NX_HTTP_SERVER *server_ptr, UINT request_type, CHAR *resource, NX_PACKET *packet_ptr) {
+UINT WebServer::requestNotify(NX_HTTP_SERVER *server_ptr, UINT request_type, const CHAR *resource, NX_PACKET *packet_ptr) {
     switch (request_type) {
         case NX_HTTP_SERVER_GET_REQUEST: {
             if (strcmp(resource, "/") == 0) {
@@ -135,7 +138,7 @@ uint8_t *WebServer::setup(uint8_t *pointer) {
     fx_system_initialize();
 
     status = nx_http_server_create(&http_server, (CHAR *)"WebServer", Network::instance().ip(), &ram_disk, pointer, http_server_stack_size,
-                                   Network::instance().pool(), NX_NULL, requestNotifyCallback);
+                                   Network::instance().pool(), NX_NULL, (requestNotifyFunc)requestNotifyCallback);
     pointer = pointer + http_server_stack_size;
     if (status) {
         goto fail;

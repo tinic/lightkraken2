@@ -50,11 +50,11 @@ class WebServer {
     bool initialized = false;
 
 #ifdef BOOTLOADER
-    UINT postRequestUpload(NX_HTTP_SERVER *server_ptr, UINT request_type, CHAR *resource, NX_PACKET *packet_ptr);
+    UINT postRequestUpload(NX_HTTP_SERVER *server_ptr, UINT request_type, const CHAR *resource, NX_PACKET *packet_ptr);
 #endif  // #ifdef BOOTLOADER
 
-    static UINT requestNotifyCallback(NX_HTTP_SERVER *server_ptr, UINT request_type, CHAR *resource, NX_PACKET *packet_ptr);
-    UINT requestNotify(NX_HTTP_SERVER *server_ptr, UINT request_type, CHAR *resource, NX_PACKET *packet_ptr);
+    static UINT requestNotifyCallback(NX_HTTP_SERVER *server_ptr, UINT request_type, const CHAR *resource, NX_PACKET *packet_ptr);
+    UINT requestNotify(NX_HTTP_SERVER *server_ptr, UINT request_type, const CHAR *resource, NX_PACKET *packet_ptr);
 
     static void APROMDiskDriver(FX_MEDIA *media_ptr);
 

@@ -40,7 +40,7 @@ class SettingsDB {
     bool getBool(const char *key, bool *value, bool default_value = false);
     bool getNumber(const char *key, float *value, float default_value = 0);
     bool getNull(const char *key);
-    bool getIP(const char *key, NXD_ADDRESS *value, NXD_ADDRESS *default_value = 0);
+    bool getIP(const char *key, NXD_ADDRESS *value, const NXD_ADDRESS *default_value = 0);
 
     void setString(const char *key, const char *str);
     void setBool(const char *key, bool value);

@@ -368,7 +368,7 @@ static int strverscmp(const char *a, const char *b);
 /* Internal utility functions */
 static WIN32_FIND_DATAW *dirent_first(_WDIR *dirp);
 static WIN32_FIND_DATAW *dirent_next(_WDIR *dirp);
-static long dirent_hash(WIN32_FIND_DATAW *datap);
+static long dirent_hash(const WIN32_FIND_DATAW *datap);
 
 #if !defined(_MSC_VER) || _MSC_VER < 1400
 static int dirent_mbstowcs_s(
@@ -697,7 +697,7 @@ dirent_next(_WDIR *dirp)
  * See djb2 at http://www.cse.yorku.ca/~oz/hash.html
  */
 static long
-dirent_hash(WIN32_FIND_DATAW *datap)
+dirent_hash(const WIN32_FIND_DATAW *datap)
 {
 	unsigned long hash = 5381;
 	unsigned long c;
@@ -895,7 +895,7 @@ _wtelldir(_WDIR *dirp)
 	}
 
 	/* Read next file entry */
-	WIN32_FIND_DATAW *datap = dirent_next(dirp);
+	const WIN32_FIND_DATAW *datap = dirent_next(dirp);
 	if (!datap) {
 		/* End of directory stream */
 		return (long) ((~0UL) >> 1);
@@ -953,7 +953,7 @@ _wseekdir(_WDIR *dirp, long loc)
 	long hash;
 	do {
 		/* Read next directory entry */
-		WIN32_FIND_DATAW *datap = dirent_next(dirp);
+		const WIN32_FIND_DATAW *datap = dirent_next(dirp);
 		if (!datap) {
 			/*
 			 * End of directory stream was reached before finding

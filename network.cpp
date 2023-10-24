@@ -196,7 +196,7 @@ static void client_ip_address_changed(NX_IP *ip_ptr, VOID *user) {
             SettingsDB::instance().setNumber(SettingsDB::kActiveIPv6PrefixLen, float(prefix));
             char ipv6str[64];
             SettingsDB::instance().getString(SettingsDB::kActiveIPv6, ipv6str, sizeof(ipv6str));
-            printf("IPv6: idx(%d) addr(%s) prefix(%d)\n", c, ipv6str, int(prefix));
+            printf("IPv6: idx(%d) addr(%s) prefix(%d)\n", int(c), ipv6str, int(prefix));
         } else {
             break;
         }
@@ -293,6 +293,7 @@ bool Network::start() {
     bool try_dhcpv6 = true;
 #endif  // #ifndef BOOTLOADER
     bool try_autop = true;
+    bool dhcp_status_check = false;
 
 #ifndef BOOTLOADER
     bool try_settings = true;
@@ -365,6 +366,8 @@ bool Network::start() {
         if (status) {
             return false;
         }
+
+        dhcp_status_check = true;
     }
 #endif  // #ifndef BOOTLOADER
 
@@ -386,13 +389,11 @@ bool Network::start() {
         if (status) {
             return false;
         }
+
+        dhcp_status_check = true;
     }
 
-    if ((!got_ip && try_dhcp)
-#ifndef BOOTLOADER
-        || (!got_ipv6 && try_dhcpv6)
-#endif  // #ifndef BOOTLOADER
-    ) {
+    if (dhcp_status_check) {
         status = nx_ip_status_check(&client_ip, NX_IP_ADDRESS_RESOLVED, (ULONG *)&actual_status, NX_IP_PERIODIC_RATE * 60);
         if (status == NX_SUCCESS) {
             got_ip = true;
