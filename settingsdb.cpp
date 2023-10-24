@@ -34,13 +34,12 @@ SOFTWARE.
 #include "stm32h5xx_hal.h"
 #include "webserver.h"
 
-
 namespace emio {
 
 template <size_t CacheSize = default_cache_size>
 class packet_buffer final : public buffer {
    public:
-    constexpr explicit packet_buffer() noexcept : cache_{} { this->set_write_area(cache_); }
+    constexpr explicit packet_buffer(NX_PACKET *packet) noexcept : resp_packet(packet), cache_{} { this->set_write_area(cache_); }
 
     packet_buffer(const packet_buffer &) = delete;
     packet_buffer(packet_buffer &&) = delete;
@@ -49,8 +48,30 @@ class packet_buffer final : public buffer {
     ~packet_buffer() override = default;
 
     result<void> flush() noexcept {
-        printf("Flush Packet!!!\n");
-        //const size_t written = std::fwrite(cache_.data(), sizeof(char), this->get_used_count(), file_);
+        if (this->get_used_count() == 0) {
+            return success;
+        }
+        UINT status = 0;
+        if (resp_packet == 0) {
+            status = nx_packet_allocate(WebServer::instance().httpServer()->nx_http_server_packet_pool_ptr, &resp_packet, NX_TCP_PACKET, NX_WAIT_FOREVER);
+            if (status != NX_SUCCESS) {
+                while (1) {
+                }
+            }
+        }
+        status = nx_packet_data_append(resp_packet, cache_.data(), this->get_used_count(), WebServer::instance().httpServer()->nx_http_server_packet_pool_ptr,
+                                       NX_WAIT_FOREVER);
+        if (status != NX_SUCCESS) {
+            while (1) {
+            }
+        }
+        status = nx_tcp_socket_send(&(WebServer::instance().httpServer()->nx_http_server_socket), resp_packet, NX_HTTP_SERVER_TIMEOUT_SEND);
+        if (status != NX_SUCCESS) {
+            while (1) {
+            }
+        }
+        nx_packet_release(resp_packet);
+        resp_packet = 0;
         this->set_write_area(cache_);
         return success;
     }
@@ -67,6 +88,7 @@ class packet_buffer final : public buffer {
     }
 
    private:
+    NX_PACKET *resp_packet;
     std::array<char, CacheSize> cache_;
 };
 }  // namespace emio
@@ -167,9 +189,19 @@ UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
 
     emio::detail::counting_buffer<1024> cbuf{};
     toBuffer(cbuf);
-    printf("cbuf.count %d\n", cbuf.count());
 
-    emio::packet_buffer<1024> pbuf{};
+    UINT status = 0;
+    NX_PACKET *resp_packet_ptr = 0;
+    const char *jsonContentType = "application/json";
+    status = nx_http_server_callback_generate_response_header_extended(WebServer::instance().httpServer(), &resp_packet_ptr, (CHAR *)NX_HTTP_STATUS_OK,
+                                                                       sizeof(NX_HTTP_STATUS_OK) - 1, cbuf.count(), (CHAR *)jsonContentType,
+                                                                       strlen(jsonContentType), NX_NULL, 0);
+    if (status != NX_SUCCESS) {
+        while (1) {
+        }
+    }
+
+    emio::packet_buffer<1024> pbuf(resp_packet_ptr);
     toBuffer(pbuf);
     auto success = pbuf.flush();
     (void)success;
