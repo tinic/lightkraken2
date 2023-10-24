@@ -96,6 +96,7 @@ set(CC_COMMON_FLAGS
     -Wno-format
     -Wstack-usage=8192
     -Wuninitialized
+    -Wno-psabi
     -funsigned-char
     -fshort-enums
     -fno-common
