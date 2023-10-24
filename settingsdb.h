@@ -78,7 +78,6 @@ class SettingsDB {
     KEY_DEFINE_STRING(kUserIPv4, "user_ipv4_addr")
     KEY_DEFINE_STRING(kUserIPv4NetMask, "user_ipv4_netmask")
     KEY_DEFINE_STRING(kUserIPv6, "user_ipv6_addr")
-    KEY_DEFINE_STRING(kUserIPv6PrefixLen, "user_ipv6_prefix_len")
 
     KEY_DEFINE_STRING(kActiveIPv4, "active_ipv4_addr")
     KEY_DEFINE_STRING(kActiveIPv4NetMask, "active_ipv4_netmask")
@@ -90,6 +89,7 @@ class SettingsDB {
     static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_NUMBER;
 
     KEY_DEFINE_NUMBER(kBootCount, "boot_count")
+    KEY_DEFINE_NUMBER(kUserIPv6PrefixLen, "user_ipv6_prefix_len")
 
 #define KEY_DEFINE_BOOL(KEY_CONSTANT, KEY_STRING)           \
     static constexpr const char *KEY_CONSTANT = KEY_STRING; \
