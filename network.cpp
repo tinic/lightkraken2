@@ -187,7 +187,7 @@ bool Network::AddrIsBroadcast(const NXD_ADDRESS *addrToCheck) const {
             return false;
         }
         if (((addrToCheck->nxd_ip_address.v4 & ipv4Mask()->nxd_ip_address.v4) == (ipv4Addr()->nxd_ip_address.v4 & ipv4Mask()->nxd_ip_address.v4)) &&
-            (addrToCheck->nxd_ip_address.v4 | ipv4Mask()->nxd_ip_address.v4) == 0xFFFFFFFF) {
+            ((addrToCheck->nxd_ip_address.v4 | ipv4Mask()->nxd_ip_address.v4) == 0xFFFFFFFF)) {
             return true;
         }
     }
@@ -197,7 +197,7 @@ bool Network::AddrIsBroadcast(const NXD_ADDRESS *addrToCheck) const {
 void Network::ArtNetReceive(NX_UDP_SOCKET *socket_ptr) {
     NX_PACKET *packet_ptr = 0;
     NXD_ADDRESS recvAddr{};
-    if (nx_udp_socket_receive(socket_ptr, &packet_ptr, NX_NO_WAIT) == NX_SUCCESS) {
+    while (nx_udp_socket_receive(socket_ptr, &packet_ptr, NX_NO_WAIT) == NX_SUCCESS) {
         nxd_udp_packet_info_extract(packet_ptr, &recvAddr, NULL, NULL, NULL);
         const uint8_t *artnetBuf = packet_ptr->nx_packet_prepend_ptr;
         size_t artnetLen = size_t(packet_ptr->nx_packet_append_ptr - packet_ptr->nx_packet_prepend_ptr);
@@ -205,6 +205,7 @@ void Network::ArtNetReceive(NX_UDP_SOCKET *socket_ptr) {
         nx_packet_release(packet_ptr);
     }
 }
+
 #endif  // #ifndef BOOTLOADER
 
 static void client_ip_address_changed(NX_IP *ip_ptr, VOID *user) { Network::instance().ClientIPChange(ip_ptr, user); }
