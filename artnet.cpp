@@ -256,9 +256,7 @@ void ArtNetPacket::sendArtPollReply(const NXD_ADDRESS *from, uint16_t universe) 
                     (ipv4.nxd_ip_address.v4 == 0 ? 0x04 : 0x00) |  // using dhcp
                     0x08;                                          // ArtNet3
 
-#if 0
-    NetConf::instance().sendArtNetUdpPacket(from, 6454, (const uint8_t *)&reply, sizeof(reply));
-#endif  // #if 0
+    Network::instance().ArtNetSend(from, 6454, (const uint8_t *)&reply, sizeof(reply));
 }
 
 bool ArtNetPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t len, bool isBroadcast) {

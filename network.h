@@ -52,7 +52,9 @@ class Network {
 
     void ClientIPChange(NX_IP *ip_ptr, VOID *user);
     void ArtNetReceive(NX_UDP_SOCKET *socket_ptr);
+    void ArtNetSend(const NXD_ADDRESS *addr, uint16_t port, const uint8_t *data, size_t len);
     bool AddrIsBroadcast(const NXD_ADDRESS *addrToCheck) const;
+
 
    private:
     void init();
