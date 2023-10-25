@@ -196,9 +196,12 @@ bool Network::AddrIsBroadcast(const NXD_ADDRESS *addrToCheck) const {
 
 void Network::ArtNetReceive(NX_UDP_SOCKET *socket_ptr) {
     NX_PACKET *packet_ptr = 0;
-    NXD_ADDRESS recvAddr{};
     while (nx_udp_socket_receive(socket_ptr, &packet_ptr, NX_NO_WAIT) == NX_SUCCESS) {
-        nxd_udp_packet_info_extract(packet_ptr, &recvAddr, NULL, NULL, NULL);
+        NXD_ADDRESS recvAddr{};
+        UINT status = nxd_udp_packet_info_extract(packet_ptr, &recvAddr, NULL, NULL, NULL);
+        if (status != NX_SUCCESS) {
+            return;
+        }
         const uint8_t *artnetBuf = packet_ptr->nx_packet_prepend_ptr;
         size_t artnetLen = size_t(packet_ptr->nx_packet_append_ptr - packet_ptr->nx_packet_prepend_ptr);
         ArtNetPacket::dispatch(&recvAddr, artnetBuf, artnetLen, AddrIsBroadcast(&recvAddr));
@@ -208,8 +211,7 @@ void Network::ArtNetReceive(NX_UDP_SOCKET *socket_ptr) {
 
 void Network::ArtNetSend(const NXD_ADDRESS *addr, uint16_t port, const uint8_t *data, size_t len) {
     NX_PACKET *packet_ptr = 0;
-    UINT status = 0;
-    status = nx_packet_allocate(&client_pool, &packet_ptr, NX_UDP_PACKET, TX_WAIT_FOREVER);
+    UINT status = nx_packet_allocate(&client_pool, &packet_ptr, NX_UDP_PACKET, TX_WAIT_FOREVER);
     if (status != NX_SUCCESS) {
         return;
     }
