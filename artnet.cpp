@@ -268,6 +268,9 @@ bool ArtNetPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t 
     }
     switch (opcode) {
         case OpPoll: {
+            // Control::instance().interateAllActiveArtnetUniverses([from](uint16_t universe) {
+            //     Systick::instance().schedulePollReply(from, universe);
+            // });
             return true;
         } break;
         case OpSync: {

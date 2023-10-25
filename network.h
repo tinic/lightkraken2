@@ -51,6 +51,8 @@ class Network {
     uint32_t ipv6Prefix() const { return uint32_t(ipv6prefix); }
 
     void ClientIPChange(NX_IP *ip_ptr, VOID *user);
+    void ArtNetReceive(NX_UDP_SOCKET *socket_ptr);
+    bool AddrIsBroadcast(const NXD_ADDRESS *addrToCheck) const;
 
    private:
     void init();
@@ -66,15 +68,18 @@ class Network {
     NXD_ADDRESS ipv4mask{};
     NXD_ADDRESS ipv6{};
     ULONG ipv6prefix = 0;
+    NX_UDP_SOCKET artnet_socket{};
 
-    uint32_t murmur3_32(const uint8_t* key, size_t len, uint32_t seed) const;
+    uint32_t murmur3_32(const uint8_t *key, size_t len, uint32_t seed) const;
 
 #ifndef BOOTLOADER
     static constexpr char hostname_base[] = "lightkraken-";
-#else  // #ifndef BOOTLOADER
+#else   // #ifndef BOOTLOADER
     static constexpr char hostname_base[] = "lightkraken-bootloader-";
 #endif  // #ifndef BOOTLOADER
-    static constexpr char hex_table[16] = { '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f',};
+    static constexpr char hex_table[16] = {
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
+    };
     static constexpr size_t id_length = 8;
 
     char hostname[sizeof(hostname_base) + id_length + 1] = {};

@@ -27,10 +27,12 @@ SOFTWARE.
 #include <emio/format.hpp>
 #endif  // #ifndef BOOTLOADER
 
-#include "stm32h5xx_hal.h"
-#include "./support/nx_stm32_eth_driver.h"
+#include "./artnet.h"
+#include "./sacn.h"
 #include "./settingsdb.h"
+#include "./support/nx_stm32_eth_driver.h"
 #include "./utils.h"
+#include "stm32h5xx_hal.h"
 
 #define NX_PACKET_POOL_SIZE (ETH_MAX_PACKET_SIZE * 32)
 
@@ -172,9 +174,40 @@ static void dhcp_state_change(NX_DHCP *dhcp_ptr, UCHAR new_state) {
     }
 }
 
-static void client_ip_address_changed(NX_IP *ip_ptr, VOID *user) {
-    Network::instance().ClientIPChange(ip_ptr, user);
+#ifndef BOOTLOADER
+
+static void artnet_receive_notify(NX_UDP_SOCKET *socket_ptr) { Network::instance().ArtNetReceive(socket_ptr); }
+
+bool Network::AddrIsBroadcast(const NXD_ADDRESS *addrToCheck) const {
+    if (addrToCheck->nxd_ip_version == NX_IP_VERSION_V4) {
+        if (addrToCheck->nxd_ip_address.v4 == 0x00000000 || addrToCheck->nxd_ip_address.v4 == 0xFFFFFFFF) {
+            return true;
+        }
+        if (addrToCheck->nxd_ip_address.v4 == ipv4Addr()->nxd_ip_address.v4) {
+            return false;
+        }
+        if (((addrToCheck->nxd_ip_address.v4 & ipv4Mask()->nxd_ip_address.v4) == (ipv4Addr()->nxd_ip_address.v4 & ipv4Mask()->nxd_ip_address.v4)) &&
+            (addrToCheck->nxd_ip_address.v4 | ipv4Mask()->nxd_ip_address.v4) == 0xFFFFFFFF) {
+            return true;
+        }
+    }
+    return false;
 }
+
+void Network::ArtNetReceive(NX_UDP_SOCKET *socket_ptr) {
+    NX_PACKET *packet_ptr = 0;
+    NXD_ADDRESS recvAddr{};
+    if (nx_udp_socket_receive(socket_ptr, &packet_ptr, NX_NO_WAIT) == NX_SUCCESS) {
+        nxd_udp_packet_info_extract(packet_ptr, &recvAddr, NULL, NULL, NULL);
+        const uint8_t *artnetBuf = packet_ptr->nx_packet_prepend_ptr;
+        size_t artnetLen = size_t(packet_ptr->nx_packet_append_ptr - packet_ptr->nx_packet_prepend_ptr);
+        ArtNetPacket::dispatch(&recvAddr, artnetBuf, artnetLen, AddrIsBroadcast(&recvAddr));
+        nx_packet_release(packet_ptr);
+    }
+}
+#endif  // #ifndef BOOTLOADER
+
+static void client_ip_address_changed(NX_IP *ip_ptr, VOID *user) { Network::instance().ClientIPChange(ip_ptr, user); }
 
 void Network::ClientIPChange(NX_IP *ip_ptr, VOID *user) {
 #ifndef BOOTLOADER
@@ -267,6 +300,11 @@ uint8_t *Network::setup(uint8_t *pointer) {
     pointer = pointer + dhcpv6_client_stack_size;
     if (status) goto fail;
 
+    status = nx_udp_socket_create(&client_ip, &artnet_socket, (CHAR *)"Art-Net", NX_IP_MIN_DELAY, NX_DONT_FRAGMENT, NX_IP_TIME_TO_LIVE, 8);
+    if (status) goto fail;
+
+    status = nx_udp_socket_receive_notify(&artnet_socket, artnet_receive_notify);
+    if (status) goto fail;
 #endif  // #ifndef BOOTLOADER
 
     status = nx_ip_address_change_notify(&client_ip, client_ip_address_changed, 0);
@@ -444,6 +482,11 @@ bool Network::start() {
         }
 
         status = nx_mdns_service_add(&mdns, (UCHAR *)hostname, (UCHAR *)"_sACN._udp", NULL, NULL, 120, 0, 0, 5568, NX_TRUE, 0);
+        if (status) {
+            return false;
+        }
+
+        status = nx_udp_socket_bind(&artnet_socket, ArtNetPacket::port, NX_WAIT_FOREVER);
         if (status) {
             return false;
         }
