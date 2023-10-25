@@ -40,7 +40,7 @@ SOFTWARE.
 
 class SettingsDB {
    public:
-    SettingsDB() : float_vector(), bool_vector(), string_vector() {}
+    SettingsDB() : array_key_name(), float_vector(), bool_vector(), string_vector() {}
 
     static SettingsDB &instance();
 
@@ -132,6 +132,7 @@ class SettingsDB {
 
     bool in_array = false;
     int32_t in_array_type = -1;
+    fixed_containers::FixedString<max_string_size> array_key_name;
 
     fixed_containers::FixedVector<float, max_array_size> float_vector;
     fixed_containers::FixedVector<bool, max_array_size> bool_vector;
