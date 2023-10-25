@@ -161,7 +161,7 @@ __attribute__((hot, flatten, optimize("O3"), optimize("unroll-loops"))) static v
     }
 }
 
-bool sACNPacket::verify(sACNPacket &packet, const uint8_t *buf, size_t len) {
+bool sACNPacket::verify(sACNPacket &packet, const uint8_t *buf, size_t len) { // cppcheck-suppress constParameterReference
     PacketType type = sACNPacket::maybeValid(buf, len);
     if (type == PacketInvalid) {
         return false;

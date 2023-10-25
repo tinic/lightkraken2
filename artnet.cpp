@@ -92,8 +92,8 @@ ArtNetPacket::Opcode ArtNetPacket::maybeValid(const uint8_t *buf, size_t len) {
 
     bool opcodeValid = false;
 
-    Opcode opcode = static_cast<Opcode>((buf[8]) | (buf[9] << 8));
-    switch (opcode) {
+    Opcode op = static_cast<Opcode>((buf[8]) | (buf[9] << 8));
+    switch (op) {
         case OpPoll:
         case OpPollReply:
         case OpDiagData:
@@ -138,7 +138,7 @@ ArtNetPacket::Opcode ArtNetPacket::maybeValid(const uint8_t *buf, size_t len) {
 
     bool versionValid = static_cast<int>((buf[10] << 8) | (buf[11])) >= currentVersion;
 
-    return (bufValid && sizeValid && validSignature && opcodeValid && versionValid) ? opcode : OpInvalid;
+    return (bufValid && sizeValid && validSignature && opcodeValid && versionValid) ? op : OpInvalid;
 }
 
 __attribute__((hot, flatten, optimize("O3"), optimize("unroll-loops"))) static void memcpy_fast_aligned(uint8_t *dst, const uint8_t *src, size_t len) {
@@ -149,13 +149,13 @@ __attribute__((hot, flatten, optimize("O3"), optimize("unroll-loops"))) static v
     }
 }
 
-bool ArtNetPacket::verify(ArtNetPacket &packet, const uint8_t *buf, size_t len) {
-    Opcode opcode = maybeValid(buf, len);
-    if (opcode == OpInvalid) {
+bool ArtNetPacket::verify(ArtNetPacket &packet, const uint8_t *buf, size_t len) { // cppcheck-suppress constParameterReference
+    Opcode op = maybeValid(buf, len);
+    if (op == OpInvalid) {
         return false;
     }
     memcpy_fast_aligned(packet.packet, buf, std::min(len, sizeof(packet.packet)));
-    switch (opcode) {
+    switch (op) {
         case OpPoll:
         case OpSync:
         case OpNzs:
@@ -260,11 +260,11 @@ void ArtNetPacket::sendArtPollReply(const NXD_ADDRESS *from, uint16_t universe) 
 }
 
 bool ArtNetPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t len, bool isBroadcast) {
-    Opcode opcode = ArtNetPacket::maybeValid(buf, len);
-    if (opcode == OpInvalid) {
+    Opcode op = ArtNetPacket::maybeValid(buf, len);
+    if (op == OpInvalid) {
         return false;
     }
-    switch (opcode) {
+    switch (op) {
         case OpPoll: {
             // Control::instance().interateAllActiveArtnetUniverses([from](uint16_t universe) {
             //     Systick::instance().schedulePollReply(from, universe);
