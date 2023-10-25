@@ -28,6 +28,7 @@ SOFTWARE.
 #include <stdio.h>
 
 #include "stm32h5xx_hal.h"
+#include "stm32h5xx_ll_rcc.h"
 #include "utils.h"
 
 void WWDG_IRQHandler() {
@@ -117,7 +118,7 @@ void HAL_ResumeTick(void) { __HAL_TIM_ENABLE_IT(&htim1, TIM_IT_UPDATE); }
 
 void app_tickhandler(void);
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) { // cppcheck-suppress constParameterPointer
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {  // cppcheck-suppress constParameterPointer
     if (htim->Instance == TIM1) {
         app_tickhandler();
         HAL_IncTick();
@@ -192,14 +193,14 @@ static void SystemClock_Config(void) {
     RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
     RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
     RCC_OscInitStruct.PLL.PLLSource = RCC_PLL1_SOURCE_HSE;
-    RCC_OscInitStruct.PLL.PLLM = 4;
-    RCC_OscInitStruct.PLL.PLLN = 250;
+    RCC_OscInitStruct.PLL.PLLM = 1;
+    RCC_OscInitStruct.PLL.PLLN = 62;
     RCC_OscInitStruct.PLL.PLLP = 2;
     RCC_OscInitStruct.PLL.PLLQ = 2;
     RCC_OscInitStruct.PLL.PLLR = 2;
     RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1_VCIRANGE_3;
     RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1_VCORANGE_WIDE;
-    RCC_OscInitStruct.PLL.PLLFRACN = 0;
+    RCC_OscInitStruct.PLL.PLLFRACN = 4096;
     if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
         while (1) {
         }
@@ -211,18 +212,18 @@ static void SystemClock_Config(void) {
     RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
     RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
     RCC_ClkInitStruct.APB3CLKDivider = RCC_HCLK_DIV1;
-
     if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK) {
         while (1) {
         }
     }
 
     // MCO1/PA8 => 25Mhz
+    LL_RCC_PLL1Q_Enable();
     HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_PLL1Q, RCC_MCODIV_10);
 }
 
 UART_HandleTypeDef huart3;
-void HAL_UART_MspInit(UART_HandleTypeDef *huart) { // cppcheck-suppress constParameterPointer
+void HAL_UART_MspInit(UART_HandleTypeDef *huart) {  // cppcheck-suppress constParameterPointer
 #define ARD_D1_TX_Pin GPIO_PIN_6
 #define ARD_D1_TX_GPIO_Port GPIOB
 #define ARD_D0_RX_Pin GPIO_PIN_7
@@ -307,7 +308,7 @@ ETH_HandleTypeDef heth;
 
 void ETH_IRQHandler(void) { HAL_ETH_IRQHandler(&heth); }
 
-void HAL_ETH_MspInit(ETH_HandleTypeDef *heth) { // cppcheck-suppress constParameterPointer
+void HAL_ETH_MspInit(ETH_HandleTypeDef *heth) {  // cppcheck-suppress constParameterPointer
 #define RMII_TXT_EN_Pin GPIO_PIN_11
 #define RMII_TXT_EN_GPIO_Port GPIOG
 #define RMII_RXD0_Pin GPIO_PIN_4
