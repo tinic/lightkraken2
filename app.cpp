@@ -29,12 +29,13 @@ SOFTWARE.
 #include <emio/format.hpp>
 #endif  // #ifndef BOOTLOADER
 
-#include "network.h"
-#include "settingsdb.h"
 #include "stm32h5xx_hal.h"
 #include "stm32h5xx_ll_utils.h"
-#include "utils.h"
-#include "webserver.h"
+
+#include "./network.h"
+#include "./settingsdb.h"
+#include "./utils.h"
+#include "./webserver.h"
 
 extern "C" void app_tickhandler(void) { App::instance().checkReset(); }
 
@@ -144,3 +145,5 @@ void App::checkReset() {
         NVIC_SystemReset();
     }
 }
+
+uint32_t App::systemTime() const { return HAL_GetTick(); }

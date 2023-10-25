@@ -4,10 +4,11 @@
 
 #include <stdint.h>
 
-
 class App {
    public:
     static App &instance();
+
+    uint32_t systemTime() const;
 
     void scheduleReset(int32_t count = 2000) { resetCount = count; };
     void checkReset();

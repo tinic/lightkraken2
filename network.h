@@ -45,6 +45,12 @@ class Network {
 
     const char *hostName() const { return hostname; }
     const uint8_t *MACAddr() const { return macaddr; }
+    const NXD_ADDRESS *ipv4Addr() const { return &ipv4; }
+    const NXD_ADDRESS *ipv4Mask() const { return &ipv4mask; }
+    const NXD_ADDRESS *ipv6Addr() const { return &ipv6; }
+    uint32_t ipv6Prefix() const { return uint32_t(ipv6prefix); }
+
+    void ClientIPChange(NX_IP *ip_ptr, VOID *user);
 
    private:
     void init();
@@ -56,6 +62,10 @@ class Network {
     NX_DHCPV6 dhcpv6_client{};
     NX_PACKET_POOL client_pool{};
     NX_MDNS mdns{};
+    NXD_ADDRESS ipv4{};
+    NXD_ADDRESS ipv4mask{};
+    NXD_ADDRESS ipv6{};
+    ULONG ipv6prefix = 0;
 
     uint32_t murmur3_32(const uint8_t* key, size_t len, uint32_t seed) const;
 

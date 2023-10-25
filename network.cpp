@@ -27,10 +27,10 @@ SOFTWARE.
 #include <emio/format.hpp>
 #endif  // #ifndef BOOTLOADER
 
-#include "nx_stm32_eth_driver.h"
-#include "settingsdb.h"
 #include "stm32h5xx_hal.h"
-#include "utils.h"
+#include "./support/nx_stm32_eth_driver.h"
+#include "./settingsdb.h"
+#include "./utils.h"
 
 #define NX_PACKET_POOL_SIZE (ETH_MAX_PACKET_SIZE * 32)
 
@@ -173,31 +173,30 @@ static void dhcp_state_change(NX_DHCP *dhcp_ptr, UCHAR new_state) {
 }
 
 static void client_ip_address_changed(NX_IP *ip_ptr, VOID *user) {
+    Network::instance().ClientIPChange(ip_ptr, user);
+}
+
+void Network::ClientIPChange(NX_IP *ip_ptr, VOID *user) {
 #ifndef BOOTLOADER
-    NXD_ADDRESS ipv4{};
-    NXD_ADDRESS mask{};
     ipv4.nxd_ip_version = NX_IP_VERSION_V4;
-    mask.nxd_ip_version = NX_IP_VERSION_V4;
-    if (nx_ip_address_get(ip_ptr, &ipv4.nxd_ip_address.v4, &mask.nxd_ip_address.v4) == NX_SUCCESS) {
+    ipv4mask.nxd_ip_version = NX_IP_VERSION_V4;
+    if (nx_ip_address_get(ip_ptr, &ipv4.nxd_ip_address.v4, &ipv4mask.nxd_ip_address.v4) == NX_SUCCESS) {
         SettingsDB::instance().setIP(SettingsDB::kActiveIPv4, &ipv4);
-        SettingsDB::instance().setIP(SettingsDB::kActiveIPv4NetMask, &mask);
+        SettingsDB::instance().setIP(SettingsDB::kActiveIPv4NetMask, &ipv4mask);
         char ipv4str[64];
         SettingsDB::instance().getString(SettingsDB::kActiveIPv4, ipv4str, sizeof(ipv4str));
         char ipv4maskstr[64];
         SettingsDB::instance().getString(SettingsDB::kActiveIPv4NetMask, ipv4maskstr, sizeof(ipv4maskstr));
         printf(ESCAPE_FG_GREEN "IPv4: addr(%s) mask(%s)\n" ESCAPE_RESET, ipv4str, ipv4maskstr);
     }
-
-    NXD_ADDRESS ipv6{};
-    ULONG prefix = 0;
     UINT interface = 0;
     for (size_t c = 0;; c++) {
-        if (nxd_ipv6_address_get(ip_ptr, c, &ipv6, &prefix, &interface) == NX_SUCCESS) {
+        if (nxd_ipv6_address_get(ip_ptr, c, &ipv6, &ipv6prefix, &interface) == NX_SUCCESS) {
             SettingsDB::instance().setIP(SettingsDB::kActiveIPv6, &ipv6);
-            SettingsDB::instance().setNumber(SettingsDB::kActiveIPv6PrefixLen, float(prefix));
+            SettingsDB::instance().setNumber(SettingsDB::kActiveIPv6PrefixLen, float(ipv6prefix));
             char ipv6str[64];
             SettingsDB::instance().getString(SettingsDB::kActiveIPv6, ipv6str, sizeof(ipv6str));
-            printf(ESCAPE_FG_GREEN "IPv6: idx(%d) addr(%s) prefix(%d)\n" ESCAPE_RESET, int(c), ipv6str, int(prefix));
+            printf(ESCAPE_FG_GREEN "IPv6: idx(%d) addr(%s) prefix(%d)\n" ESCAPE_RESET, int(c), ipv6str, int(ipv6prefix));
         } else {
             break;
         }

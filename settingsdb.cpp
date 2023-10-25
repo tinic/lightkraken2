@@ -33,10 +33,10 @@ SOFTWARE.
 #include <fixed_containers/fixed_string.hpp>
 #include <fixed_containers/fixed_vector.hpp>
 
-#include "ipv6.h"
 #include "stm32h5xx_hal.h"
-#include "utils.h"
-#include "webserver.h"
+#include "./support/ipv6.h"
+#include "./utils.h"
+#include "./webserver.h"
 
 namespace emio {
 

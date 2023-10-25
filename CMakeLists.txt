@@ -178,8 +178,10 @@ include_directories(${FLASHDB_DIR}/port/fal/inc)
 
 set(COMMON_SOURCES
     ${PROJECT_SOURCE_DIR}/main.c
+    ${PROJECT_SOURCE_DIR}/artnet.cpp
     ${PROJECT_SOURCE_DIR}/app.cpp
     ${PROJECT_SOURCE_DIR}/network.cpp
+    ${PROJECT_SOURCE_DIR}/sacn.cpp
     ${PROJECT_SOURCE_DIR}/settingsdb.cpp
     ${PROJECT_SOURCE_DIR}/webserver.cpp
     ${PROJECT_SOURCE_DIR}/support/fal_stm32h5xx.c

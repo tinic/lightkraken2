@@ -40,7 +40,7 @@ SOFTWARE.
 
 class SettingsDB {
    public:
-    SettingsDB() : array_key_name(), float_vector(), bool_vector(), string_vector() {}
+    SettingsDB() {}
 
     static SettingsDB &instance();
 
@@ -103,6 +103,7 @@ class SettingsDB {
     static constexpr const char *KEY_CONSTANT = KEY_STRING; \
     static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_STRING;
 
+    KEY_DEFINE_STRING(kTag, "tag")
     KEY_DEFINE_STRING(kHostname, "hostname")
     KEY_DEFINE_STRING(kMacAddress, "mac_address")
     KEY_DEFINE_STRING(kUID, "uid")
@@ -144,11 +145,10 @@ class SettingsDB {
     bool in_delete_request = false;
     bool in_array = false;
     int32_t in_array_type = -1;
-    fixed_containers::FixedString<max_string_size> array_key_name;
-
-    fixed_containers::FixedVector<float, max_array_size> float_vector;
-    fixed_containers::FixedVector<bool, max_array_size> bool_vector;
-    fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> string_vector;
+    fixed_containers::FixedString<max_string_size> array_key_name{};
+    fixed_containers::FixedVector<float, max_array_size> float_vector{};
+    fixed_containers::FixedVector<bool, max_array_size> bool_vector{};
+    fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> string_vector{};
 };
 
 #endif  // #ifndef BOOTLOADER
