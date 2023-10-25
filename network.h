@@ -54,7 +54,7 @@ class Network {
     void ArtNetReceive(NX_UDP_SOCKET *socket_ptr);
     void ArtNetSend(const NXD_ADDRESS *addr, uint16_t port, const uint8_t *data, size_t len);
     bool AddrIsBroadcast(const NXD_ADDRESS *addrToCheck) const;
-
+    bool AddrToString(const NXD_ADDRESS *value, char *ip_str, size_t max_len) const;
 
    private:
     void init();

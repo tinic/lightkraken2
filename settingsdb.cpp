@@ -193,7 +193,7 @@ UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
                         emio::format_to(buf, "{}\"{}\":null", comma, name_buf).value();
                         comma = ",";
                     } break;
-                    case KEY_TYPE_ARRAY_BOOL_CHAR: {
+                    case KEY_TYPE_BOOL_VECTOR_CHAR: {
                         std::array<bool, max_array_size> value;
                         size_t len = fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb),
                                                    fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, value.data(), value.size() * sizeof(bool))));
@@ -205,7 +205,7 @@ UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
                         }
                         emio::format_to(buf, "]").value();
                     } break;
-                    case KEY_TYPE_ARRAY_NUMBER_CHAR: {
+                    case KEY_TYPE_NUMBER_VECTOR_CHAR: {
                         std::array<float, max_array_size> value;
                         size_t len = fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb),
                                                    fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, value.data(), value.size() * sizeof(float))));
@@ -217,7 +217,7 @@ UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
                         }
                         emio::format_to(buf, "]").value();
                     } break;
-                    case KEY_TYPE_ARRAY_STRING_CHAR: {
+                    case KEY_TYPE_STRING_VECTOR_CHAR: {
                         std::array<std::array<char, max_string_size>, max_array_size> value;
                         size_t len = fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb),
                                                    fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, value.data(), value.size() * max_array_size)));
@@ -568,7 +568,7 @@ bool SettingsDB::getNumberVector(const char *key, fixed_containers::FixedVector<
     }
     vec.clear();
     fixed_containers::FixedString<max_string_size> keyF(key);
-    keyF.append(KEY_TYPE_ARRAY_NUMBER);
+    keyF.append(KEY_TYPE_NUMBER_VECTOR);
     struct fdb_blob blob {};
     size_t len = 0;
     std::array<float, max_array_size> value;
@@ -587,7 +587,7 @@ bool SettingsDB::getBoolVector(const char *key, fixed_containers::FixedVector<bo
     }
     vec.clear();
     fixed_containers::FixedString<max_string_size> keyF(key);
-    keyF.append(KEY_TYPE_ARRAY_BOOL);
+    keyF.append(KEY_TYPE_BOOL_VECTOR);
     struct fdb_blob blob {};
     size_t len = 0;
     std::array<bool, max_array_size> value;
@@ -608,7 +608,7 @@ bool SettingsDB::getStringVector(const char *key, fixed_containers::FixedVector<
     size_t len = 0;
     std::array<std::array<char, max_string_size>, max_array_size> value;
     fixed_containers::FixedString<max_string_size> keyS(key);
-    keyS.append(KEY_TYPE_ARRAY_STRING);
+    keyS.append(KEY_TYPE_STRING_VECTOR);
     if ((len = fdb_kv_get_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(value.data()), value.size() * max_string_size))) > 0) {
         for (size_t c = 0; c < len / max_string_size; c++) {
             vec.push_back(value[c].data());
@@ -635,7 +635,7 @@ void SettingsDB::setString(const char *key, const char *str) {
 
 void SettingsDB::setNumberVector(const char *key, const fixed_containers::FixedVector<float, max_array_size> &vec) {
     fixed_containers::FixedString<max_string_size> keyN(key);
-    keyN.append(KEY_TYPE_ARRAY_NUMBER);
+    keyN.append(KEY_TYPE_NUMBER_VECTOR);
 
     fixed_containers::FixedVector<float, max_array_size> checkNumber;
     if (getNumberVector(key, checkNumber)) {
@@ -650,7 +650,7 @@ void SettingsDB::setNumberVector(const char *key, const fixed_containers::FixedV
 
 void SettingsDB::setBoolVector(const char *key, const fixed_containers::FixedVector<bool, max_array_size> &vec) {
     fixed_containers::FixedString<max_string_size> keyB(key);
-    keyB.append(KEY_TYPE_ARRAY_BOOL);
+    keyB.append(KEY_TYPE_BOOL_VECTOR);
 
     fixed_containers::FixedVector<bool, max_array_size> checkBool;
     if (getBoolVector(key, checkBool)) {
@@ -665,7 +665,7 @@ void SettingsDB::setBoolVector(const char *key, const fixed_containers::FixedVec
 
 void SettingsDB::setStringVector(const char *key, const fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> &vec) {
     fixed_containers::FixedString<max_string_size> keyS(key);
-    keyS.append(KEY_TYPE_ARRAY_STRING);
+    keyS.append(KEY_TYPE_STRING_VECTOR);
 
     fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> checkString;
     if (getStringVector(key, checkString)) {
@@ -796,19 +796,19 @@ void SettingsDB::delIP(const char *key) {
 
 void SettingsDB::delNumberVector(const char *key) {
     fixed_containers::FixedString<max_string_size> keyN(key);
-    keyN.append(KEY_TYPE_ARRAY_NUMBER);
+    keyN.append(KEY_TYPE_NUMBER_VECTOR);
     fdb_kv_del(&kvdb, keyN.c_str());
 }
 
 void SettingsDB::delBoolVector(const char *key) {
     fixed_containers::FixedString<max_string_size> keyB(key);
-    keyB.append(KEY_TYPE_ARRAY_BOOL);
+    keyB.append(KEY_TYPE_BOOL_VECTOR);
     fdb_kv_del(&kvdb, keyB.c_str());
 }
 
 void SettingsDB::delStringVector(const char *key) {
     fixed_containers::FixedString<max_string_size> keyS(key);
-    keyS.append(KEY_TYPE_ARRAY_STRING);
+    keyS.append(KEY_TYPE_STRING_VECTOR);
     fdb_kv_del(&kvdb, keyS.c_str());
 }
 
