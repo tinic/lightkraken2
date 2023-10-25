@@ -556,7 +556,7 @@ void SettingsDB::setNumberVector(const char *key, const fixed_containers::FixedV
     }
 
     struct fdb_blob blob {};
-    fdb_kv_set_blob(&kvdb, keyN.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(vec.data()), sizeof(vec.size()*sizeof(float))));
+    fdb_kv_set_blob(&kvdb, keyN.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(vec.data()), sizeof(vec.size())*sizeof(float)));
 }
 
 void SettingsDB::setBoolVector(const char *key, const fixed_containers::FixedVector<bool, max_array_size> &vec) {
@@ -570,7 +570,7 @@ void SettingsDB::setBoolVector(const char *key, const fixed_containers::FixedVec
     }
 
     struct fdb_blob blob {};
-    fdb_kv_set_blob(&kvdb, keyB.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(vec.data()), sizeof(vec.size()*sizeof(bool))));
+    fdb_kv_set_blob(&kvdb, keyB.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(vec.data()), sizeof(vec.size())*sizeof(bool)));
 }
 
 void SettingsDB::setStringVector(const char *key, const fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> &vec) {
@@ -584,7 +584,7 @@ void SettingsDB::setStringVector(const char *key, const fixed_containers::FixedV
     }
 
     struct fdb_blob blob {};
-    fdb_kv_set_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(vec.data()), sizeof(vec.size()*max_string_size)));
+    fdb_kv_set_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(vec.data()), sizeof(vec.size())*max_string_size));
 }
 
 void SettingsDB::setBool(const char *key, bool value) {
