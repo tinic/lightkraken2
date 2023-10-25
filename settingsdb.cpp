@@ -195,10 +195,11 @@ UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
                     } break;
                     case KEY_TYPE_ARRAY_BOOL_CHAR: {
                         std::array<bool, max_array_size> value;
-                        size_t len = fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, value.data(), value.size() * sizeof(bool))));
+                        size_t len = fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb),
+                                                   fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, value.data(), value.size() * sizeof(bool))));
                         emio::format_to(buf, "{}\"{}\":[", comma, name_buf).value();
                         const char *inner_comma = "";
-                        for (size_t c = 0; c < len/sizeof(bool); c++) {
+                        for (size_t c = 0; c < len / sizeof(bool); c++) {
                             emio::format_to(buf, "{}{}", inner_comma, value[c] ? "true" : "false").value();
                             inner_comma = ",";
                         }
@@ -206,10 +207,11 @@ UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
                     } break;
                     case KEY_TYPE_ARRAY_NUMBER_CHAR: {
                         std::array<float, max_array_size> value;
-                        size_t len = fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, value.data(), value.size() * sizeof(float))));
+                        size_t len = fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb),
+                                                   fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, value.data(), value.size() * sizeof(float))));
                         emio::format_to(buf, "{}\"{}\":[", comma, name_buf).value();
                         const char *inner_comma = "";
-                        for (size_t c = 0; c < len/sizeof(float); c++) {
+                        for (size_t c = 0; c < len / sizeof(float); c++) {
                             emio::format_to(buf, "{}{}", inner_comma, value[c]).value();
                             inner_comma = ",";
                         }
@@ -217,10 +219,11 @@ UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
                     } break;
                     case KEY_TYPE_ARRAY_STRING_CHAR: {
                         std::array<std::array<char, max_string_size>, max_array_size> value;
-                        size_t len = fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb), fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, value.data(), value.size() * max_array_size)));
+                        size_t len = fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb),
+                                                   fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, value.data(), value.size() * max_array_size)));
                         emio::format_to(buf, "{}\"{}\":[", comma, name_buf).value();
                         const char *inner_comma = "";
-                        for (size_t c = 0; c < len/max_string_size; c++) {
+                        for (size_t c = 0; c < len / max_string_size; c++) {
                             emio::format_to(buf, "{}\"{}\"", inner_comma, value[c].data()).value();
                             inner_comma = ",";
                         }
@@ -274,53 +277,89 @@ void SettingsDB::jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_t
     switch (type) {
         case LWJSON_STREAM_TYPE_STRING:
             if (in_array) {
-                if (in_array_type == -1) {
-                    in_array_type = LWJSON_STREAM_TYPE_STRING;
-                }
-                if (in_array_type == LWJSON_STREAM_TYPE_STRING && string_vector.size() < max_array_size) {
-                    string_vector.push_back(data_buf);
+                if (in_delete_request) {
+                    // NOP
+                } else {
+                    if (in_array_type == -1) {
+                        in_array_type = LWJSON_STREAM_TYPE_STRING;
+                    }
+                    if (in_array_type == LWJSON_STREAM_TYPE_STRING && string_vector.size() < max_array_size) {
+                        string_vector.push_back(data_buf);
+                    }
                 }
             } else {
-                SettingsDB::instance().setString(key_name, data_buf);
+                if (in_delete_request) {
+                    SettingsDB::instance().delString(key_name);
+                } else {
+                    SettingsDB::instance().setString(key_name, data_buf);
+                }
             }
             break;
         case LWJSON_STREAM_TYPE_TRUE:
             if (in_array) {
-                if (in_array_type == -1) {
-                    in_array_type = LWJSON_STREAM_TYPE_TRUE;
-                }
-                if (in_array_type == LWJSON_STREAM_TYPE_TRUE && bool_vector.size() < max_array_size) {
-                    bool_vector.push_back(true);
+                if (in_delete_request) {
+                    // NOP
+                } else {
+                    if (in_array_type == -1) {
+                        in_array_type = LWJSON_STREAM_TYPE_TRUE;
+                    }
+                    if (in_array_type == LWJSON_STREAM_TYPE_TRUE && bool_vector.size() < max_array_size) {
+                        bool_vector.push_back(true);
+                    }
                 }
             } else {
-                SettingsDB::instance().setBool(key_name, true);
+                if (in_delete_request) {
+                    SettingsDB::instance().delBool(key_name);
+                } else {
+                    SettingsDB::instance().setBool(key_name, true);
+                }
             }
             break;
         case LWJSON_STREAM_TYPE_FALSE:
             if (in_array) {
-                if (in_array_type == -1) {
-                    in_array_type = LWJSON_STREAM_TYPE_TRUE;
-                }
-                if (in_array_type == LWJSON_STREAM_TYPE_TRUE && bool_vector.size() < max_array_size) {
-                    bool_vector.push_back(false);
+                if (in_delete_request) {
+                    // NOP
+                } else {
+                    if (in_array_type == -1) {
+                        in_array_type = LWJSON_STREAM_TYPE_TRUE;
+                    }
+                    if (in_array_type == LWJSON_STREAM_TYPE_TRUE && bool_vector.size() < max_array_size) {
+                        bool_vector.push_back(false);
+                    }
                 }
             } else {
-                SettingsDB::instance().setBool(key_name, false);
+                if (in_delete_request) {
+                    SettingsDB::instance().delBool(key_name);
+                } else {
+                    SettingsDB::instance().setBool(key_name, false);
+                }
             }
             break;
         case LWJSON_STREAM_TYPE_NULL:
-            SettingsDB::instance().setNull(key_name);
+            if (in_delete_request) {
+                SettingsDB::instance().delNull(key_name);
+            } else {
+                SettingsDB::instance().setNull(key_name);
+            }
             break;
         case LWJSON_STREAM_TYPE_NUMBER: {
             if (in_array) {
-                if (in_array_type == -1) {
-                    in_array_type = LWJSON_STREAM_TYPE_NUMBER;
-                }
-                if (in_array_type == LWJSON_STREAM_TYPE_NUMBER && float_vector.size() < max_array_size) {
-                    float_vector.push_back(strtof(data_buf, NULL));
+                if (in_delete_request) {
+                    // NOP
+                } else {
+                    if (in_array_type == -1) {
+                        in_array_type = LWJSON_STREAM_TYPE_NUMBER;
+                    }
+                    if (in_array_type == LWJSON_STREAM_TYPE_NUMBER && float_vector.size() < max_array_size) {
+                        float_vector.push_back(strtof(data_buf, NULL));
+                    }
                 }
             } else {
-                SettingsDB::instance().setNumber(key_name, strtof(data_buf, NULL));
+                if (in_delete_request) {
+                    SettingsDB::instance().delNumber(key_name);
+                } else {
+                    SettingsDB::instance().setNumber(key_name, strtof(data_buf, NULL));
+                }
             }
         } break;
         case LWJSON_STREAM_TYPE_NONE:
@@ -329,6 +368,11 @@ void SettingsDB::jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_t
         case LWJSON_STREAM_TYPE_OBJECT_END: {
         } break;
         case LWJSON_STREAM_TYPE_ARRAY: {
+            if (in_delete_request) {
+                SettingsDB::instance().delStringVector(data_buf);
+                SettingsDB::instance().delBoolVector(data_buf);
+                SettingsDB::instance().delNumberVector(data_buf);
+            }
             in_array = true;
             in_array_type = -1;
             array_key_name = data_buf;
@@ -337,18 +381,20 @@ void SettingsDB::jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_t
             string_vector.clear();
         } break;
         case LWJSON_STREAM_TYPE_ARRAY_END: {
-            switch (in_array_type) {
-                case LWJSON_STREAM_TYPE_STRING: {
-                    setStringVector(array_key_name.c_str(), string_vector);
-                } break;
-                case LWJSON_STREAM_TYPE_TRUE: {
-                    setBoolVector(array_key_name.c_str(), bool_vector);
-                } break;
-                case LWJSON_STREAM_TYPE_NUMBER: {
-                    setNumberVector(array_key_name.c_str(), float_vector);
-                } break;
-                default:
-                    break;
+            if (!in_delete_request) {
+                switch (in_array_type) {
+                    case LWJSON_STREAM_TYPE_STRING: {
+                        setStringVector(array_key_name.c_str(), string_vector);
+                    } break;
+                    case LWJSON_STREAM_TYPE_TRUE: {
+                        setBoolVector(array_key_name.c_str(), bool_vector);
+                    } break;
+                    case LWJSON_STREAM_TYPE_NUMBER: {
+                        setNumberVector(array_key_name.c_str(), float_vector);
+                    } break;
+                    default:
+                        break;
+                }
             }
             in_array = false;
             in_array_type = -1;
@@ -363,7 +409,9 @@ void SettingsDB::jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_t
     }
 }
 
-UINT SettingsDB::jsonPUTRequest(NX_PACKET *packet_ptr) {
+UINT SettingsDB::jsonDELETERequest(NX_PACKET *packet_ptr) { return jsonPUTRequest(packet_ptr, true); }
+
+UINT SettingsDB::jsonPUTRequest(NX_PACKET *packet_ptr, bool deleteRequest) {
     ULONG contentLength = 0;
     UINT status = nx_http_server_packet_content_find(WebServer::instance().httpServer(), &packet_ptr, &contentLength);
     if (status) {
@@ -378,6 +426,7 @@ UINT SettingsDB::jsonPUTRequest(NX_PACKET *packet_ptr) {
                                                        sizeof(NX_HTTP_STATUS_NO_CONTENT) - 1, NX_NULL, 0, NX_NULL, 0);
         return (NX_HTTP_CALLBACK_COMPLETED);
     }
+    in_delete_request = deleteRequest;
     lwjson_stream_parser_t stream_parser;
     lwjson_stream_init(&stream_parser, jsonStreamSettingsCallback);
     ULONG contentOffset = 0;
@@ -713,6 +762,54 @@ void SettingsDB::setIP(const char *key, const NXD_ADDRESS *value) {
         }
     }
     fdb_kv_set_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(ip_str), sizeof(ip_str)));
+}
+
+void SettingsDB::delString(const char *key) {
+    fixed_containers::FixedString<max_string_size> keyS(key);
+    keyS.append(KEY_TYPE_STRING);
+    fdb_kv_del(&kvdb, keyS.c_str());
+}
+
+void SettingsDB::delBool(const char *key) {
+    fixed_containers::FixedString<max_string_size> keyB(key);
+    keyB.append(KEY_TYPE_BOOL);
+    fdb_kv_del(&kvdb, keyB.c_str());
+}
+
+void SettingsDB::delNumber(const char *key) {
+    fixed_containers::FixedString<max_string_size> keyF(key);
+    keyF.append(KEY_TYPE_NUMBER);
+    fdb_kv_del(&kvdb, keyF.c_str());
+}
+
+void SettingsDB::delNull(const char *key) {
+    fixed_containers::FixedString<max_string_size> keyN(key);
+    keyN.append(KEY_TYPE_NULL);
+    fdb_kv_del(&kvdb, keyN.c_str());
+}
+
+void SettingsDB::delIP(const char *key) {
+    fixed_containers::FixedString<max_string_size> keyS(key);
+    keyS.append(KEY_TYPE_STRING);
+    fdb_kv_del(&kvdb, keyS.c_str());
+}
+
+void SettingsDB::delNumberVector(const char *key) {
+    fixed_containers::FixedString<max_string_size> keyN(key);
+    keyN.append(KEY_TYPE_ARRAY_NUMBER);
+    fdb_kv_del(&kvdb, keyN.c_str());
+}
+
+void SettingsDB::delBoolVector(const char *key) {
+    fixed_containers::FixedString<max_string_size> keyB(key);
+    keyB.append(KEY_TYPE_ARRAY_BOOL);
+    fdb_kv_del(&kvdb, keyB.c_str());
+}
+
+void SettingsDB::delStringVector(const char *key) {
+    fixed_containers::FixedString<max_string_size> keyS(key);
+    keyS.append(KEY_TYPE_ARRAY_STRING);
+    fdb_kv_del(&kvdb, keyS.c_str());
 }
 
 #endif  // #ifndef BOOTLOADER

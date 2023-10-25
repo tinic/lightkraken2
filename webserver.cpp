@@ -91,6 +91,13 @@ UINT WebServer::requestNotify(NX_HTTP_SERVER *server_ptr, UINT request_type, con
                                                                0);
                 return (NX_HTTP_CALLBACK_COMPLETED);
             }
+            if (strcmp(resource, "/erase") == 0) {
+                SettingsDB::instance().erase();
+                nx_packet_release(packet_ptr);
+                nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, NX_NULL, NX_NULL,
+                                                               0);
+                return (NX_HTTP_CALLBACK_COMPLETED);
+            }
             if (strcmp(resource, "/settings") == 0) {
                 return SettingsDB::instance().jsonPUTRequest(packet_ptr);
             }
@@ -108,11 +115,7 @@ UINT WebServer::requestNotify(NX_HTTP_SERVER *server_ptr, UINT request_type, con
         case NX_HTTP_SERVER_DELETE_REQUEST: {
 #ifndef BOOTLOADER
             if (strcmp(resource, "/settings") == 0) {
-                SettingsDB::instance().erase();
-                nx_packet_release(packet_ptr);
-                nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, NX_NULL, NX_NULL,
-                                                               0);
-                return (NX_HTTP_CALLBACK_COMPLETED);
+                return SettingsDB::instance().jsonDELETERequest(packet_ptr);
             }
 #endif  // #ifndef BOOTLOADER
             nx_packet_release(packet_ptr);

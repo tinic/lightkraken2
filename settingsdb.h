@@ -67,10 +67,21 @@ class SettingsDB {
     void setBoolVector(const char *key, const fixed_containers::FixedVector<bool, max_array_size> &vec);
     void setStringVector(const char *key, const fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> &vec);
 
+    void delString(const char *key);
+    void delBool(const char *key);
+    void delNumber(const char *key);
+    void delNull(const char *key);
+    void delIP(const char *key);
+
+    void delNumberVector(const char *key);
+    void delBoolVector(const char *key);
+    void delStringVector(const char *key);
+
     void erase();
 
     UINT jsonGETRequest(NX_PACKET *packet_ptr);
-    UINT jsonPUTRequest(NX_PACKET *packet_ptr);
+    UINT jsonPUTRequest(NX_PACKET *packet_ptr, bool deleteRequest = false);
+    UINT jsonDELETERequest(NX_PACKET *packet_ptr);
 
 #define KEY_TYPE_NUMBER "@f"
 #define KEY_TYPE_STRING "@s"
@@ -130,6 +141,7 @@ class SettingsDB {
 
     struct fdb_kvdb kvdb {};
 
+    bool in_delete_request = false;
     bool in_array = false;
     int32_t in_array_type = -1;
     fixed_containers::FixedString<max_string_size> array_key_name;
