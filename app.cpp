@@ -33,8 +33,8 @@ SOFTWARE.
 #include "settingsdb.h"
 #include "stm32h5xx_hal.h"
 #include "stm32h5xx_ll_utils.h"
-#include "webserver.h"
 #include "utils.h"
+#include "webserver.h"
 
 extern "C" void app_tickhandler(void) { App::instance().checkReset(); }
 
@@ -49,8 +49,6 @@ void thread_startup_entry(ULONG thread_input) {
     if (!WebServer::instance().start()) {
         return;
     }
-                           
-    printf(ESCAPE_FG_BLUE "----------------------------------------------------------------------\n" ESCAPE_RESET);
 
     tx_thread_relinquish();
 }
@@ -131,7 +129,9 @@ void App::init() {
     emio::format_to(flashSizeStr, "{}k", flashSize).value();
     SettingsDB::instance().setString(SettingsDB::kFlashSize, flashSizeStr.str().c_str());
 
-    float bootCount = SettingsDB::instance().getNumber(SettingsDB::kBootCount, 0) + 1;
+    float bootCount = 0;
+    SettingsDB::instance().getNumber(SettingsDB::kBootCount, &bootCount);
+    bootCount++;
     SettingsDB::instance().setNumber(SettingsDB::kBootCount, bootCount);
 #endif  // #ifndef BOOTLOADER
 }

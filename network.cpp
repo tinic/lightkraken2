@@ -140,34 +140,34 @@ static void dhcp_state_change(NX_DHCP *dhcp_ptr, UCHAR new_state) {
 
     switch (new_state) {
         case NX_DHCP_STATE_NOT_STARTED:
-            printf("dhcp_state_change NX_DHCP_STATE_NOT_STARTED\n");
+            printf(ESCAPE_FG_MAGENTA "DHCP Not Started.\n" ESCAPE_RESET);
             break;
         case NX_DHCP_STATE_BOOT:
-            printf("dhcp_state_change NX_DHCP_STATE_BOOT\n");
+            printf(ESCAPE_FG_MAGENTA "DHCP Boot.\n" ESCAPE_RESET);
             break;
         case NX_DHCP_STATE_INIT:
-            printf("dhcp_state_change NX_DHCP_STATE_INIT\n");
+            printf(ESCAPE_FG_MAGENTA "DHCP Init.\n" ESCAPE_RESET);
             break;
         case NX_DHCP_STATE_SELECTING:
-            printf("dhcp_state_change NX_DHCP_STATE_SELECTING\n");
+            printf(ESCAPE_FG_MAGENTA "DHCP Select.\n" ESCAPE_RESET);
             break;
         case NX_DHCP_STATE_REQUESTING:
-            printf("dhcp_state_change NX_DHCP_STATE_REQUESTING\n");
+            printf(ESCAPE_FG_MAGENTA "DHCP Requesting\n" ESCAPE_RESET);
             break;
         case NX_DHCP_STATE_BOUND:
-            printf("dhcp_state_change NX_DHCP_STATE_BOUND\n");
+            printf(ESCAPE_FG_MAGENTA "DHCP Bound.\n" ESCAPE_RESET);
             break;
         case NX_DHCP_STATE_RENEWING:
-            printf("dhcp_state_change NX_DHCP_STATE_RENEWING\n");
+            printf(ESCAPE_FG_MAGENTA "DHCP Renewing.\n" ESCAPE_RESET);
             break;
         case NX_DHCP_STATE_REBINDING:
-            printf("dhcp_state_change NX_DHCP_STATE_REBINDING\n");
+            printf(ESCAPE_FG_MAGENTA "DHCP Rebinding.\n" ESCAPE_RESET);
             break;
         case NX_DHCP_STATE_FORCERENEW:
-            printf("dhcp_state_change NX_DHCP_STATE_FORCERENEW\n");
+            printf(ESCAPE_FG_MAGENTA "DHCP Force Renew.\n" ESCAPE_RESET);
             break;
         case NX_DHCP_STATE_ADDRESS_PROBING:
-            printf("dhcp_state_change NX_DHCP_STATE_ADDRESS_PROBING\n");
+            printf(ESCAPE_FG_MAGENTA "DHCP Address Probe.\n" ESCAPE_RESET);
             break;
     }
 }
