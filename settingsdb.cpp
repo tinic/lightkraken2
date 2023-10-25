@@ -143,11 +143,6 @@ void SettingsDB::init() {
         while (1) {
         }
     }
-
-    struct fdb_blob blob {};
-    fdb_kv_get_blob(&kvdb, SettingsDB::kBootCount_t, fdb_blob_make(&blob, &boot_count, sizeof(boot_count)));
-    boot_count++;
-    fdb_kv_set_blob(&kvdb, SettingsDB::kBootCount_t, fdb_blob_make(&blob, &boot_count, sizeof(boot_count)));
 }
 
 void SettingsDB::lock() { __disable_irq(); }

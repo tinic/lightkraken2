@@ -130,6 +130,9 @@ void App::init() {
     emio::static_buffer<64> flashSizeStr{};
     emio::format_to(flashSizeStr, "{}k", flashSize).value();
     SettingsDB::instance().setString(SettingsDB::kFlashSize, flashSizeStr.str().c_str());
+
+    float bootCount = SettingsDB::instance().getNumber(SettingsDB::kBootCount, 0) + 1;
+    SettingsDB::instance().setNumber(SettingsDB::kBootCount, bootCount);
 #endif  // #ifndef BOOTLOADER
 }
 
