@@ -44,11 +44,18 @@ class SettingsDB {
 
     static SettingsDB &instance();
 
+    static constexpr size_t max_array_size = 32;
+    static constexpr size_t max_string_size = 64;
+
     size_t getString(const char *key, char *value, size_t maxlen, const char *default_value = "");
     bool getBool(const char *key, bool *value, bool default_value = false);
     bool getNumber(const char *key, float *value, float default_value = 0);
     bool getNull(const char *key);
     bool getIP(const char *key, NXD_ADDRESS *value, const NXD_ADDRESS *default_value = 0);
+
+    bool getNumberVector(const char *key, fixed_containers::FixedVector<float, max_array_size> &vec);
+    bool getBoolVector(const char *key, fixed_containers::FixedVector<bool, max_array_size> &vec);
+    bool getStringVector(const char *key, fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> &vec);
 
     void setString(const char *key, const char *str);
     void setBool(const char *key, bool value);
@@ -56,13 +63,14 @@ class SettingsDB {
     void setNull(const char *key);
     void setIP(const char *key, const NXD_ADDRESS *addr);
 
+    void setNumberVector(const char *key, const fixed_containers::FixedVector<float, max_array_size> &vec);
+    void setBoolVector(const char *key, const fixed_containers::FixedVector<bool, max_array_size> &vec);
+    void setStringVector(const char *key, const fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> &vec);
+
     void erase();
 
     UINT jsonGETRequest(NX_PACKET *packet_ptr);
     UINT jsonPUTRequest(NX_PACKET *packet_ptr);
-
-    static constexpr size_t max_array_size = 32;
-    static constexpr size_t max_string_size = 64;
 
 #define KEY_TYPE_NUMBER "@f"
 #define KEY_TYPE_STRING "@s"
