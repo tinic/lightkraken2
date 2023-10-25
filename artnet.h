@@ -89,7 +89,7 @@ class ArtNetPacket {
     virtual ~ArtNetPacket() {}
 
     virtual bool verify() const { return false; }
-    uint8_t packet[512 + 18];
+    uint8_t packet[512 + 18] {};
     Opcode opcode() const;
     int version() const;
 

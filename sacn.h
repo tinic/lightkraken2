@@ -55,7 +55,7 @@ class sACNPacket {
     virtual ~sACNPacket(){};
 
     virtual bool verify() const { return false; }
-    uint8_t packet[1143];
+    uint8_t packet[1143] {};
     static uint16_t syncuniverse;
 
    private:
