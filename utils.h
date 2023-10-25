@@ -1,6 +1,7 @@
 #ifndef _UTILS_H_
 #define _UTILS_H_
 
+#define ESCAPE_CLEAR_SCREEN "\33[2J\33[H\33c"
 #define ESCAPE_RESET "\33[0m"
 
 #define ESCAPE_FG_RED "\33[31m"

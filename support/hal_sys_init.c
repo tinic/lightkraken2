@@ -410,7 +410,7 @@ void SYS_Init() {
 
     MX_USART3_UART_Init();
 
-    printf(ESCAPE_FG_BLUE "======================================================================\n" ESCAPE_RESET);
+    printf(ESCAPE_CLEAR_SCREEN ESCAPE_FG_BLUE "======================================================================\n" ESCAPE_RESET);
     printf(ESCAPE_FG_GREEN "Lightkraken2 is starting up.\n" ESCAPE_RESET);
 
     MX_ICACHE_Init();
