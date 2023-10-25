@@ -196,22 +196,22 @@ bool Network::AddrIsBroadcast(const NXD_ADDRESS *addrToCheck) const {
 }
 
 bool Network::AddrToString(const NXD_ADDRESS *value, char *ip_str, size_t max_len) const {
-    ipv6_address_full_t ip{};
+    ipv6_address_full_t ipAddr{};
     if (value->nxd_ip_version == NX_IP_VERSION_V4) {
-        ip.address.components[0] = uint16_t((value->nxd_ip_address.v4 >> 16) & 0xFFFF);
-        ip.address.components[1] = uint16_t((value->nxd_ip_address.v4 >> 0) & 0xFFFF);
-        ip.flags = IPV6_FLAG_IPV4_COMPAT;
+        ipAddr.address.components[0] = uint16_t((value->nxd_ip_address.v4 >> 16) & 0xFFFF);
+        ipAddr.address.components[1] = uint16_t((value->nxd_ip_address.v4 >> 0) & 0xFFFF);
+        ipAddr.flags = IPV6_FLAG_IPV4_COMPAT;
     } else {
-        ip.address.components[0] = uint16_t((value->nxd_ip_address.v6[0] >> 16) & 0xFFFF);
-        ip.address.components[1] = uint16_t((value->nxd_ip_address.v6[0] >> 0) & 0xFFFF);
-        ip.address.components[2] = uint16_t((value->nxd_ip_address.v6[1] >> 16) & 0xFFFF);
-        ip.address.components[3] = uint16_t((value->nxd_ip_address.v6[1] >> 0) & 0xFFFF);
-        ip.address.components[4] = uint16_t((value->nxd_ip_address.v6[2] >> 16) & 0xFFFF);
-        ip.address.components[5] = uint16_t((value->nxd_ip_address.v6[2] >> 0) & 0xFFFF);
-        ip.address.components[6] = uint16_t((value->nxd_ip_address.v6[3] >> 16) & 0xFFFF);
-        ip.address.components[7] = uint16_t((value->nxd_ip_address.v6[3] >> 0) & 0xFFFF);
+        ipAddr.address.components[0] = uint16_t((value->nxd_ip_address.v6[0] >> 16) & 0xFFFF);
+        ipAddr.address.components[1] = uint16_t((value->nxd_ip_address.v6[0] >> 0) & 0xFFFF);
+        ipAddr.address.components[2] = uint16_t((value->nxd_ip_address.v6[1] >> 16) & 0xFFFF);
+        ipAddr.address.components[3] = uint16_t((value->nxd_ip_address.v6[1] >> 0) & 0xFFFF);
+        ipAddr.address.components[4] = uint16_t((value->nxd_ip_address.v6[2] >> 16) & 0xFFFF);
+        ipAddr.address.components[5] = uint16_t((value->nxd_ip_address.v6[2] >> 0) & 0xFFFF);
+        ipAddr.address.components[6] = uint16_t((value->nxd_ip_address.v6[3] >> 16) & 0xFFFF);
+        ipAddr.address.components[7] = uint16_t((value->nxd_ip_address.v6[3] >> 0) & 0xFFFF);
     }
-    if (ipv6_to_str(&ip, ip_str, max_len) > 0) {
+    if (ipv6_to_str(&ipAddr, ip_str, max_len) > 0) {
         return true;
     }
     return false;
