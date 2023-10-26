@@ -45,7 +45,7 @@ class SettingsDB {
     static SettingsDB &instance();
 
     static constexpr size_t max_array_size = 32;
-    static constexpr size_t max_string_size = 96;
+    static constexpr size_t max_string_size = 128;
 
     size_t getString(const char *key, char *value, size_t maxlen, const char *default_value = "");
     bool getBool(const char *key, bool *value, bool default_value = false);
@@ -56,6 +56,7 @@ class SettingsDB {
     bool getNumberVector(const char *key, fixed_containers::FixedVector<float, max_array_size> &vec);
     bool getBoolVector(const char *key, fixed_containers::FixedVector<bool, max_array_size> &vec);
     bool getStringVector(const char *key, fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> &vec);
+    bool getObjectVector(const char *key, fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> &vec);
 
     void setString(const char *key, const char *str);
     void setBool(const char *key, bool value);
@@ -66,6 +67,7 @@ class SettingsDB {
     void setNumberVector(const char *key, const fixed_containers::FixedVector<float, max_array_size> &vec);
     void setBoolVector(const char *key, const fixed_containers::FixedVector<bool, max_array_size> &vec);
     void setStringVector(const char *key, const fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> &vec);
+    void setObjectVector(const char *key, const fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> &vec);
 
     void delString(const char *key);
     void delBool(const char *key);
@@ -89,6 +91,7 @@ class SettingsDB {
 #define KEY_TYPE_NUMBER_VECTOR "@F"
 #define KEY_TYPE_STRING_VECTOR "@S"
 #define KEY_TYPE_BOOL_VECTOR "@B"
+#define KEY_TYPE_OBJECT_VECTOR "@O"
 #define KEY_TYPE_NULL "@n"
 
 #define KEY_TYPE_NUMBER_CHAR 'f'
@@ -97,6 +100,7 @@ class SettingsDB {
 #define KEY_TYPE_NUMBER_VECTOR_CHAR 'F'
 #define KEY_TYPE_STRING_VECTOR_CHAR 'S'
 #define KEY_TYPE_BOOL_VECTOR_CHAR 'B'
+#define KEY_TYPE_OBJECT_VECTOR_CHAR 'O'
 #define KEY_TYPE_NULL_CHAR 'n'
 
 #define KEY_DEFINE_STRING(KEY_CONSTANT, KEY_STRING)         \
@@ -133,6 +137,13 @@ class SettingsDB {
     static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_STRING_VECTOR;
 
     KEY_DEFINE_STRING_VECTOR(kActiveIPv6, "active_ipv6_addr")
+
+#define KEY_DEFINE_OBJECT_VECTOR(KEY_CONSTANT, KEY_STRING)           \
+    static constexpr const char *KEY_CONSTANT = KEY_STRING; \
+    static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_OBJECT_VECTOR;
+
+    KEY_DEFINE_OBJECT_VECTOR(kStripOutputProperties, "strip_output_properties")
+    KEY_DEFINE_OBJECT_VECTOR(kOutputConfigProperties, "output_config_properties")
 
 #define KEY_DEFINE_NUMBER_VECTOR(KEY_CONSTANT, KEY_STRING)           \
     static constexpr const char *KEY_CONSTANT = KEY_STRING; \

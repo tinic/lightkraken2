@@ -71,6 +71,7 @@ set(NETXDUO_DIR ${PROJECT_SOURCE_DIR}/netxduo)
 set(LWJSON_DIR ${PROJECT_SOURCE_DIR}/lwjson)
 set(FLASHDB_DIR ${PROJECT_SOURCE_DIR}/FlashDB)
 set(EMIO_DIR ${PROJECT_SOURCE_DIR}/emio)
+set(NAMEOF_DIR ${PROJECT_SOURCE_DIR}/nameof)
 set(MAGIC_ENUM_DIR ${PROJECT_SOURCE_DIR}/magic_enum)
 set(FIXED_CONTRAINERS_DIR ${PROJECT_SOURCE_DIR}/fixed-containers)
 
@@ -96,7 +97,7 @@ set(CC_COMMON_FLAGS
     -Wno-unused-parameter
     -Wno-strict-aliasing 
     -Wno-format
-    -Wstack-usage=8192
+    -Wstack-usage=16384
     -Wuninitialized
     -Wno-psabi
     -funsigned-char
@@ -181,6 +182,7 @@ set(COMMON_SOURCES
     ${PROJECT_SOURCE_DIR}/artnet.cpp
     ${PROJECT_SOURCE_DIR}/app.cpp
     ${PROJECT_SOURCE_DIR}/network.cpp
+    ${PROJECT_SOURCE_DIR}/model.cpp
     ${PROJECT_SOURCE_DIR}/sacn.cpp
     ${PROJECT_SOURCE_DIR}/settingsdb.cpp
     ${PROJECT_SOURCE_DIR}/webserver.cpp
@@ -363,6 +365,11 @@ target_compile_options(stm32hal PRIVATE "$<$<COMPILE_LANGUAGE:ASM>:${CC_COMMON_F
 target_compile_options(stm32hal PRIVATE "$<$<COMPILE_LANGUAGE:C>:${CC_COMMON_FLAGS}>")
 target_compile_options(stm32hal PRIVATE "$<$<CONFIG:DEBUG>:${CC_DEBUG_FLAGS}>")
 target_compile_options(stm32hal PRIVATE "$<$<CONFIG:RELEASE>:${CC_RELEASE_FLAGS}>")
+
+# nameof
+add_subdirectory(${NAMEOF_DIR})
+target_link_libraries(${TARGET_NAME_RUNTIME} nameof::nameof)
+target_link_libraries(${TARGET_NAME_BOOTLOADER} nameof::nameof)
 
 # magic_enum
 add_subdirectory(${MAGIC_ENUM_DIR})

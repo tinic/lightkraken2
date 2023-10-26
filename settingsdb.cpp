@@ -229,6 +229,18 @@ UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
                         }
                         emio::format_to(buf, "]").value();
                     } break;
+                    case KEY_TYPE_OBJECT_VECTOR_CHAR: {
+                        std::array<std::array<char, max_string_size>, max_array_size> value;
+                        size_t len = fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb),
+                                                   fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, value.data(), value.size() * max_array_size)));
+                        emio::format_to(buf, "{}\"{}\":[", comma, name_buf).value();
+                        const char *inner_comma = "";
+                        for (size_t c = 0; c < len / max_string_size; c++) {
+                            emio::format_to(buf, "{}{}", inner_comma, value[c].data()).value();
+                            inner_comma = ",";
+                        }
+                        emio::format_to(buf, "]").value();
+                    } break;
                     default:
                         break;
                 }
@@ -618,6 +630,24 @@ bool SettingsDB::getStringVector(const char *key, fixed_containers::FixedVector<
     return false;
 }
 
+bool SettingsDB::getObjectVector(const char *key, fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> &vec) {
+    if (!key) {
+        return false;
+    }
+    struct fdb_blob blob {};
+    size_t len = 0;
+    std::array<std::array<char, max_string_size>, max_array_size> value;
+    fixed_containers::FixedString<max_string_size> keyS(key);
+    keyS.append(KEY_TYPE_OBJECT_VECTOR);
+    if ((len = fdb_kv_get_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(value.data()), value.size() * max_string_size))) > 0) {
+        for (size_t c = 0; c < len / max_string_size; c++) {
+            vec.push_back(value[c].data());
+        }
+        return true;
+    }
+    return false;
+}
+
 void SettingsDB::setString(const char *key, const char *str) {
     if (!str || !key) {
         return;
@@ -669,6 +699,25 @@ void SettingsDB::setStringVector(const char *key, const fixed_containers::FixedV
 
     fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> checkString;
     if (getStringVector(key, checkString)) {
+        if (vec == checkString) {
+            return;
+        }
+    }
+
+    struct fdb_blob blob {};
+    std::array<std::array<char, max_string_size>, max_array_size> value{};
+    for (size_t c = 0; c < vec.size(); c++) {
+        strcpy(value[c].data(), vec[c].c_str());
+    }
+    fdb_kv_set_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(value.data()), vec.size() * max_string_size));
+}
+
+void SettingsDB::setObjectVector(const char *key, const fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> &vec) {
+    fixed_containers::FixedString<max_string_size> keyS(key);
+    keyS.append(KEY_TYPE_OBJECT_VECTOR);
+
+    fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> checkString;
+    if (getObjectVector(key, checkString)) {
         if (vec == checkString) {
             return;
         }

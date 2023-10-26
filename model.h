@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Tinic Uro
+Copyright 2023 Tinic Uro
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the
@@ -165,12 +165,12 @@ struct Model {
     static constexpr struct OutputConfigProperties {
         static constexpr size_t OutputConfigMaxDevices = 3;
         const char *label;
-        uint8_t strip_count;
-        uint8_t analog_count;
-        bool is_strip[OutputConfigMaxDevices];
-        bool is_rgb[OutputConfigMaxDevices];
-        bool can_have_clock[OutputConfigMaxDevices];
-        uint8_t max_comp[OutputConfigMaxDevices];
+        uint8_t stripn;
+        uint8_t alogn;
+        bool strip[OutputConfigMaxDevices];
+        bool rgb[OutputConfigMaxDevices];
+        bool wclock[OutputConfigMaxDevices];
+        uint8_t comp[OutputConfigMaxDevices];
     } outputConfigProperties[CONFIG_COUNT] = {
         {"2 x RGB Strip",                    2, 0, {true,  true,  false}, {false, false, false}, {true,   true,  false}, {0, 0, 0}},
         {"1 x RGB Strip + 1 x Analog RGB",   1, 1, {true,  false, false}, {false, true,  false}, {false,  true,  false}, {0, 3, 0}},
@@ -256,10 +256,13 @@ struct Model {
         return strip_config[strip].e131[dmx512Index];
     }
 
+    void dumpStatics();
+
    private:
     Model(){};
     void init();
     bool initialized = false;
+
 };
 
 #endif /* _MODEL_H_ */
