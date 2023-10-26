@@ -45,7 +45,7 @@ class SettingsDB {
     static SettingsDB &instance();
 
     static constexpr size_t max_array_size = 32;
-    static constexpr size_t max_string_size = 64;
+    static constexpr size_t max_string_size = 96;
 
     size_t getString(const char *key, char *value, size_t maxlen, const char *default_value = "");
     bool getBool(const char *key, bool *value, bool default_value = false);

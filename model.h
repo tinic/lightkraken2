@@ -27,12 +27,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <string.h>
 
 struct Model {
-   private:
-    uint32_t model_version;
-
    public:
-    static constexpr uint32_t currentModelVersion = 0x1ed50000;
-
+   
     static constexpr size_t stripN = 2;
     static constexpr size_t analogN = 2;
     static constexpr size_t universeN = 6;
@@ -163,7 +159,7 @@ struct Model {
         RGB_RGB,         // channel0: rgb 	    channel1: rgb
         RGBWWW,          // channel0: rgbwww
         CONFIG_COUNT
-    } output_config;
+    } output_config = DUAL_STRIP;
 
     // clang-format off
     static constexpr struct OutputConfigProperties {
@@ -210,44 +206,34 @@ struct Model {
         };
         OutputConfigPinAssign pin_assign;
         struct OutputConfigPinLabel {
-            const char *label0;
-            const char *label1;
+            const char *l;
+            const char *s;
         };
         static constexpr size_t OutputConfigPinCount = 8;
         OutputConfigPinLabel pinlabel_without_clock[OutputConfigPinCount];
         OutputConfigPinLabel pinlabel_with_clock[OutputConfigPinCount];
     } outputConfigPinNames[CONFIG_COUNT] = {
         { { /*s0*/ 0x02, 0x01, /*s1*/ 0x06, 0x05, /*a0*/ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /*a1*/ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },
-          { /*0*/"GND" , "GND" , /*1*/"---" , "NIL" , /*1*/"DAT0", "DAT" , /*2*/"VCC" , "VCC" , /*3*/"GND" , "GND" , /*4*/"---" , "NIL" , /*5*/"DAT1", "GND" , /*6*/"VCC" , "VCC" },
-          { /*0*/"GND" , "GND" , /*1*/"CLK0", "CLK" , /*1*/"DAT0", "DAT" , /*2*/"VCC" , "VCC" , /*3*/"GND" , "GND" , /*4*/"CLk1", "CLK" , /*5*/"DAT1", "GND" , /*6*/"VCC" , "VCC" } },
-        { { /*s0*/ 0x05, 0x04, /*s1*/ 0xFF, 0xFF, /*a0*/ 0x00, 0x01, 0x02, 0xFF, 0xFF, 0xFF, /*a1*/ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },
-          { /*0*/"BLU" , "BLU" , /*1*/"RED" , "RED" , /*1*/"GRN" , "GRN" , /*2*/"VCC" , "VCC" , /*3*/"GND" , "GND" , /*4*/"---" , "NIL" , /*5*/"DAT1", "GND" , /*6*/"VCC" , "VCC" },
-          { /*0*/"BLU" , "BLU" , /*1*/"RED" , "RED" , /*1*/"GRN" , "GRN" , /*2*/"VCC" , "VCC" , /*3*/"GND" , "GND" , /*4*/"CLk1", "CLK" , /*5*/"DAT1", "GND" , /*6*/"VCC" , "VCC" } },
+          { /*0*/"GND" , "GND" , /*1*/"---" , "NIL" , /*2*/"DAT0", "DAT" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"---" , "NIL" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" },
+          { /*0*/"GND" , "GND" , /*1*/"CLK0", "CLK" , /*2*/"DAT0", "DAT" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"CLK1", "CLK" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" } },
+        { { /*s0*/ 0x06, 0x05, /*s1*/ 0xFF, 0xFF, /*a0*/ 0x00, 0x01, 0x02, 0xFF, 0xFF, 0xFF, /*a1*/ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },
+          { /*0*/"BLU" , "BLU" , /*1*/"RED" , "RED" , /*2*/"GRN" , "GRN" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"---" , "NIL" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" },
+          { /*0*/"BLU" , "BLU" , /*1*/"RED" , "RED" , /*2*/"GRN" , "GRN" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"CLk1", "CLK" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" } },
+        { { /*s0*/ 0x01, 0xFF, /*s1*/ 0x06, 0xFF, /*a0*/ 0x00, 0x01, 0x05, 0xFF, 0xFF, 0xFF, /*a1*/ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },
+          { /*0*/"BLU" , "BLU" , /*1*/"RED" , "RED" , /*2*/"DAT0", "DAT" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"GRN" , "GRN" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" },
+          { /*0*/"BLU" , "BLU" , /*1*/"RED" , "RED" , /*2*/"DAT0", "DAT" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"GRN" , "GRN" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" } },
+        { { /*s0*/ 0x06, 0xFF, /*s1*/ 0xFF, 0xFF, /*a0*/ 0x00, 0x01, 0x02, 0x05, 0xFF, 0xFF, /*a1*/ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },
+          { /*0*/"BLU" , "BLU" , /*1*/"RED" , "RED" , /*2*/"GRN" , "GRN" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"WHT" , "WHT" , /*6*/"DAT" , "DAT" , /*7*/"VCC" , "VCC" },
+          { /*0*/"BLU" , "BLU" , /*1*/"RED" , "RED" , /*2*/"GRN" , "GRN" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"WHT" , "WHT" , /*6*/"DAT" , "DAT" , /*7*/"VCC" , "VCC" } },
+        { { /*s0*/ 0xFF, 0xFF, /*s1*/ 0xFF, 0xFF, /*a0*/ 0x00, 0x01, 0x02, 0xFF, 0xFF, 0xFF, /*a1*/ 0x04, 0x05, 0x06, 0xFF, 0xFF, 0xFF },
+          { /*0*/"BLU0", "BLU" , /*1*/"RED0", "RED" , /*2*/"GRN0", "GRN" , /*3*/"VCC" , "VCC" , /*4*/"BLU1", "BLU" , /*5*/"RED1", "RED" , /*6*/"GRN1", "GRN" , /*7*/"VCC" , "VCC" },
+          { /*0*/"BLU0", "BLU" , /*1*/"RED0", "RED" , /*2*/"GRN0", "GRN" , /*3*/"VCC" , "VCC" , /*4*/"BLU1", "BLU" , /*5*/"RED1", "RED" , /*6*/"GRN1", "GRN" , /*7*/"VCC" , "VCC" } },
+        { { /*s0*/ 0xFF, 0xFF, /*s1*/ 0xFF, 0xFF, /*a0*/ 0x00, 0x01, 0x02, 0x04, 0x05, 0x06, /*a1*/ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },
+          { /*0*/"BLU0", "BLU" , /*1*/"RED0", "RED" , /*2*/"GRN0", "GRN" , /*3*/"VCC" , "VCC" , /*4*/"WHT0", "WHT" , /*5*/"WHT1", "WHT" , /*6*/"WHT2", "WHT" , /*7*/"VCC" , "VCC" },
+          { /*0*/"BLU0", "BLU" , /*1*/"RED0", "RED" , /*2*/"GRN0", "GRN" , /*3*/"VCC" , "VCC" , /*4*/"WHT0", "WHT" , /*5*/"WHT1", "WHT" , /*6*/"WHT2", "WHT" , /*7*/"VCC" , "VCC" } },
     };
     // clang-format on
 
-/*     pinTable: [
-        [ 
-          [{t:"GND", c:"GND"},{t:"---", c:"NIL"},{t:"DAT0",c:"DAT"},{t:"VCC",c:"VCC"},{t:"GND", c:"GND"},{t:"---", c:"NIL"},{t:"DAT1",c:"DAT"},{t:"VCC",c:"VCC"}],
-          [{t:"GND", c:"GND"},{t:"CLK0",c:"CLK"},{t:"DAT0",c:"DAT"},{t:"VCC",c:"VCC"},{t:"GND", c:"GND"},{t:"CLK1",c:"CLK"},{t:"DAT1",c:"DAT"},{t:"VCC",c:"VCC"}]
-        ],[
-          [{t:"BLU", c:"BLU"},{t:"RED", c:"RED"},{t:"GRN", c:"GRN"},{t:"VCC",c:"VCC"},{t:"GND", c:"GND"},{t:"---", c:"NIL"},{t:"DAT", c:"DAT"},{t:"VCC",c:"VCC"}],
-          [{t:"BLU", c:"BLU"},{t:"RED", c:"RED"},{t:"GRN", c:"GRN"},{t:"VCC",c:"VCC"},{t:"GND", c:"GND"},{t:"CLK", c:"CLK"},{t:"DAT", c:"DAT"},{t:"VCC",c:"VCC"}]
-        ],[
-          [{t:"BLU", c:"BLU"},{t:"RED", c:"RED"},{t:"DAT0",c:"DAT"},{t:"VCC",c:"VCC"},{t:"GND", c:"GND"},{t:"GRN", c:"GRN"},{t:"DAT1",c:"DAT"},{t:"VCC",c:"VCC"}],
-          [{t:"BLU", c:"BLU"},{t:"RED", c:"RED"},{t:"DAT0",c:"DAT"},{t:"VCC",c:"VCC"},{t:"GND", c:"GND"},{t:"GRN", c:"GRN"},{t:"DAT1",c:"DAT"},{t:"VCC",c:"VCC"}]
-        ],[
-          [{t:"BLU", c:"BLU"},{t:"RED", c:"RED"},{t:"GRN", c:"GRN"},{t:"VCC",c:"VCC"},{t:"GND", c:"GND"},{t:"WHT", c:"WHT"},{t:"DAT", c:"DAT"},{t:"VCC",c:"VCC"}],
-          [{t:"BLU", c:"BLU"},{t:"RED", c:"RED"},{t:"GRN", c:"GRN"},{t:"VCC",c:"VCC"},{t:"GND", c:"GND"},{t:"WHT", c:"WHT"},{t:"DAT", c:"DAT"},{t:"VCC",c:"VCC"}]
-        ],[
-          [{t:"BLU0",c:"BLU"},{t:"RED0",c:"RED"},{t:"GRN0",c:"GRN"},{t:"VCC",c:"VCC"},{t:"BLU1",c:"BLU"},{t:"RED1",c:"RED"},{t:"GRN1",c:"GRN"},{t:"VCC",c:"VCC"}],
-          [{t:"BLU0",c:"BLU"},{t:"RED0",c:"RED"},{t:"GRN0",c:"GRN"},{t:"VCC",c:"VCC"},{t:"BLU1",c:"BLU"},{t:"RED1",c:"RED"},{t:"GRN1",c:"GRN"},{t:"VCC",c:"VCC"}]
-        ],[
-          [{t:"BLU0",c:"BLU"},{t:"RED0",c:"RED"},{t:"GRN0",c:"GRN"},{t:"VCC",c:"VCC"},{t:"WHT",c:"WHT"},{t:"WWHT",c:"WHT"},{t:"---",c:"NIL"},{t:"VCC",c:"VCC"}],
-          [{t:"BLU0",c:"BLU"},{t:"RED0",c:"RED"},{t:"GRN0",c:"GRN"},{t:"VCC",c:"VCC"},{t:"WHT",c:"WHT"},{t:"WWHT",c:"WHT"},{t:"---",c:"NIL"},{t:"VCC",c:"VCC"}]
-        ]
-      ]
-*/
     static Model &instance();
 
     StripConfig &stripConfig(size_t index) { return strip_config[index]; }
@@ -256,13 +242,13 @@ struct Model {
     OutputConfig outputConfig() const { return output_config; }
     void setOutputConfig(OutputConfig outputConfig);
 
-    uint16_t artnetStrip(int32_t strip, int32_t dmx512Index) const {
+    uint16_t artnetStrip(size_t strip, size_t dmx512Index) const {
         strip %= stripN;
         dmx512Index %= universeN;
         return strip_config[strip].artnet[dmx512Index];
     }
 
-    uint16_t e131Strip(int32_t strip, int32_t dmx512Index) const {
+    uint16_t e131Strip(size_t strip, size_t dmx512Index) const {
         strip %= stripN;
         dmx512Index %= universeN;
         return strip_config[strip].e131[dmx512Index];
