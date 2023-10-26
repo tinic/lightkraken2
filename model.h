@@ -28,7 +28,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 struct Model {
    public:
-
     static constexpr size_t stripN = 2;
     static constexpr size_t analogN = 2;
     static constexpr size_t universeN = 6;
@@ -74,7 +73,24 @@ struct Model {
             } e131;
             uint16_t value;
         } components[analogCompN];
-    } analog_config[analogN];
+    } analog_config[analogN] = {
+        // clang-format off
+        { AnalogConfig::RGB, AnalogConfig::RGB8, 1.0,
+            { { 0,  0, 1,  0, 0 }, 
+              { 0,  1, 1,  1, 0 }, 
+              { 0,  2, 1,  2, 0 }, 
+              { 0,  3, 1,  3, 0 }, 
+              { 0,  4, 1,  4, 0 }, 
+              { 0,  5, 1,  5, 0 } } },
+        { AnalogConfig::RGB, AnalogConfig::RGB8, 1.0, 
+            { { 0,  6, 1,  6, 0 }, 
+              { 0,  7, 1,  7, 0 }, 
+              { 0,  8, 1,  8, 0 }, 
+              { 0,  9, 1,  9, 0 }, 
+              { 0, 10, 1, 10, 0 }, 
+              { 0, 11, 1, 11, 0 } } },
+        // clang-format on
+    };
 
     struct StripConfig {
         // clang-format off
@@ -124,7 +140,10 @@ struct Model {
         uint16_t len;
         uint16_t artnet[universeN];
         uint16_t e131[universeN];
-    } strip_config[stripN];
+    } strip_config[stripN] = {
+        {StripConfig::WS2812, StripConfig::RGB8, StripConfig::COLOR, 1.0, 1.0, 255, {0, 0, 0, 0, 0, 0}, {1, 0, 0, 0, 0, 0}},
+        {StripConfig::WS2812, StripConfig::RGB8, StripConfig::COLOR, 1.0, 1.0, 255, {1, 0, 0, 0, 0, 0}, {2, 0, 0, 0, 0, 0}},
+    };
 
     // clang-format off
     static constexpr struct StripOutputProperties {
@@ -262,7 +281,6 @@ struct Model {
     Model(){};
     void init();
     bool initialized = false;
-
 };
 
 #endif /* _MODEL_H_ */
