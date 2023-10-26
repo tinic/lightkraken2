@@ -48,16 +48,22 @@ class SettingsDB {
     static constexpr size_t max_string_size = 64;
     static constexpr size_t max_object_size = 128;
 
+    using stringFixed_t = fixed_containers::FixedString<max_string_size>;
+    using floatFixedVector_t = fixed_containers::FixedVector<float, max_array_size>;
+    using boolFixedVector_t = fixed_containers::FixedVector<bool, max_array_size>;
+    using stringFixedVector_t = fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size>;
+    using objectFixedVector_t = fixed_containers::FixedVector<fixed_containers::FixedString<max_object_size>, max_array_size>;
+
     size_t getString(const char *key, char *value, size_t maxlen, const char *default_value = "");
     bool getBool(const char *key, bool *value, bool default_value = false);
     bool getNumber(const char *key, float *value, float default_value = 0);
     bool getNull(const char *key);
     bool getIP(const char *key, NXD_ADDRESS *value, const NXD_ADDRESS *default_value = 0);
 
-    bool getNumberVector(const char *key, fixed_containers::FixedVector<float, max_array_size> &vec);
-    bool getBoolVector(const char *key, fixed_containers::FixedVector<bool, max_array_size> &vec);
-    bool getStringVector(const char *key, fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> &vec);
-    bool getObjectVector(const char *key, fixed_containers::FixedVector<fixed_containers::FixedString<max_object_size>, max_array_size> &vec);
+    bool getNumberVector(const char *key, floatFixedVector_t &vec);
+    bool getBoolVector(const char *key, boolFixedVector_t &vec);
+    bool getStringVector(const char *key, stringFixedVector_t &vec);
+    bool getObjectVector(const char *key, objectFixedVector_t &vec);
 
     void setString(const char *key, const char *str);
     void setBool(const char *key, bool value);
@@ -65,10 +71,10 @@ class SettingsDB {
     void setNull(const char *key);
     void setIP(const char *key, const NXD_ADDRESS *addr);
 
-    void setNumberVector(const char *key, const fixed_containers::FixedVector<float, max_array_size> &vec);
-    void setBoolVector(const char *key, const fixed_containers::FixedVector<bool, max_array_size> &vec);
-    void setStringVector(const char *key, const fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> &vec);
-    void setObjectVector(const char *key, const fixed_containers::FixedVector<fixed_containers::FixedString<max_object_size>, max_array_size> &vec);
+    void setNumberVector(const char *key, const floatFixedVector_t &vec);
+    void setBoolVector(const char *key, const boolFixedVector_t &vec);
+    void setStringVector(const char *key, const stringFixedVector_t &vec);
+    void setObjectVector(const char *key, const objectFixedVector_t &vec);
 
     void delString(const char *key);
     void delBool(const char *key);
@@ -169,9 +175,9 @@ class SettingsDB {
     bool in_array = false;
     int32_t in_array_type = -1;
     fixed_containers::FixedString<max_string_size> array_key_name{};
-    fixed_containers::FixedVector<float, max_array_size> float_vector{};
-    fixed_containers::FixedVector<bool, max_array_size> bool_vector{};
-    fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> string_vector{};
+    floatFixedVector_t float_vector{};
+    boolFixedVector_t bool_vector{};
+    stringFixedVector_t string_vector{};
 };
 
 #endif  // #ifndef BOOTLOADER

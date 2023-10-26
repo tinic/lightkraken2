@@ -257,8 +257,8 @@ void Network::ClientIPChange(NX_IP *ip_ptr, VOID *user) {
     ipv4.nxd_ip_version = NX_IP_VERSION_V4;
     ipv4mask.nxd_ip_version = NX_IP_VERSION_V4;
     if (nx_ip_address_get(ip_ptr, &ipv4.nxd_ip_address.v4, &ipv4mask.nxd_ip_address.v4) == NX_SUCCESS) {
-        fixed_containers::FixedString<SettingsDB::max_string_size> ipv4str;
-        fixed_containers::FixedString<SettingsDB::max_string_size> ipv4maskstr;
+        SettingsDB::stringFixed_t ipv4str;
+        SettingsDB::stringFixed_t ipv4maskstr;
         if (AddrToString(&ipv4, ipv4str.data(), ipv4str.capacity()) && AddrToString(&ipv4mask, ipv4maskstr.data(), ipv4maskstr.capacity())) {
             SettingsDB::instance().setString(SettingsDB::kActiveIPv4, ipv4str.c_str());
             SettingsDB::instance().setString(SettingsDB::kActiveIPv4NetMask, ipv4maskstr.c_str());
@@ -267,7 +267,7 @@ void Network::ClientIPChange(NX_IP *ip_ptr, VOID *user) {
     }
 
     UINT interface = 0;
-    fixed_containers::FixedVector<fixed_containers::FixedString<SettingsDB::max_string_size>, SettingsDB::max_array_size> ipVec;
+    SettingsDB::stringFixedVector_t ipVec;
     fixed_containers::FixedVector<float, SettingsDB::max_array_size> ipPrefixVec;
     for (size_t c = 0;; c++) {
         if (nxd_ipv6_address_get(ip_ptr, c, &ipv6, &ipv6prefix, &interface) == NX_SUCCESS) {
