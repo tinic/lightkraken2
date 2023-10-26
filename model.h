@@ -28,7 +28,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 struct Model {
    public:
-   
+
     static constexpr size_t stripN = 2;
     static constexpr size_t analogN = 2;
     static constexpr size_t universeN = 6;
@@ -205,13 +205,15 @@ struct Model {
             uint8_t whw1;
         };
         OutputConfigPinAssign pin_assign;
-        struct OutputConfigPinLabel {
-            const char *l;
-            const char *s;
-        };
         static constexpr size_t OutputConfigPinCount = 8;
-        OutputConfigPinLabel pinlabel_without_clock[OutputConfigPinCount];
-        OutputConfigPinLabel pinlabel_with_clock[OutputConfigPinCount];
+        struct OutputConfigPinLabelNoClock {
+            const char *nl;
+            const char *ns;
+        } pinlabel_no_clock[OutputConfigPinCount];
+        struct OutputConfigPinLabelWithClock {
+            const char *cl;
+            const char *cs;
+        } pinlabel_with_clock[OutputConfigPinCount];
     } outputConfigPinNames[CONFIG_COUNT] = {
         { { /*s0*/ 0x02, 0x01, /*s1*/ 0x06, 0x05, /*a0*/ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /*a1*/ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },
           { /*0*/"GND" , "GND" , /*1*/"---" , "NIL" , /*2*/"DAT0", "DAT" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"---" , "NIL" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" },
