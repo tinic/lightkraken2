@@ -365,22 +365,22 @@ target_compile_options(stm32hal PRIVATE "$<$<CONFIG:DEBUG>:${CC_DEBUG_FLAGS}>")
 target_compile_options(stm32hal PRIVATE "$<$<CONFIG:RELEASE>:${CC_RELEASE_FLAGS}>")
 
 # magic_enum
-add_subdirectory(${MAGIC_ENUM_DIR})
+add_subdirectory(${MAGIC_ENUM_DIR} EXCLUDE_FROM_ALL)
 target_link_libraries(${TARGET_NAME_RUNTIME} magic_enum::magic_enum)
 target_link_libraries(${TARGET_NAME_BOOTLOADER} magic_enum::magic_enum)
 
 # fixed-containers
-add_subdirectory(${FIXED_CONTRAINERS_DIR})
+add_subdirectory(${FIXED_CONTRAINERS_DIR} EXCLUDE_FROM_ALL)
 target_link_libraries(${TARGET_NAME_RUNTIME} fixed_containers::fixed_containers)
 target_link_libraries(${TARGET_NAME_BOOTLOADER} fixed_containers::fixed_containers)
 
 # emio
-add_subdirectory(${EMIO_DIR})
+add_subdirectory(${EMIO_DIR} EXCLUDE_FROM_ALL)
 target_link_libraries(${TARGET_NAME_RUNTIME} emio::emio)
 target_link_libraries(${TARGET_NAME_BOOTLOADER} emio::emio)
 
 # ThreadX
-add_subdirectory(${THREADX_DIR})
+add_subdirectory(${THREADX_DIR} EXCLUDE_FROM_ALL)
 target_link_libraries(${TARGET_NAME_RUNTIME} threadx)
 target_link_libraries(${TARGET_NAME_BOOTLOADER} threadx)
 
@@ -390,7 +390,7 @@ target_compile_options(threadx PRIVATE "$<$<CONFIG:DEBUG>:${CC_DEBUG_FLAGS}>")
 target_compile_options(threadx PRIVATE "$<$<CONFIG:RELEASE>:${CC_RELEASE_FLAGS}>")
 
 # FileX
-add_subdirectory(${FILEX_DIR})
+add_subdirectory(${FILEX_DIR} EXCLUDE_FROM_ALL)
 target_link_libraries(${TARGET_NAME_RUNTIME} filex)
 target_link_libraries(${TARGET_NAME_BOOTLOADER} filex)
 
@@ -399,7 +399,7 @@ target_compile_options(filex PRIVATE "$<$<CONFIG:DEBUG>:${CC_DEBUG_FLAGS}>")
 target_compile_options(filex PRIVATE "$<$<CONFIG:RELEASE>:${CC_RELEASE_FLAGS}>")
 
 # NetXDuo
-add_subdirectory(${NETXDUO_DIR})
+add_subdirectory(${NETXDUO_DIR} EXCLUDE_FROM_ALL)
 target_link_libraries(${TARGET_NAME_RUNTIME} netxduo)
 target_link_libraries(${TARGET_NAME_BOOTLOADER} netxduo)
 
