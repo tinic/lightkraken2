@@ -46,6 +46,13 @@ class SettingsDB {
 
     static constexpr size_t max_array_size = 32;
     static constexpr size_t max_string_size = 64;
+    static constexpr size_t max_object_size = 128;
+
+    using stringFixed_t = fixed_containers::FixedString<max_string_size>;
+    using floatFixedVector_t = fixed_containers::FixedVector<float, max_array_size>;
+    using boolFixedVector_t = fixed_containers::FixedVector<bool, max_array_size>;
+    using stringFixedVector_t = fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size>;
+    using objectFixedVector_t = fixed_containers::FixedVector<fixed_containers::FixedString<max_object_size>, max_array_size>;
 
     size_t getString(const char *key, char *value, size_t maxlen, const char *default_value = "");
     bool getBool(const char *key, bool *value, bool default_value = false);
@@ -53,9 +60,10 @@ class SettingsDB {
     bool getNull(const char *key);
     bool getIP(const char *key, NXD_ADDRESS *value, const NXD_ADDRESS *default_value = 0);
 
-    bool getNumberVector(const char *key, fixed_containers::FixedVector<float, max_array_size> &vec);
-    bool getBoolVector(const char *key, fixed_containers::FixedVector<bool, max_array_size> &vec);
-    bool getStringVector(const char *key, fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> &vec);
+    bool getNumberVector(const char *key, floatFixedVector_t &vec);
+    bool getBoolVector(const char *key, boolFixedVector_t &vec);
+    bool getStringVector(const char *key, stringFixedVector_t &vec);
+    bool getObjectVector(const char *key, objectFixedVector_t &vec);
 
     void setString(const char *key, const char *str);
     void setBool(const char *key, bool value);
@@ -63,9 +71,10 @@ class SettingsDB {
     void setNull(const char *key);
     void setIP(const char *key, const NXD_ADDRESS *addr);
 
-    void setNumberVector(const char *key, const fixed_containers::FixedVector<float, max_array_size> &vec);
-    void setBoolVector(const char *key, const fixed_containers::FixedVector<bool, max_array_size> &vec);
-    void setStringVector(const char *key, const fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> &vec);
+    void setNumberVector(const char *key, const floatFixedVector_t &vec);
+    void setBoolVector(const char *key, const boolFixedVector_t &vec);
+    void setStringVector(const char *key, const stringFixedVector_t &vec);
+    void setObjectVector(const char *key, const objectFixedVector_t &vec);
 
     void delString(const char *key);
     void delBool(const char *key);
@@ -86,17 +95,19 @@ class SettingsDB {
 #define KEY_TYPE_NUMBER "@f"
 #define KEY_TYPE_STRING "@s"
 #define KEY_TYPE_BOOL "@b"
-#define KEY_TYPE_ARRAY_NUMBER "@F"
-#define KEY_TYPE_ARRAY_STRING "@S"
-#define KEY_TYPE_ARRAY_BOOL "@B"
+#define KEY_TYPE_NUMBER_VECTOR "@F"
+#define KEY_TYPE_STRING_VECTOR "@S"
+#define KEY_TYPE_BOOL_VECTOR "@B"
+#define KEY_TYPE_OBJECT_VECTOR "@O"
 #define KEY_TYPE_NULL "@n"
 
 #define KEY_TYPE_NUMBER_CHAR 'f'
 #define KEY_TYPE_STRING_CHAR 's'
 #define KEY_TYPE_BOOL_CHAR 'b'
-#define KEY_TYPE_ARRAY_NUMBER_CHAR 'F'
-#define KEY_TYPE_ARRAY_STRING_CHAR 'S'
-#define KEY_TYPE_ARRAY_BOOL_CHAR 'B'
+#define KEY_TYPE_NUMBER_VECTOR_CHAR 'F'
+#define KEY_TYPE_STRING_VECTOR_CHAR 'S'
+#define KEY_TYPE_BOOL_VECTOR_CHAR 'B'
+#define KEY_TYPE_OBJECT_VECTOR_CHAR 'O'
 #define KEY_TYPE_NULL_CHAR 'n'
 
 #define KEY_DEFINE_STRING(KEY_CONSTANT, KEY_STRING)         \
@@ -116,7 +127,6 @@ class SettingsDB {
 
     KEY_DEFINE_STRING(kActiveIPv4, "active_ipv4_addr")
     KEY_DEFINE_STRING(kActiveIPv4NetMask, "active_ipv4_netmask")
-    KEY_DEFINE_STRING(kActiveIPv6, "active_ipv6_addr")
 
 #define KEY_DEFINE_NUMBER(KEY_CONSTANT, KEY_STRING)         \
     static constexpr const char *KEY_CONSTANT = KEY_STRING; \
@@ -124,11 +134,30 @@ class SettingsDB {
 
     KEY_DEFINE_NUMBER(kBootCount, "boot_count")
     KEY_DEFINE_NUMBER(kUserIPv6PrefixLen, "user_ipv6_prefix_len")
-    KEY_DEFINE_NUMBER(kActiveIPv6PrefixLen, "active_ipv6_prefix_len")
 
 #define KEY_DEFINE_BOOL(KEY_CONSTANT, KEY_STRING)           \
     static constexpr const char *KEY_CONSTANT = KEY_STRING; \
     static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_BOOL;
+
+#define KEY_DEFINE_STRING_VECTOR(KEY_CONSTANT, KEY_STRING)           \
+    static constexpr const char *KEY_CONSTANT = KEY_STRING; \
+    static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_STRING_VECTOR;
+
+    KEY_DEFINE_STRING_VECTOR(kActiveIPv6, "active_ipv6_addr")
+
+#define KEY_DEFINE_OBJECT_VECTOR(KEY_CONSTANT, KEY_STRING)           \
+    static constexpr const char *KEY_CONSTANT = KEY_STRING; \
+    static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_OBJECT_VECTOR;
+
+    KEY_DEFINE_OBJECT_VECTOR(kStripOutputProperties, "strip_output_properties")
+    KEY_DEFINE_OBJECT_VECTOR(kOutputConfigProperties, "output_config_properties")
+
+#define KEY_DEFINE_NUMBER_VECTOR(KEY_CONSTANT, KEY_STRING)           \
+    static constexpr const char *KEY_CONSTANT = KEY_STRING; \
+    static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_NUMBER_VECTOR;
+    
+    KEY_DEFINE_NUMBER_VECTOR(kActiveIPv6PrefixLen, "active_ipv6_prefix_len")
+
 
    private:
     void init();
@@ -146,9 +175,9 @@ class SettingsDB {
     bool in_array = false;
     int32_t in_array_type = -1;
     fixed_containers::FixedString<max_string_size> array_key_name{};
-    fixed_containers::FixedVector<float, max_array_size> float_vector{};
-    fixed_containers::FixedVector<bool, max_array_size> bool_vector{};
-    fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size> string_vector{};
+    floatFixedVector_t float_vector{};
+    boolFixedVector_t bool_vector{};
+    stringFixedVector_t string_vector{};
 };
 
 #endif  // #ifndef BOOTLOADER

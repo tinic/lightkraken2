@@ -36,6 +36,7 @@ SOFTWARE.
 #include "./settingsdb.h"
 #include "./utils.h"
 #include "./webserver.h"
+#include "./model.h"
 
 extern "C" void app_tickhandler(void) { App::instance().checkReset(); }
 
@@ -134,6 +135,8 @@ void App::init() {
     SettingsDB::instance().getNumber(SettingsDB::kBootCount, &bootCount);
     bootCount++;
     SettingsDB::instance().setNumber(SettingsDB::kBootCount, bootCount);
+
+    Model::instance().dumpStatics();
 #endif  // #ifndef BOOTLOADER
 }
 

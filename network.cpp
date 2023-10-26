@@ -30,6 +30,7 @@ SOFTWARE.
 #include "./artnet.h"
 #include "./sacn.h"
 #include "./settingsdb.h"
+#include "./support/ipv6.h"
 #include "./support/nx_stm32_eth_driver.h"
 #include "./utils.h"
 #include "stm32h5xx_hal.h"
@@ -194,6 +195,28 @@ bool Network::AddrIsBroadcast(const NXD_ADDRESS *addrToCheck) const {
     return false;
 }
 
+bool Network::AddrToString(const NXD_ADDRESS *value, char *ip_str, size_t max_len) const {
+    ipv6_address_full_t ipAddr{};
+    if (value->nxd_ip_version == NX_IP_VERSION_V4) {
+        ipAddr.address.components[0] = uint16_t((value->nxd_ip_address.v4 >> 16) & 0xFFFF);
+        ipAddr.address.components[1] = uint16_t((value->nxd_ip_address.v4 >> 0) & 0xFFFF);
+        ipAddr.flags = IPV6_FLAG_IPV4_COMPAT;
+    } else {
+        ipAddr.address.components[0] = uint16_t((value->nxd_ip_address.v6[0] >> 16) & 0xFFFF);
+        ipAddr.address.components[1] = uint16_t((value->nxd_ip_address.v6[0] >> 0) & 0xFFFF);
+        ipAddr.address.components[2] = uint16_t((value->nxd_ip_address.v6[1] >> 16) & 0xFFFF);
+        ipAddr.address.components[3] = uint16_t((value->nxd_ip_address.v6[1] >> 0) & 0xFFFF);
+        ipAddr.address.components[4] = uint16_t((value->nxd_ip_address.v6[2] >> 16) & 0xFFFF);
+        ipAddr.address.components[5] = uint16_t((value->nxd_ip_address.v6[2] >> 0) & 0xFFFF);
+        ipAddr.address.components[6] = uint16_t((value->nxd_ip_address.v6[3] >> 16) & 0xFFFF);
+        ipAddr.address.components[7] = uint16_t((value->nxd_ip_address.v6[3] >> 0) & 0xFFFF);
+    }
+    if (ipv6_to_str(&ipAddr, ip_str, max_len) > 0) {
+        return true;
+    }
+    return false;
+}
+
 void Network::ArtNetReceive(NX_UDP_SOCKET *socket_ptr) {
     NX_PACKET *packet_ptr = 0;
     while (nx_udp_socket_receive(socket_ptr, &packet_ptr, NX_NO_WAIT) == NX_SUCCESS) {
@@ -234,26 +257,32 @@ void Network::ClientIPChange(NX_IP *ip_ptr, VOID *user) {
     ipv4.nxd_ip_version = NX_IP_VERSION_V4;
     ipv4mask.nxd_ip_version = NX_IP_VERSION_V4;
     if (nx_ip_address_get(ip_ptr, &ipv4.nxd_ip_address.v4, &ipv4mask.nxd_ip_address.v4) == NX_SUCCESS) {
-        SettingsDB::instance().setIP(SettingsDB::kActiveIPv4, &ipv4);
-        SettingsDB::instance().setIP(SettingsDB::kActiveIPv4NetMask, &ipv4mask);
-        char ipv4str[64];
-        SettingsDB::instance().getString(SettingsDB::kActiveIPv4, ipv4str, sizeof(ipv4str));
-        char ipv4maskstr[64];
-        SettingsDB::instance().getString(SettingsDB::kActiveIPv4NetMask, ipv4maskstr, sizeof(ipv4maskstr));
-        printf(ESCAPE_FG_GREEN "IPv4: addr(%s) mask(%s)\n" ESCAPE_RESET, ipv4str, ipv4maskstr);
+        SettingsDB::stringFixed_t ipv4str;
+        SettingsDB::stringFixed_t ipv4maskstr;
+        if (AddrToString(&ipv4, ipv4str.data(), ipv4str.capacity()) && AddrToString(&ipv4mask, ipv4maskstr.data(), ipv4maskstr.capacity())) {
+            SettingsDB::instance().setString(SettingsDB::kActiveIPv4, ipv4str.c_str());
+            SettingsDB::instance().setString(SettingsDB::kActiveIPv4NetMask, ipv4maskstr.c_str());
+        }
+        printf(ESCAPE_FG_GREEN "IPv4: addr(%s) mask(%s)\n" ESCAPE_RESET, ipv4str.c_str(), ipv4maskstr.c_str());
     }
+
     UINT interface = 0;
+    SettingsDB::stringFixedVector_t ipVec;
+    fixed_containers::FixedVector<float, SettingsDB::max_array_size> ipPrefixVec;
     for (size_t c = 0;; c++) {
         if (nxd_ipv6_address_get(ip_ptr, c, &ipv6, &ipv6prefix, &interface) == NX_SUCCESS) {
-            SettingsDB::instance().setIP(SettingsDB::kActiveIPv6, &ipv6);
-            SettingsDB::instance().setNumber(SettingsDB::kActiveIPv6PrefixLen, float(ipv6prefix));
-            char ipv6str[64];
-            SettingsDB::instance().getString(SettingsDB::kActiveIPv6, ipv6str, sizeof(ipv6str));
-            printf(ESCAPE_FG_GREEN "IPv6: idx(%d) addr(%s) prefix(%d)\n" ESCAPE_RESET, int(c), ipv6str, int(ipv6prefix));
+            fixed_containers::FixedString<SettingsDB::max_string_size> ipv6str;
+            if (AddrToString(&ipv6, ipv6str.data(), ipv6str.capacity())) {
+                ipVec.push_back(ipv6str);
+                ipPrefixVec.push_back(float(ipv6prefix));
+                printf(ESCAPE_FG_GREEN "IPv6: idx(%d) addr(%s) prefix(%d)\n" ESCAPE_RESET, int(c), ipv6str.c_str(), int(ipv6prefix));
+            }
         } else {
             break;
         }
     }
+    SettingsDB::instance().setStringVector(SettingsDB::kActiveIPv6, ipVec);
+    SettingsDB::instance().setNumberVector(SettingsDB::kActiveIPv6PrefixLen, ipPrefixVec);
 #endif  // #ifndef BOOTLOADER
 }
 
