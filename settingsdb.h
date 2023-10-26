@@ -144,6 +144,12 @@ class SettingsDB {
     static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_STRING_VECTOR;
 
     KEY_DEFINE_STRING_VECTOR(kActiveIPv6, "active_ipv6_addr")
+    KEY_DEFINE_STRING_VECTOR(kAnalogOutputType, "analog_output_types")
+    KEY_DEFINE_STRING_VECTOR(kAnalogInputType, "analog_input_types")
+    KEY_DEFINE_STRING_VECTOR(kStripOutputType, "strip_output_types")
+    KEY_DEFINE_STRING_VECTOR(kStripInputType, "strip_input_types")
+    KEY_DEFINE_STRING_VECTOR(kStripStartupMode, "strip_startup_modes")
+    KEY_DEFINE_STRING_VECTOR(kOutputConfigType, "output_config_types")
 
 #define KEY_DEFINE_OBJECT_VECTOR(KEY_CONSTANT, KEY_STRING)           \
     static constexpr const char *KEY_CONSTANT = KEY_STRING; \
@@ -157,7 +163,6 @@ class SettingsDB {
     static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_NUMBER_VECTOR;
     
     KEY_DEFINE_NUMBER_VECTOR(kActiveIPv6PrefixLen, "active_ipv6_prefix_len")
-
 
    private:
     void init();
