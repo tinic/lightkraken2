@@ -48,9 +48,9 @@ Model &Model::instance() {
 void Model::dumpStatics()  {
 
     auto stripOutputStringVector = [] () consteval {
-        fixed_containers::FixedVector<fixed_containers::FixedString<SettingsDB::max_string_size>, SettingsDB::max_array_size> vec{};
+        fixed_containers::FixedVector<fixed_containers::FixedString<SettingsDB::max_object_size>, SettingsDB::max_array_size> vec{};
         for (Model::StripOutputProperties prop : Model::stripOutputProperties ) {
-            emio::static_buffer<SettingsDB::max_string_size> buf{};
+            emio::static_buffer<SettingsDB::max_object_size> buf{};
             emio::format_to(buf, "{{").value();
             emio::format_to(buf, "\"{}\":\"{}\",", "label", NAMEOF_ENUM(prop.type)).value();
             emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.type), int(prop.type)).value();
@@ -67,9 +67,9 @@ void Model::dumpStatics()  {
     SettingsDB::instance().setObjectVector(SettingsDB::kStripOutputProperties, vec0);
 
     auto outputConfigPropertiesVector = [] () consteval {
-        fixed_containers::FixedVector<fixed_containers::FixedString<SettingsDB::max_string_size>, SettingsDB::max_array_size> vec{};
+        fixed_containers::FixedVector<fixed_containers::FixedString<SettingsDB::max_object_size>, SettingsDB::max_array_size> vec{};
         for (Model::OutputConfigProperties prop : Model::outputConfigProperties ) {
-            emio::static_buffer<SettingsDB::max_string_size> buf{};
+            emio::static_buffer<SettingsDB::max_object_size> buf{};
             emio::format_to(buf, "{{").value();
             emio::format_to(buf, "\"{}\":\"{}\",", NAMEOF(prop.label), prop.label).value();
             emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.stripn), prop.stripn).value();
