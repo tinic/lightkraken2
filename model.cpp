@@ -94,14 +94,14 @@ void Model::dumpStatics()  {
                 emio::format_to(buf, "{}{}", comma, prop.wclock[c] ? 1 : 0).value();
                 comma = ",";
             }
-            emio::format_to(buf, "]").value();
+            emio::format_to(buf, "],").value();
             comma = "";
             emio::format_to(buf, "\"{}\":[", NAMEOF(prop.comp)).value();
             for (size_t c = 0; c < Model::OutputConfigProperties::OutputConfigMaxDevices; c++ ) {
                 emio::format_to(buf, "{}{}", comma, prop.comp[c]).value();
                 comma = ",";
             }
-            emio::format_to(buf, "],").value();
+            emio::format_to(buf, "]").value();
             emio::format_to(buf, "}}").value();
             vec.push_back(buf.view());
         }
