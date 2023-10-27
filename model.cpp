@@ -110,6 +110,65 @@ void Model::dumpStatics()  {
     static constexpr auto vec1 = outputConfigPropertiesVector();
     SettingsDB::instance().setObjectVector(SettingsDB::kOutputConfigProperties, vec1);
 
+    auto analogOutputTypes = []() consteval {
+        SettingsDB::stringFixedVector_t vec;
+        for (size_t c = 0; c < AnalogConfig::OUTPUT_COUNT; c++) {
+            vec.push_back(NAMEOF_ENUM(AnalogConfig::AnalogOutputType(c)));
+        }
+        return vec;
+    };
+    static constexpr auto vec2 = analogOutputTypes();
+    SettingsDB::instance().setStringVector(SettingsDB::kAnalogOutputType, vec2);
+
+    auto analogInputTypes = []() consteval {
+        SettingsDB::stringFixedVector_t vec;
+        for (size_t c = 0; c < AnalogConfig::INPUT_COUNT; c++) {
+            vec.push_back(NAMEOF_ENUM(AnalogConfig::AnalogInputType(c)));
+        }
+        return vec;
+    };
+    static constexpr auto vec3 = analogInputTypes();
+    SettingsDB::instance().setStringVector(SettingsDB::kAnalogInputType, vec3);
+
+    auto stripInputTypes = []() consteval {
+        SettingsDB::stringFixedVector_t vec;
+        for (size_t c = 0; c < StripConfig::INPUT_COUNT; c++) {
+            vec.push_back(NAMEOF_ENUM(StripConfig::StripInputType(c)));
+        }
+        return vec;
+    };
+    static constexpr auto vec4 = stripInputTypes();
+    SettingsDB::instance().setStringVector(SettingsDB::kStripInputType, vec4);
+
+    auto stripOutptTypes = []() consteval {
+        SettingsDB::stringFixedVector_t vec;
+        for (size_t c = 0; c < StripConfig::OUTPUT_COUNT; c++) {
+            vec.push_back(NAMEOF_ENUM(StripConfig::StripOutputType(c)));
+        }
+        return vec;
+    };
+    static constexpr auto vec5 = stripOutptTypes();
+    SettingsDB::instance().setStringVector(SettingsDB::kStripOutputType, vec5);
+
+    auto stripStartupMode = []() consteval {
+        SettingsDB::stringFixedVector_t vec;
+        for (size_t c = 0; c < StripConfig::STARTUP_COUNT; c++) {
+            vec.push_back(NAMEOF_ENUM(StripConfig::StripStartupMode(c)));
+        }
+        return vec;
+    };
+    static constexpr auto vec7 = stripStartupMode();
+    SettingsDB::instance().setStringVector(SettingsDB::kStripStartupMode, vec7);
+
+    auto outputConfigType = []() consteval {
+        SettingsDB::stringFixedVector_t vec;
+        for (size_t c = 0; c < CONFIG_COUNT; c++) {
+            vec.push_back(NAMEOF_ENUM(OutputConfig(c)));
+        }
+        return vec;
+    };
+    static constexpr auto vec8 = outputConfigType();
+    SettingsDB::instance().setStringVector(SettingsDB::kOutputConfigType, vec8);
 }
 
 void Model::init() {
