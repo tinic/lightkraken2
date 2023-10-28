@@ -99,6 +99,8 @@ void App::init() {
         }
     }
 
+    Model::instance().exportStaticsToDB();
+
     emio::static_buffer<64> uID{};
     emio::format_to(uID, "{:08x}:{:08x}:{:08x}", uid[0], uid[1], uid[2]).value();
     SettingsDB::instance().setString(SettingsDB::kUID, uID.str().c_str());

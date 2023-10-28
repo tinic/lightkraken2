@@ -137,7 +137,7 @@ struct Model {
         StripStartupMode startup_mode;
         float comp_limit;
         float glob_illum;
-        uint16_t len;
+        uint16_t led_count;
         uint16_t artnet[universeN];
         uint16_t e131[universeN];
     } strip_config[stripN] = {
@@ -279,11 +279,11 @@ struct Model {
 
     void importFromDB();
     void exportToDB();
+    void exportStaticsToDB();
 
    private:
     Model(){};
     void init();
-    void dumpStatics();
     bool initialized = false;
 };
 

@@ -32,6 +32,11 @@ SOFTWARE.
 #include <fixed_containers/fixed_vector.hpp>
 #pragma GCC diagnostic pop
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#include <nameof.hpp>
+#pragma GCC diagnostic pop
+
 #include "lwjson/lwjson.h"
 #include "nx_api.h"
 #include "tx_api.h"
@@ -96,6 +101,7 @@ class SettingsDB {
 #define KEY_TYPE_BOOL "@b"
 #define KEY_TYPE_OBJECT "@o"
 #define KEY_TYPE_NUMBER_VECTOR "@F"
+#define KEY_TYPE_NUMBER_2D_VECTOR "@2"
 #define KEY_TYPE_STRING_VECTOR "@S"
 #define KEY_TYPE_BOOL_VECTOR "@B"
 #define KEY_TYPE_NULL "@n"
@@ -105,6 +111,7 @@ class SettingsDB {
 #define KEY_TYPE_BOOL_CHAR 'b'
 #define KEY_TYPE_OBJECT_CHAR 'o'
 #define KEY_TYPE_NUMBER_VECTOR_CHAR 'F'
+#define KEY_TYPE_NUMBER_2D_VECTOR_CHAR "2"
 #define KEY_TYPE_STRING_VECTOR_CHAR 'S'
 #define KEY_TYPE_BOOL_VECTOR_CHAR 'B'
 #define KEY_TYPE_NULL_CHAR 'n'
@@ -143,6 +150,11 @@ class SettingsDB {
     static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_STRING_VECTOR;
 
     KEY_DEFINE_STRING_VECTOR(kActiveIPv6, "active_ipv6_addr")
+    KEY_DEFINE_STRING_VECTOR(kStripOutputType, "strip_output_type")
+    KEY_DEFINE_STRING_VECTOR(kStripInputType, "strip_input_type")
+    KEY_DEFINE_STRING_VECTOR(kStripStartupMode, "strip_startup_mode")
+    KEY_DEFINE_STRING_VECTOR(kAnalogOutputType, "analog_output_type")
+    KEY_DEFINE_STRING_VECTOR(kAnalogInputType, "analog_input_type")
 
 #define KEY_DEFINE_OBJECT(KEY_CONSTANT, KEY_STRING)         \
     static constexpr const char *KEY_CONSTANT = KEY_STRING; \
@@ -163,6 +175,21 @@ class SettingsDB {
     static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_NUMBER_VECTOR;
 
     KEY_DEFINE_NUMBER_VECTOR(kActiveIPv6PrefixLen, "active_ipv6_prefix_len")
+    KEY_DEFINE_STRING_VECTOR(kStripCompLimit, "strip_comp_limit")
+    KEY_DEFINE_STRING_VECTOR(kStripGlobIllum, "strip_glob_illum")
+    KEY_DEFINE_STRING_VECTOR(kStripLedCount, "strip_led_count")
+    KEY_DEFINE_STRING_VECTOR(kAnalogPwmLimit, "analog_pwm_limit")
+
+#define KEY_DEFINE_NUMBER_2D_VECTOR(KEY_CONSTANT, KEY_STRING)  \
+    static constexpr const char *KEY_CONSTANT = KEY_STRING; \
+    static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_NUMBER_2D_VECTOR;
+
+    KEY_DEFINE_NUMBER_2D_VECTOR(kStripArtnetUniverse, "strip_artnet_universe")
+    KEY_DEFINE_NUMBER_2D_VECTOR(kStripe131Universe, "strip_e131_universe")
+    KEY_DEFINE_NUMBER_2D_VECTOR(kAnalogArtnetUniverse, "analog_artnet_universe")
+    KEY_DEFINE_NUMBER_2D_VECTOR(kAnalogArtnetChannel, "analog_artnet_channel")
+    KEY_DEFINE_NUMBER_2D_VECTOR(kAnaloge131Universe, "analog_e131_universe")
+    KEY_DEFINE_NUMBER_2D_VECTOR(kAnaloge131Channel, "analog_e131_channel")
 
    private:
     void init();

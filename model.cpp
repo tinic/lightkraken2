@@ -31,15 +31,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <fixed_containers/fixed_vector.hpp>
 #pragma GCC diagnostic pop
 
-#include "./settingsdb.h"
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#include <nameof.hpp>
-#pragma GCC diagnostic pop
-
 #include <string>
 #include <vector>
+
+#include "./settingsdb.h"
 
 #ifndef BOOTLOADER
 
@@ -52,7 +47,7 @@ Model &Model::instance() {
     return model;
 }
 
-void Model::dumpStatics() {
+void Model::exportStaticsToDB() {
     {
         auto stripOutputStringVector = []() consteval {
             emio::static_buffer<SettingsDB::max_object_size> buf{};
@@ -259,6 +254,6 @@ void Model::exportToDB() {}
 
 void Model::importFromDB() {}
 
-void Model::init() { dumpStatics(); }
+void Model::init() {}
 
 #endif  // #ifndef BOOTLOADER
