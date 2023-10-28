@@ -33,10 +33,10 @@ SOFTWARE.
 #include <fixed_containers/fixed_string.hpp>
 #include <fixed_containers/fixed_vector.hpp>
 
-#include "stm32h5xx_hal.h"
 #include "./support/ipv6.h"
 #include "./utils.h"
 #include "./webserver.h"
+#include "stm32h5xx_hal.h"
 
 namespace emio {
 
@@ -228,16 +228,14 @@ UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
                         }
                         emio::format_to(buf, "]").value();
                     } break;
-                    case KEY_TYPE_OBJECT_VECTOR_CHAR: {
+                    case KEY_TYPE_OBJECT_CHAR: {
                         size_t len = fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb),
-                                                   fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, scratch_object_array.data(), max_object_size * max_array_size)));
-                        emio::format_to(buf, "{}\"{}\":[", comma, name_buf).value();
-                        const char *inner_comma = "";
-                        for (size_t c = 0; c < len / max_object_size; c++) {
-                            emio::format_to(buf, "{}{}", inner_comma, scratch_object_array[c].data()).value();
-                            inner_comma = ",";
+                                                   fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, scratch_object.data(), max_object_size)));
+                        if (len > 0) {
+                            emio::format_to(buf, "{}\"{}\":", comma, name_buf).value();
+                            emio::format_to(buf, "{}", scratch_object.data()).value();
+                            emio::format_to(buf, "").value();
                         }
-                        emio::format_to(buf, "]").value();
                     } break;
                     default:
                         break;
@@ -618,7 +616,9 @@ bool SettingsDB::getStringVector(const char *key, stringFixedVector_t &vec) {
     size_t len = 0;
     stringFixed_t keyS(key);
     keyS.append(KEY_TYPE_STRING_VECTOR);
-    if ((len = fdb_kv_get_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(scratch_string_array.data()), scratch_string_array.size() * max_string_size))) > 0) {
+    if ((len = fdb_kv_get_blob(
+             &kvdb, keyS.c_str(),
+             fdb_blob_make(&blob, reinterpret_cast<const void *>(scratch_string_array.data()), scratch_string_array.size() * max_string_size))) > 0) {
         for (size_t c = 0; c < len / max_string_size; c++) {
             vec.push_back(scratch_string_array[c].data());
         }
@@ -627,18 +627,14 @@ bool SettingsDB::getStringVector(const char *key, stringFixedVector_t &vec) {
     return false;
 }
 
-bool SettingsDB::getObjectVector(const char *key, objectFixedVector_t &vec) {
+bool SettingsDB::getObject(const char *key, char *value, size_t *len, size_t max_len) {
     if (!key) {
         return false;
     }
     struct fdb_blob blob {};
-    size_t len = 0;
     stringFixed_t keyS(key);
-    keyS.append(KEY_TYPE_OBJECT_VECTOR);
-    if ((len = fdb_kv_get_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(scratch_object_array.data()), scratch_object_array.size() * max_object_size))) > 0) {
-        for (size_t c = 0; c < len / max_object_size; c++) {
-            vec.push_back(scratch_object_array[c].data());
-        }
+    keyS.append(KEY_TYPE_OBJECT);
+    if ((*len = fdb_kv_get_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, value, max_len))) > 0) {
         return true;
     }
     return false;
@@ -707,22 +703,19 @@ void SettingsDB::setStringVector(const char *key, const stringFixedVector_t &vec
     fdb_kv_set_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(scratch_string_array.data()), vec.size() * max_string_size));
 }
 
-void SettingsDB::setObjectVector(const char *key, const objectFixedVector_t &vec) {
+void SettingsDB::setObject(const char *key, const char *value, size_t len) {
     stringFixed_t keyS(key);
-    keyS.append(KEY_TYPE_OBJECT_VECTOR);
+    keyS.append(KEY_TYPE_OBJECT);
 
-    scratch_object_vector.clear();
-    if (getObjectVector(key, scratch_object_vector)) {
-        if (vec == scratch_object_vector) {
+    size_t get_len = 0;
+    if (getObject(key, scratch_object.data(), &get_len, max_object_size)) {
+        if (strcmp(value, scratch_object.data()) == 0) {
             return;
         }
     }
 
     struct fdb_blob blob {};
-    for (size_t c = 0; c < vec.size(); c++) {
-        strcpy(scratch_object_array[c].data(), vec[c].c_str());
-    }
-    fdb_kv_set_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(scratch_object_array.data()), vec.size() * max_object_size));
+    fdb_kv_set_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(value), len));
 }
 
 void SettingsDB::setBool(const char *key, bool value) {

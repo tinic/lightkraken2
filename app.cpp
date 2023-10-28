@@ -135,8 +135,6 @@ void App::init() {
     SettingsDB::instance().getNumber(SettingsDB::kBootCount, &bootCount);
     bootCount++;
     SettingsDB::instance().setNumber(SettingsDB::kBootCount, bootCount);
-
-    Model::instance().dumpStatics();
 #endif  // #ifndef BOOTLOADER
 }
 

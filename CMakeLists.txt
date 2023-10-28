@@ -126,7 +126,7 @@ set(CXX_COMMON_FLAGS
     -Wcast-align
     -Wconversion
     -Wno-volatile
-    -std=c++20
+    -std=c++23
     -fno-rtti 
     -fno-exceptions)
 

@@ -46,13 +46,12 @@ class SettingsDB {
 
     static constexpr size_t max_array_size = 32;
     static constexpr size_t max_string_size = 64;
-    static constexpr size_t max_object_size = 512;
+    static constexpr size_t max_object_size = 4096;
 
     using stringFixed_t = fixed_containers::FixedString<max_string_size>;
     using floatFixedVector_t = fixed_containers::FixedVector<float, max_array_size>;
     using boolFixedVector_t = fixed_containers::FixedVector<bool, max_array_size>;
     using stringFixedVector_t = fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size>;
-    using objectFixedVector_t = fixed_containers::FixedVector<fixed_containers::FixedString<max_object_size>, max_array_size>;
 
     size_t getString(const char *key, char *value, size_t maxlen, const char *default_value = "");
     bool getBool(const char *key, bool *value, bool default_value = false);
@@ -63,7 +62,7 @@ class SettingsDB {
     bool getNumberVector(const char *key, floatFixedVector_t &vec);
     bool getBoolVector(const char *key, boolFixedVector_t &vec);
     bool getStringVector(const char *key, stringFixedVector_t &vec);
-    bool getObjectVector(const char *key, objectFixedVector_t &vec);
+    bool getObject(const char *key, char *value, size_t *len, size_t max_len);
 
     void setString(const char *key, const char *str);
     void setBool(const char *key, bool value);
@@ -74,7 +73,7 @@ class SettingsDB {
     void setNumberVector(const char *key, const floatFixedVector_t &vec);
     void setBoolVector(const char *key, const boolFixedVector_t &vec);
     void setStringVector(const char *key, const stringFixedVector_t &vec);
-    void setObjectVector(const char *key, const objectFixedVector_t &vec);
+    void setObject(const char *key, const char *value, size_t len);
 
     void delString(const char *key);
     void delBool(const char *key);
@@ -95,19 +94,19 @@ class SettingsDB {
 #define KEY_TYPE_NUMBER "@f"
 #define KEY_TYPE_STRING "@s"
 #define KEY_TYPE_BOOL "@b"
+#define KEY_TYPE_OBJECT "@o"
 #define KEY_TYPE_NUMBER_VECTOR "@F"
 #define KEY_TYPE_STRING_VECTOR "@S"
 #define KEY_TYPE_BOOL_VECTOR "@B"
-#define KEY_TYPE_OBJECT_VECTOR "@O"
 #define KEY_TYPE_NULL "@n"
 
 #define KEY_TYPE_NUMBER_CHAR 'f'
 #define KEY_TYPE_STRING_CHAR 's'
 #define KEY_TYPE_BOOL_CHAR 'b'
+#define KEY_TYPE_OBJECT_CHAR 'o'
 #define KEY_TYPE_NUMBER_VECTOR_CHAR 'F'
 #define KEY_TYPE_STRING_VECTOR_CHAR 'S'
 #define KEY_TYPE_BOOL_VECTOR_CHAR 'B'
-#define KEY_TYPE_OBJECT_VECTOR_CHAR 'O'
 #define KEY_TYPE_NULL_CHAR 'n'
 
 #define KEY_DEFINE_STRING(KEY_CONSTANT, KEY_STRING)         \
@@ -139,30 +138,30 @@ class SettingsDB {
     static constexpr const char *KEY_CONSTANT = KEY_STRING; \
     static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_BOOL;
 
-#define KEY_DEFINE_STRING_VECTOR(KEY_CONSTANT, KEY_STRING)           \
+#define KEY_DEFINE_STRING_VECTOR(KEY_CONSTANT, KEY_STRING)  \
     static constexpr const char *KEY_CONSTANT = KEY_STRING; \
     static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_STRING_VECTOR;
 
     KEY_DEFINE_STRING_VECTOR(kActiveIPv6, "active_ipv6_addr")
-    KEY_DEFINE_STRING_VECTOR(kAnalogOutputType, "analog_output_types")
-    KEY_DEFINE_STRING_VECTOR(kAnalogInputType, "analog_input_types")
-    KEY_DEFINE_STRING_VECTOR(kStripOutputType, "strip_output_types")
-    KEY_DEFINE_STRING_VECTOR(kStripInputType, "strip_input_types")
-    KEY_DEFINE_STRING_VECTOR(kStripStartupMode, "strip_startup_modes")
-    KEY_DEFINE_STRING_VECTOR(kOutputConfigType, "output_config_types")
 
-#define KEY_DEFINE_OBJECT_VECTOR(KEY_CONSTANT, KEY_STRING)           \
+#define KEY_DEFINE_OBJECT(KEY_CONSTANT, KEY_STRING)         \
     static constexpr const char *KEY_CONSTANT = KEY_STRING; \
-    static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_OBJECT_VECTOR;
+    static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_OBJECT;
 
-    KEY_DEFINE_OBJECT_VECTOR(kStripOutputProperties, "strip_output_properties")
-    KEY_DEFINE_OBJECT_VECTOR(kOutputConfigProperties, "output_config_properties")
-    KEY_DEFINE_OBJECT_VECTOR(kOutputConfigPinNames, "output_config_pin_names")
+    KEY_DEFINE_OBJECT(kStripOutputProperties, "strip_output_properties")
+    KEY_DEFINE_OBJECT(kOutputConfigProperties, "output_config_properties")
+    KEY_DEFINE_OBJECT(kOutputConfigPinNames, "output_config_pin_names")
+    KEY_DEFINE_OBJECT(kAnalogOutputTypes, "analog_output_types")
+    KEY_DEFINE_OBJECT(kAnalogInputTypes, "analog_input_types")
+    KEY_DEFINE_OBJECT(kStripOutputTypes, "strip_output_types")
+    KEY_DEFINE_OBJECT(kStripInputTypes, "strip_input_types")
+    KEY_DEFINE_OBJECT(kStripStartupModes, "strip_startup_modes")
+    KEY_DEFINE_OBJECT(kOutputConfigTypes, "output_config_types")
 
-#define KEY_DEFINE_NUMBER_VECTOR(KEY_CONSTANT, KEY_STRING)           \
+#define KEY_DEFINE_NUMBER_VECTOR(KEY_CONSTANT, KEY_STRING)  \
     static constexpr const char *KEY_CONSTANT = KEY_STRING; \
     static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_NUMBER_VECTOR;
-    
+
     KEY_DEFINE_NUMBER_VECTOR(kActiveIPv6PrefixLen, "active_ipv6_prefix_len")
 
    private:
@@ -182,14 +181,12 @@ class SettingsDB {
     int32_t in_array_type = -1;
 
     fixed_containers::FixedString<max_string_size> array_key_name{};
-
     floatFixedVector_t scratch_float_vector{};
     boolFixedVector_t scratch_bool_vector{};
     stringFixedVector_t scratch_string_vector{};
-    objectFixedVector_t scratch_object_vector{};
 
     std::array<std::array<char, max_string_size>, max_array_size> scratch_string_array{};
-    std::array<std::array<char, max_object_size>, max_array_size> scratch_object_array{};
+    std::array<char, max_object_size> scratch_object{};
 };
 
 #endif  // #ifndef BOOTLOADER

@@ -28,8 +28,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 struct Model {
    public:
-   
-    static constexpr size_t stripN = 2;
+       static constexpr size_t stripN = 2;
     static constexpr size_t analogN = 2;
     static constexpr size_t universeN = 6;
     static constexpr size_t analogCompN = 6;
@@ -278,11 +277,13 @@ struct Model {
         return strip_config[strip].e131[dmx512Index];
     }
 
-    void dumpStatics();
+    void importFromDB();
+    void exportToDB();
 
    private:
     Model(){};
     void init();
+    void dumpStatics();
     bool initialized = false;
 };
 
