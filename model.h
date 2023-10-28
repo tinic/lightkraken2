@@ -185,12 +185,12 @@ struct Model {
     static constexpr struct OutputConfigProperties {
         static constexpr size_t OutputConfigMaxDevices = 3;
         const char *label;
-        uint8_t stripn;
-        uint8_t alogn;
+        uint8_t strip_n;
+        uint8_t analog_n;
         bool strip[OutputConfigMaxDevices];
-        bool rgb[OutputConfigMaxDevices];
-        bool wclock[OutputConfigMaxDevices];
-        uint8_t comp[OutputConfigMaxDevices];
+        bool analog[OutputConfigMaxDevices];
+        bool has_clock[OutputConfigMaxDevices];
+        uint8_t components[OutputConfigMaxDevices];
     } outputConfigProperties[CONFIG_COUNT] = {
         {"2 x RGB Strip",                    2, 0, {true,  true,  false}, {false, false, false}, {true,   true,  false}, {0, 0, 0}},
         {"1 x RGB Strip + 1 x Analog RGB",   1, 1, {true,  false, false}, {false, true,  false}, {false,  true,  false}, {0, 3, 0}},
@@ -226,33 +226,35 @@ struct Model {
         };
         OutputConfigPinAssign pin_assign;
         static constexpr size_t OutputConfigPinCount = 8;
-        struct OutputConfigPinLabelNoClock {
-            const char *nl;
-            const char *ns;
-        } pinlabel_no_clock[OutputConfigPinCount];
-        struct OutputConfigPinLabelWithClock {
-            const char *cl;
-            const char *cs;
-        } pinlabel_with_clock[OutputConfigPinCount];
+        struct PinLabels {
+            struct OutputConfigPinLabelNoClock {
+                const char *l;
+                const char *s;
+            } no_clock[OutputConfigPinCount];
+            struct OutputConfigPinLabelWithClock {
+                const char *l;
+                const char *s;
+            } with_clock[OutputConfigPinCount];
+        } pinlabels;
     } outputConfigPinNames[CONFIG_COUNT] = {
         { { /*s0*/ 0x02, 0x01, /*s1*/ 0x06, 0x05, /*a0*/ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /*a1*/ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },
-          { /*0*/"GND" , "GND" , /*1*/"---" , "NIL" , /*2*/"DAT0", "DAT" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"---" , "NIL" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" },
-          { /*0*/"GND" , "GND" , /*1*/"CLK0", "CLK" , /*2*/"DAT0", "DAT" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"CLK1", "CLK" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" } },
+          {{ /*0*/"GND" , "GND" , /*1*/"---" , "NIL" , /*2*/"DAT0", "DAT" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"---" , "NIL" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" },
+           { /*0*/"GND" , "GND" , /*1*/"CLK0", "CLK" , /*2*/"DAT0", "DAT" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"CLK1", "CLK" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" }} },
         { { /*s0*/ 0x06, 0x05, /*s1*/ 0xFF, 0xFF, /*a0*/ 0x00, 0x01, 0x02, 0xFF, 0xFF, 0xFF, /*a1*/ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },
-          { /*0*/"BLU" , "BLU" , /*1*/"RED" , "RED" , /*2*/"GRN" , "GRN" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"---" , "NIL" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" },
-          { /*0*/"BLU" , "BLU" , /*1*/"RED" , "RED" , /*2*/"GRN" , "GRN" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"CLk1", "CLK" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" } },
+          {{ /*0*/"BLU" , "BLU" , /*1*/"RED" , "RED" , /*2*/"GRN" , "GRN" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"---" , "NIL" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" },
+           { /*0*/"BLU" , "BLU" , /*1*/"RED" , "RED" , /*2*/"GRN" , "GRN" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"CLk1", "CLK" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" }} },
         { { /*s0*/ 0x01, 0xFF, /*s1*/ 0x06, 0xFF, /*a0*/ 0x00, 0x01, 0x05, 0xFF, 0xFF, 0xFF, /*a1*/ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },
-          { /*0*/"BLU" , "BLU" , /*1*/"RED" , "RED" , /*2*/"DAT0", "DAT" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"GRN" , "GRN" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" },
-          { /*0*/"BLU" , "BLU" , /*1*/"RED" , "RED" , /*2*/"DAT0", "DAT" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"GRN" , "GRN" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" } },
+          {{ /*0*/"BLU" , "BLU" , /*1*/"RED" , "RED" , /*2*/"DAT0", "DAT" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"GRN" , "GRN" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" },
+           { /*0*/"BLU" , "BLU" , /*1*/"RED" , "RED" , /*2*/"DAT0", "DAT" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"GRN" , "GRN" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" }} },
         { { /*s0*/ 0x06, 0xFF, /*s1*/ 0xFF, 0xFF, /*a0*/ 0x00, 0x01, 0x02, 0x05, 0xFF, 0xFF, /*a1*/ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },
-          { /*0*/"BLU" , "BLU" , /*1*/"RED" , "RED" , /*2*/"GRN" , "GRN" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"WHT" , "WHT" , /*6*/"DAT" , "DAT" , /*7*/"VCC" , "VCC" },
-          { /*0*/"BLU" , "BLU" , /*1*/"RED" , "RED" , /*2*/"GRN" , "GRN" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"WHT" , "WHT" , /*6*/"DAT" , "DAT" , /*7*/"VCC" , "VCC" } },
+          {{ /*0*/"BLU" , "BLU" , /*1*/"RED" , "RED" , /*2*/"GRN" , "GRN" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"WHT" , "WHT" , /*6*/"DAT" , "DAT" , /*7*/"VCC" , "VCC" },
+           { /*0*/"BLU" , "BLU" , /*1*/"RED" , "RED" , /*2*/"GRN" , "GRN" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"WHT" , "WHT" , /*6*/"DAT" , "DAT" , /*7*/"VCC" , "VCC" }} },
         { { /*s0*/ 0xFF, 0xFF, /*s1*/ 0xFF, 0xFF, /*a0*/ 0x00, 0x01, 0x02, 0xFF, 0xFF, 0xFF, /*a1*/ 0x04, 0x05, 0x06, 0xFF, 0xFF, 0xFF },
-          { /*0*/"BLU0", "BLU" , /*1*/"RED0", "RED" , /*2*/"GRN0", "GRN" , /*3*/"VCC" , "VCC" , /*4*/"BLU1", "BLU" , /*5*/"RED1", "RED" , /*6*/"GRN1", "GRN" , /*7*/"VCC" , "VCC" },
-          { /*0*/"BLU0", "BLU" , /*1*/"RED0", "RED" , /*2*/"GRN0", "GRN" , /*3*/"VCC" , "VCC" , /*4*/"BLU1", "BLU" , /*5*/"RED1", "RED" , /*6*/"GRN1", "GRN" , /*7*/"VCC" , "VCC" } },
+          {{ /*0*/"BLU0", "BLU" , /*1*/"RED0", "RED" , /*2*/"GRN0", "GRN" , /*3*/"VCC" , "VCC" , /*4*/"BLU1", "BLU" , /*5*/"RED1", "RED" , /*6*/"GRN1", "GRN" , /*7*/"VCC" , "VCC" },
+           { /*0*/"BLU0", "BLU" , /*1*/"RED0", "RED" , /*2*/"GRN0", "GRN" , /*3*/"VCC" , "VCC" , /*4*/"BLU1", "BLU" , /*5*/"RED1", "RED" , /*6*/"GRN1", "GRN" , /*7*/"VCC" , "VCC" }} },
         { { /*s0*/ 0xFF, 0xFF, /*s1*/ 0xFF, 0xFF, /*a0*/ 0x00, 0x01, 0x02, 0x04, 0x05, 0x06, /*a1*/ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },
-          { /*0*/"BLU0", "BLU" , /*1*/"RED0", "RED" , /*2*/"GRN0", "GRN" , /*3*/"VCC" , "VCC" , /*4*/"WHT0", "WHT" , /*5*/"WHT1", "WHT" , /*6*/"WHT2", "WHT" , /*7*/"VCC" , "VCC" },
-          { /*0*/"BLU0", "BLU" , /*1*/"RED0", "RED" , /*2*/"GRN0", "GRN" , /*3*/"VCC" , "VCC" , /*4*/"WHT0", "WHT" , /*5*/"WHT1", "WHT" , /*6*/"WHT2", "WHT" , /*7*/"VCC" , "VCC" } },
+          {{ /*0*/"BLU0", "BLU" , /*1*/"RED0", "RED" , /*2*/"GRN0", "GRN" , /*3*/"VCC" , "VCC" , /*4*/"WHT0", "WHT" , /*5*/"WHT1", "WHT" , /*6*/"WHT2", "WHT" , /*7*/"VCC" , "VCC" },
+           { /*0*/"BLU0", "BLU" , /*1*/"RED0", "RED" , /*2*/"GRN0", "GRN" , /*3*/"VCC" , "VCC" , /*4*/"WHT0", "WHT" , /*5*/"WHT1", "WHT" , /*6*/"WHT2", "WHT" , /*7*/"VCC" , "VCC" }} },
     };
     // clang-format on
 

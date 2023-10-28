@@ -196,7 +196,7 @@ UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
                     case KEY_TYPE_BOOL_VECTOR_CHAR: {
                         std::array<bool, max_array_size> value;
                         size_t len = fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb),
-                                                   fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, value.data(), value.size() * sizeof(bool))));
+                                                   fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, value.data(), sizeof(bool) * max_array_size)));
                         emio::format_to(buf, "{}\"{}\":[", comma, name_buf).value();
                         const char *inner_comma = "";
                         for (size_t c = 0; c < len / sizeof(bool); c++) {
@@ -208,7 +208,7 @@ UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
                     case KEY_TYPE_NUMBER_VECTOR_CHAR: {
                         std::array<float, max_array_size> value;
                         size_t len = fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb),
-                                                   fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, value.data(), value.size() * sizeof(float))));
+                                                   fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, value.data(), sizeof(float) * max_array_size)));
                         emio::format_to(buf, "{}\"{}\":[", comma, name_buf).value();
                         const char *inner_comma = "";
                         for (size_t c = 0; c < len / sizeof(float); c++) {
@@ -218,25 +218,23 @@ UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
                         emio::format_to(buf, "]").value();
                     } break;
                     case KEY_TYPE_STRING_VECTOR_CHAR: {
-                        std::array<std::array<char, max_string_size>, max_array_size> value;
                         size_t len = fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb),
-                                                   fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, value.data(), value.size() * max_array_size)));
+                                                   fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, scratch_string_array.data(), max_string_size * max_array_size)));
                         emio::format_to(buf, "{}\"{}\":[", comma, name_buf).value();
                         const char *inner_comma = "";
                         for (size_t c = 0; c < len / max_string_size; c++) {
-                            emio::format_to(buf, "{}\"{}\"", inner_comma, value[c].data()).value();
+                            emio::format_to(buf, "{}\"{}\"", inner_comma, scratch_string_array[c].data()).value();
                             inner_comma = ",";
                         }
                         emio::format_to(buf, "]").value();
                     } break;
                     case KEY_TYPE_OBJECT_VECTOR_CHAR: {
-                        std::array<std::array<char, max_object_size>, max_array_size> value;
                         size_t len = fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb),
-                                                   fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, value.data(), value.size() * max_array_size)));
+                                                   fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, scratch_object_array.data(), max_object_size * max_array_size)));
                         emio::format_to(buf, "{}\"{}\":[", comma, name_buf).value();
                         const char *inner_comma = "";
                         for (size_t c = 0; c < len / max_object_size; c++) {
-                            emio::format_to(buf, "{}{}", inner_comma, value[c].data()).value();
+                            emio::format_to(buf, "{}{}", inner_comma, scratch_object_array[c].data()).value();
                             inner_comma = ",";
                         }
                         emio::format_to(buf, "]").value();
@@ -295,8 +293,8 @@ void SettingsDB::jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_t
                     if (in_array_type == -1) {
                         in_array_type = LWJSON_STREAM_TYPE_STRING;
                     }
-                    if (in_array_type == LWJSON_STREAM_TYPE_STRING && string_vector.size() < max_array_size) {
-                        string_vector.push_back(data_buf);
+                    if (in_array_type == LWJSON_STREAM_TYPE_STRING && scratch_string_vector.size() < max_array_size) {
+                        scratch_string_vector.push_back(data_buf);
                     }
                 }
             } else {
@@ -315,8 +313,8 @@ void SettingsDB::jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_t
                     if (in_array_type == -1) {
                         in_array_type = LWJSON_STREAM_TYPE_TRUE;
                     }
-                    if (in_array_type == LWJSON_STREAM_TYPE_TRUE && bool_vector.size() < max_array_size) {
-                        bool_vector.push_back(true);
+                    if (in_array_type == LWJSON_STREAM_TYPE_TRUE && scratch_bool_vector.size() < max_array_size) {
+                        scratch_bool_vector.push_back(true);
                     }
                 }
             } else {
@@ -335,8 +333,8 @@ void SettingsDB::jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_t
                     if (in_array_type == -1) {
                         in_array_type = LWJSON_STREAM_TYPE_TRUE;
                     }
-                    if (in_array_type == LWJSON_STREAM_TYPE_TRUE && bool_vector.size() < max_array_size) {
-                        bool_vector.push_back(false);
+                    if (in_array_type == LWJSON_STREAM_TYPE_TRUE && scratch_bool_vector.size() < max_array_size) {
+                        scratch_bool_vector.push_back(false);
                     }
                 }
             } else {
@@ -362,8 +360,8 @@ void SettingsDB::jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_t
                     if (in_array_type == -1) {
                         in_array_type = LWJSON_STREAM_TYPE_NUMBER;
                     }
-                    if (in_array_type == LWJSON_STREAM_TYPE_NUMBER && float_vector.size() < max_array_size) {
-                        float_vector.push_back(strtof(data_buf, NULL));
+                    if (in_array_type == LWJSON_STREAM_TYPE_NUMBER && scratch_float_vector.size() < max_array_size) {
+                        scratch_float_vector.push_back(strtof(data_buf, NULL));
                     }
                 }
             } else {
@@ -388,21 +386,21 @@ void SettingsDB::jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_t
             in_array = true;
             in_array_type = -1;
             array_key_name = data_buf;
-            float_vector.clear();
-            bool_vector.clear();
-            string_vector.clear();
+            scratch_float_vector.clear();
+            scratch_bool_vector.clear();
+            scratch_string_vector.clear();
         } break;
         case LWJSON_STREAM_TYPE_ARRAY_END: {
             if (!in_delete_request) {
                 switch (in_array_type) {
                     case LWJSON_STREAM_TYPE_STRING: {
-                        setStringVector(array_key_name.c_str(), string_vector);
+                        setStringVector(array_key_name.c_str(), scratch_string_vector);
                     } break;
                     case LWJSON_STREAM_TYPE_TRUE: {
-                        setBoolVector(array_key_name.c_str(), bool_vector);
+                        setBoolVector(array_key_name.c_str(), scratch_bool_vector);
                     } break;
                     case LWJSON_STREAM_TYPE_NUMBER: {
-                        setNumberVector(array_key_name.c_str(), float_vector);
+                        setNumberVector(array_key_name.c_str(), scratch_float_vector);
                     } break;
                     default:
                         break;
@@ -411,9 +409,9 @@ void SettingsDB::jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_t
             in_array = false;
             in_array_type = -1;
             array_key_name.clear();
-            float_vector.clear();
-            bool_vector.clear();
-            string_vector.clear();
+            scratch_float_vector.clear();
+            scratch_bool_vector.clear();
+            scratch_string_vector.clear();
         } break;
         default:
             // not supported
@@ -618,12 +616,11 @@ bool SettingsDB::getStringVector(const char *key, stringFixedVector_t &vec) {
     }
     struct fdb_blob blob {};
     size_t len = 0;
-    std::array<std::array<char, max_string_size>, max_array_size> value;
     stringFixed_t keyS(key);
     keyS.append(KEY_TYPE_STRING_VECTOR);
-    if ((len = fdb_kv_get_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(value.data()), value.size() * max_string_size))) > 0) {
+    if ((len = fdb_kv_get_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(scratch_string_array.data()), scratch_string_array.size() * max_string_size))) > 0) {
         for (size_t c = 0; c < len / max_string_size; c++) {
-            vec.push_back(value[c].data());
+            vec.push_back(scratch_string_array[c].data());
         }
         return true;
     }
@@ -636,12 +633,11 @@ bool SettingsDB::getObjectVector(const char *key, objectFixedVector_t &vec) {
     }
     struct fdb_blob blob {};
     size_t len = 0;
-    std::array<std::array<char, max_object_size>, max_array_size> value;
     stringFixed_t keyS(key);
     keyS.append(KEY_TYPE_OBJECT_VECTOR);
-    if ((len = fdb_kv_get_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(value.data()), value.size() * max_object_size))) > 0) {
+    if ((len = fdb_kv_get_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(scratch_object_array.data()), scratch_object_array.size() * max_object_size))) > 0) {
         for (size_t c = 0; c < len / max_object_size; c++) {
-            vec.push_back(value[c].data());
+            vec.push_back(scratch_object_array[c].data());
         }
         return true;
     }
@@ -667,9 +663,9 @@ void SettingsDB::setNumberVector(const char *key, const floatFixedVector_t &vec)
     stringFixed_t keyN(key);
     keyN.append(KEY_TYPE_NUMBER_VECTOR);
 
-    fixed_containers::FixedVector<float, max_array_size> checkNumber;
-    if (getNumberVector(key, checkNumber)) {
-        if (vec == checkNumber) {
+    scratch_float_vector.clear();
+    if (getNumberVector(key, scratch_float_vector)) {
+        if (vec == scratch_float_vector) {
             return;
         }
     }
@@ -682,9 +678,9 @@ void SettingsDB::setBoolVector(const char *key, const fixed_containers::FixedVec
     stringFixed_t keyB(key);
     keyB.append(KEY_TYPE_BOOL_VECTOR);
 
-    fixed_containers::FixedVector<bool, max_array_size> checkBool;
-    if (getBoolVector(key, checkBool)) {
-        if (vec == checkBool) {
+    scratch_bool_vector.clear();
+    if (getBoolVector(key, scratch_bool_vector)) {
+        if (vec == scratch_bool_vector) {
             return;
         }
     }
@@ -697,38 +693,36 @@ void SettingsDB::setStringVector(const char *key, const stringFixedVector_t &vec
     stringFixed_t keyS(key);
     keyS.append(KEY_TYPE_STRING_VECTOR);
 
-    stringFixedVector_t checkString;
-    if (getStringVector(key, checkString)) {
-        if (vec == checkString) {
+    scratch_string_vector.clear();
+    if (getStringVector(key, scratch_string_vector)) {
+        if (vec == scratch_string_vector) {
             return;
         }
     }
 
     struct fdb_blob blob {};
-    std::array<std::array<char, max_string_size>, max_array_size> value{};
     for (size_t c = 0; c < vec.size(); c++) {
-        strcpy(value[c].data(), vec[c].c_str());
+        strcpy(scratch_string_array[c].data(), vec[c].c_str());
     }
-    fdb_kv_set_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(value.data()), vec.size() * max_string_size));
+    fdb_kv_set_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(scratch_string_array.data()), vec.size() * max_string_size));
 }
 
 void SettingsDB::setObjectVector(const char *key, const objectFixedVector_t &vec) {
     stringFixed_t keyS(key);
     keyS.append(KEY_TYPE_OBJECT_VECTOR);
 
-    objectFixedVector_t checkString;
-    if (getObjectVector(key, checkString)) {
-        if (vec == checkString) {
+    scratch_object_vector.clear();
+    if (getObjectVector(key, scratch_object_vector)) {
+        if (vec == scratch_object_vector) {
             return;
         }
     }
 
     struct fdb_blob blob {};
-    std::array<std::array<char, max_object_size>, max_array_size> value{};
     for (size_t c = 0; c < vec.size(); c++) {
-        strcpy(value[c].data(), vec[c].c_str());
+        strcpy(scratch_object_array[c].data(), vec[c].c_str());
     }
-    fdb_kv_set_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(value.data()), vec.size() * max_object_size));
+    fdb_kv_set_blob(&kvdb, keyS.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(scratch_object_array.data()), vec.size() * max_object_size));
 }
 
 void SettingsDB::setBool(const char *key, bool value) {

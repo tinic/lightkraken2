@@ -46,7 +46,7 @@ class SettingsDB {
 
     static constexpr size_t max_array_size = 32;
     static constexpr size_t max_string_size = 64;
-    static constexpr size_t max_object_size = 128;
+    static constexpr size_t max_object_size = 512;
 
     using stringFixed_t = fixed_containers::FixedString<max_string_size>;
     using floatFixedVector_t = fixed_containers::FixedVector<float, max_array_size>;
@@ -157,6 +157,7 @@ class SettingsDB {
 
     KEY_DEFINE_OBJECT_VECTOR(kStripOutputProperties, "strip_output_properties")
     KEY_DEFINE_OBJECT_VECTOR(kOutputConfigProperties, "output_config_properties")
+    KEY_DEFINE_OBJECT_VECTOR(kOutputConfigPinNames, "output_config_pin_names")
 
 #define KEY_DEFINE_NUMBER_VECTOR(KEY_CONSTANT, KEY_STRING)           \
     static constexpr const char *KEY_CONSTANT = KEY_STRING; \
@@ -179,10 +180,16 @@ class SettingsDB {
     bool in_delete_request = false;
     bool in_array = false;
     int32_t in_array_type = -1;
+
     fixed_containers::FixedString<max_string_size> array_key_name{};
-    floatFixedVector_t float_vector{};
-    boolFixedVector_t bool_vector{};
-    stringFixedVector_t string_vector{};
+
+    floatFixedVector_t scratch_float_vector{};
+    boolFixedVector_t scratch_bool_vector{};
+    stringFixedVector_t scratch_string_vector{};
+    objectFixedVector_t scratch_object_vector{};
+
+    std::array<std::array<char, max_string_size>, max_array_size> scratch_string_array{};
+    std::array<std::array<char, max_object_size>, max_array_size> scratch_object_array{};
 };
 
 #endif  // #ifndef BOOTLOADER

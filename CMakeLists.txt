@@ -98,7 +98,7 @@ set(CC_COMMON_FLAGS
     -Wno-unused-parameter
     -Wno-strict-aliasing 
     -Wno-format
-    -Wstack-usage=16384
+    -Wstack-usage=8192
     -Wuninitialized
     -Wno-psabi
     -funsigned-char

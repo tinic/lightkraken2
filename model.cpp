@@ -21,13 +21,17 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #include "./model.h"
-#include "./settingsdb.h"
 
 #include <emio/buffer.hpp>
 #include <emio/format.hpp>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weffc++"
 #include <fixed_containers/fixed_string.hpp>
 #include <fixed_containers/fixed_vector.hpp>
+#pragma GCC diagnostic pop
+
+#include "./settingsdb.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
@@ -45,11 +49,10 @@ Model &Model::instance() {
     return model;
 }
 
-void Model::dumpStatics()  {
-
-    auto stripOutputStringVector = [] () consteval {
+void Model::dumpStatics() {
+    auto stripOutputStringVector = []() consteval {
         SettingsDB::objectFixedVector_t vec{};
-        for (Model::StripOutputProperties prop : Model::stripOutputProperties ) {
+        for (Model::StripOutputProperties prop : Model::stripOutputProperties) {
             emio::static_buffer<SettingsDB::max_object_size> buf{};
             emio::format_to(buf, "{{").value();
             emio::format_to(buf, "\"{}\":\"{}\",", "label", NAMEOF_ENUM(prop.type)).value();
@@ -66,39 +69,39 @@ void Model::dumpStatics()  {
     static constexpr auto vec0 = stripOutputStringVector();
     SettingsDB::instance().setObjectVector(SettingsDB::kStripOutputProperties, vec0);
 
-    auto outputConfigPropertiesVector = [] () consteval {
+    auto outputConfigPropertiesVector = []() consteval {
         SettingsDB::objectFixedVector_t vec{};
-        for (Model::OutputConfigProperties prop : Model::outputConfigProperties ) {
+        for (Model::OutputConfigProperties prop : Model::outputConfigProperties) {
             emio::static_buffer<SettingsDB::max_object_size> buf{};
             emio::format_to(buf, "{{").value();
             emio::format_to(buf, "\"{}\":\"{}\",", NAMEOF(prop.label), prop.label).value();
-            emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.stripn), prop.stripn).value();
-            emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.alogn), prop.alogn).value();
+            emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.strip_n), prop.strip_n).value();
+            emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.analog_n), prop.analog_n).value();
             const char *comma = "";
             emio::format_to(buf, "\"{}\":[", NAMEOF(prop.strip)).value();
-            for (size_t c = 0; c < Model::OutputConfigProperties::OutputConfigMaxDevices; c++ ) {
+            for (size_t c = 0; c < Model::OutputConfigProperties::OutputConfigMaxDevices; c++) {
                 emio::format_to(buf, "{}{}", comma, prop.strip[c] ? 1 : 0).value();
                 comma = ",";
             }
             emio::format_to(buf, "],").value();
             comma = "";
-            emio::format_to(buf, "\"{}\":[", NAMEOF(prop.rgb)).value();
-            for (size_t c = 0; c < Model::OutputConfigProperties::OutputConfigMaxDevices; c++ ) {
-                emio::format_to(buf, "{}{}", comma, prop.rgb[c] ? 1 : 0).value();
+            emio::format_to(buf, "\"{}\":[", NAMEOF(prop.analog)).value();
+            for (size_t c = 0; c < Model::OutputConfigProperties::OutputConfigMaxDevices; c++) {
+                emio::format_to(buf, "{}{}", comma, prop.analog[c] ? 1 : 0).value();
                 comma = ",";
             }
             emio::format_to(buf, "],").value();
             comma = "";
-            emio::format_to(buf, "\"{}\":[", NAMEOF(prop.wclock)).value();
-            for (size_t c = 0; c < Model::OutputConfigProperties::OutputConfigMaxDevices; c++ ) {
-                emio::format_to(buf, "{}{}", comma, prop.wclock[c] ? 1 : 0).value();
+            emio::format_to(buf, "\"{}\":[", NAMEOF(prop.has_clock)).value();
+            for (size_t c = 0; c < Model::OutputConfigProperties::OutputConfigMaxDevices; c++) {
+                emio::format_to(buf, "{}{}", comma, prop.has_clock[c] ? 1 : 0).value();
                 comma = ",";
             }
             emio::format_to(buf, "],").value();
             comma = "";
-            emio::format_to(buf, "\"{}\":[", NAMEOF(prop.comp)).value();
-            for (size_t c = 0; c < Model::OutputConfigProperties::OutputConfigMaxDevices; c++ ) {
-                emio::format_to(buf, "{}{}", comma, prop.comp[c]).value();
+            emio::format_to(buf, "\"{}\":[", NAMEOF(prop.components)).value();
+            for (size_t c = 0; c < Model::OutputConfigProperties::OutputConfigMaxDevices; c++) {
+                emio::format_to(buf, "{}{}", comma, prop.components[c]).value();
                 comma = ",";
             }
             emio::format_to(buf, "]").value();
@@ -169,9 +172,43 @@ void Model::dumpStatics()  {
     };
     static constexpr auto vec8 = outputConfigType();
     SettingsDB::instance().setStringVector(SettingsDB::kOutputConfigType, vec8);
+
+    auto outputConfigPinNamesVector = []() consteval {
+        SettingsDB::objectFixedVector_t vec{};
+        for (Model::OutputConfigPinNames prop : Model::outputConfigPinNames) {
+            emio::static_buffer<SettingsDB::max_object_size> buf{};
+            emio::format_to(buf, "{{").value();
+
+            const char *comma = "";
+            emio::format_to(buf, "\"{}\":[", NAMEOF(prop.pinlabels.no_clock)).value();
+            for (size_t c = 0; c < Model::OutputConfigPinNames::OutputConfigPinCount; c++) {
+                emio::format_to(buf, "{}{{\"{}\":\"{}\",\"{}\":\"{}\"}}", comma, NAMEOF(prop.pinlabels.no_clock[c].l), prop.pinlabels.no_clock[c].l,
+                                NAMEOF(prop.pinlabels.no_clock[c].s), prop.pinlabels.no_clock[c].s)
+                    .value();
+                comma = ",";
+            }
+            emio::format_to(buf, "],").value();
+
+            comma = "";
+            emio::format_to(buf, "\"{}\":[", NAMEOF(prop.pinlabels.with_clock)).value();
+            for (size_t c = 0; c < Model::OutputConfigPinNames::OutputConfigPinCount; c++) {
+                emio::format_to(buf, "{}{{\"{}\":\"{}\",\"{}\":\"{}\"}}", comma, NAMEOF(prop.pinlabels.with_clock[c].l), prop.pinlabels.with_clock[c].l,
+                                NAMEOF(prop.pinlabels.with_clock[c].s), prop.pinlabels.with_clock[c].s)
+                    .value();
+                comma = ",";
+            }
+            emio::format_to(buf, "]").value();
+            emio::format_to(buf, "}}").value();
+
+            vec.push_back(buf.view());
+        }
+        return vec;
+    };
+    static constexpr auto vec9 = outputConfigPinNamesVector();
+    printf("vec %d\n", vec9.size());
+    SettingsDB::instance().setObjectVector(SettingsDB::kOutputConfigPinNames, vec9);
 }
 
-void Model::init() {
-}
+void Model::init() {}
 
 #endif  // #ifndef BOOTLOADER
