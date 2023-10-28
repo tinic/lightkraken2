@@ -81,6 +81,7 @@ App &App::instance() {
 
 void App::init() {
 #ifndef BOOTLOADER
+
     if (HAL_ICACHE_Disable() != 0) {
         while (1) {
         }
