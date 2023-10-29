@@ -24,9 +24,10 @@ SOFTWARE.
 
 #include "webserver.h"
 
-#include "app.h"
-#include "network.h"
-#include "settingsdb.h"
+#include "./app.h"
+#include "./model.h"
+#include "./network.h"
+#include "./settingsdb.h"
 #include "stm32h5xx_hal.h"
 
 typedef UINT (*requestNotifyFunc)(NX_HTTP_SERVER *server_ptr, UINT request_type, CHAR *resource, NX_PACKET *packet_ptr);

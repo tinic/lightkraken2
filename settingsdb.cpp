@@ -33,6 +33,7 @@ SOFTWARE.
 #include <fixed_containers/fixed_string.hpp>
 #include <fixed_containers/fixed_vector.hpp>
 
+#include "./model.h"
 #include "./support/ipv6.h"
 #include "./utils.h"
 #include "./webserver.h"
@@ -495,8 +496,13 @@ UINT SettingsDB::jsonPUTRequest(NX_PACKET *packet_ptr, bool deleteRequest) {
         }
     } while (!done);
     nx_packet_release(packet_ptr);
-    nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, 0,
-                                                   NX_NULL, 0);
+    if (Model::instance().importFromDB()) {
+        nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, 0,
+                                                       NX_NULL, 0);
+    } else {
+        nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_NOT_ACCEPTABLE, sizeof(NX_HTTP_STATUS_NOT_ACCEPTABLE) - 1, NX_NULL, 0,
+                                                       NX_NULL, 0);
+    }
     return (NX_HTTP_CALLBACK_COMPLETED);
 }
 
