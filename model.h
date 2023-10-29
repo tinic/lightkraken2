@@ -28,7 +28,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 struct Model {
    public:
-       static constexpr size_t stripN = 2;
+    static constexpr size_t stripN = 2;
     static constexpr size_t analogN = 2;
     static constexpr size_t universeN = 6;
     static constexpr size_t analogCompN = 6;

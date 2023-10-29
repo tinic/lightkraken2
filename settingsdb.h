@@ -196,8 +196,8 @@ class SettingsDB {
     KEY_DEFINE_NUMBER_VECTOR(kStripLedCount, "strip_led_count")
     KEY_DEFINE_NUMBER_VECTOR(kAnalogPwmLimit, "analog_pwm_limit")
 
-#define KEY_DEFINE_NUMBER_VECTOR_2D(KEY_CONSTANT, KEY_STRING)  \
-    static constexpr const char *KEY_CONSTANT = KEY_STRING; \
+#define KEY_DEFINE_NUMBER_VECTOR_2D(KEY_CONSTANT, KEY_STRING) \
+    static constexpr const char *KEY_CONSTANT = KEY_STRING;   \
     static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_NUMBER_VECTOR_2D;
 
     KEY_DEFINE_NUMBER_VECTOR_2D(kStripArtnetUniverse, "strip_artnet_universe")
