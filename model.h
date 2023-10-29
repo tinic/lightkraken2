@@ -36,6 +36,8 @@ struct Model {
     static constexpr size_t maxLEDs = 255 * universeN;
     static constexpr size_t maxUniverseID = 65535;
 
+    bool broadcastEnabled = false;
+
     struct AnalogConfig {
         // clang-format off
         enum AnalogOutputType { 

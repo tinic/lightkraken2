@@ -260,6 +260,10 @@ void Model::exportToDB() {
     SettingsDB::stringFixedVector_t svec{};
     SettingsDB::floatFixedVector2D_t dvec{};
 
+    if (!SettingsDB::instance().hasBool(SettingsDB::kBroadcastEnabled)) {
+        SettingsDB::instance().setBool(SettingsDB::kBroadcastEnabled, broadcastEnabled);
+    }
+
     if (!SettingsDB::instance().hasStringVector(SettingsDB::kStripOutputType)) {
         svec.clear();
         for (size_t c = 0; c < stripN; c++) {
@@ -403,6 +407,11 @@ bool Model::importFromDB() {
     SettingsDB::floatFixedVector_t nvec{};
     SettingsDB::stringFixedVector_t svec{};
     SettingsDB::floatFixedVector2D_t dvec{};
+
+    bool be = false;
+    if (SettingsDB::instance().getBool(SettingsDB::kStripOutputType, &be)) {
+        broadcastEnabled = be;
+    }
 
     if (SettingsDB::instance().getStringVector(SettingsDB::kStripOutputType, svec)) {
         if (svec.size() >= stripN) {

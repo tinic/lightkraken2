@@ -30,6 +30,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <emio/format.hpp>
 
 #include "./app.h"
+#include "./control.h"
 #include "./network.h"
 #include "./settingsdb.h"
 #include "version.h"
@@ -149,7 +150,7 @@ __attribute__((hot, flatten, optimize("O3"), optimize("unroll-loops"))) static v
     }
 }
 
-bool ArtNetPacket::verify(ArtNetPacket &packet, const uint8_t *buf, size_t len) { // cppcheck-suppress constParameterReference
+bool ArtNetPacket::verify(ArtNetPacket &packet, const uint8_t *buf, size_t len) {  // cppcheck-suppress constParameterReference
     Opcode op = maybeValid(buf, len);
     if (op == OpInvalid) {
         return false;
@@ -266,45 +267,46 @@ bool ArtNetPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t 
     }
     switch (op) {
         case OpPoll: {
-            // Control::instance().interateAllActiveArtnetUniverses([from](uint16_t universe) {
-            //     Systick::instance().schedulePollReply(from, universe);
-            // });
+            Control::instance().interateAllActiveArtnetUniverses([from](uint16_t universe) {
+                // TODO
+                // Systick::instance().schedulePollReply(from, universe);
+            });
             return true;
         } break;
         case OpSync: {
-            // if (!Model::instance().broadcastEnabled() && isBroadcast) {
-            //     return false;
-            // }
-            // Control::instance().setEnableSyncMode(true);
-            // Control::instance().sync();
+            if (!Model::instance().broadcastEnabled && isBroadcast) {
+                return false;
+            }
+            Control::instance().setEnableSyncMode(true);
+            Control::instance().sync();
             syncWatchDog.feed();
             return true;
         } break;
         case OpNzs: {
-            // if (!Model::instance().broadcastEnabled() && isBroadcast) {
-            //     return false;
-            // }
+            if (!Model::instance().broadcastEnabled && isBroadcast) {
+                return false;
+            }
             OutputNzsPacket outputPacket;
             if (ArtNetPacket::verify(outputPacket, buf, len)) {
-                // lightkraken::Control::instance().setArtnetUniverseOutputData(outputPacket.universe(), outputPacket.data(), outputPacket.len());
-                // if(Control::instance().syncModeEnabled() && syncWatchDog.starved()) {
-                //     Control::instance().sync();
-                //     Control::instance().setEnableSyncMode(false);
-                // }
+                Control::instance().setArtnetUniverseOutputData(outputPacket.universe(), outputPacket.data(), outputPacket.len());
+                if (Control::instance().syncModeEnabled() && syncWatchDog.starved()) {
+                    Control::instance().sync();
+                    Control::instance().setEnableSyncMode(false);
+                }
                 return true;
             }
         } break;
         case OpOutput: {
-            // if (!Model::instance().broadcastEnabled() && isBroadcast) {
-            //     return false;
-            // }
+            if (!Model::instance().broadcastEnabled && isBroadcast) {
+                return false;
+            }
             OutputPacket outputPacket;
             if (ArtNetPacket::verify(outputPacket, buf, len)) {
-                // lightkraken::Control::instance().setArtnetUniverseOutputData(outputPacket.universe(), outputPacket.data(), outputPacket.len());
-                // if(Control::instance().syncModeEnabled() && syncWatchDog.starved()) {
-                //     Control::instance().sync();
-                //     Control::instance().setEnableSyncMode(false);
-                // }
+                Control::instance().setArtnetUniverseOutputData(outputPacket.universe(), outputPacket.data(), outputPacket.len());
+                if (Control::instance().syncModeEnabled() && syncWatchDog.starved()) {
+                    Control::instance().sync();
+                    Control::instance().setEnableSyncMode(false);
+                }
                 return true;
             }
         } break;
