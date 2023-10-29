@@ -81,7 +81,7 @@ void Systick::schedulePollReply(const NXD_ADDRESS *from, uint16_t universe) {
         if (pollReply[c].delay <= 0) {
             pollReply[c].from = *from;
             pollReply[c].universe = universe;
-            pollReply[c].delay = PseudoRandom::instance().get(100, 900);
+            pollReply[c].delay = PseudoRandom::instance().get(1000, 9000);
             return;
         }
     }
@@ -99,12 +99,12 @@ void Systick::handler() {
 #ifndef BOOTLOADER
 
     static uint32_t set_color = 1;
-    if ((set_color++ & 0x00FF) == 0x0 && !Control::instance().dataReceived()) {
+    if ((set_color++ & 0x0000'0FFF) == 0x0 && !Control::instance().dataReceived()) {
         Control::instance().scheduleColor();
     }
 
     static uint32_t sacn_discovery = 1;
-    if ((sacn_discovery++ & 0x3FFF) == 0x0) {
+    if ((sacn_discovery++ & 0x0003'FFFF) == 0x0) {
         sACNPacket::sendDiscovery();
     }
 
@@ -130,7 +130,6 @@ void Systick::handler() {
                 powerClass == StatusLED::PSE_TYPE_3_4_CLASS_4 ||
                 powerClass == StatusLED::PSE_TYPE_3_4_CLASS_5_6 ||
                 powerClass == StatusLED::PSE_TYPE_4_CLASS_7_8 ) {
-
                 Model::instance().apply();
                 apply_scheduled = false;
             }
@@ -143,7 +142,7 @@ void Systick::handler() {
 #if 0
     static uint32_t status_led = 0;
     if ((status_led++ & 0xF) == 0x0) {
-        lightkraken::StatusLED::instance().schedule();
+        StatusLED::instance().schedule();
     }
 #endif  // #if 0
 

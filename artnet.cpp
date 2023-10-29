@@ -269,8 +269,7 @@ bool ArtNetPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t 
     switch (op) {
         case OpPoll: {
             Control::instance().interateAllActiveArtnetUniverses([from](uint16_t universe) {
-                // TODO
-                // Systick::instance().schedulePollReply(from, universe);
+            Systick::instance().schedulePollReply(from, universe);
             });
             return true;
         } break;
