@@ -61,7 +61,7 @@ class Systick {
         NXD_ADDRESS from;
         uint16_t universe;
         int32_t delay;
-    } pollReply[8];
+    } pollReply[8] {};
 #endif  // #ifndef BOOTLOADER
 };
 
