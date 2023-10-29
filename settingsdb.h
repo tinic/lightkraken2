@@ -185,10 +185,10 @@ class SettingsDB {
     static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_NUMBER_VECTOR;
 
     KEY_DEFINE_NUMBER_VECTOR(kActiveIPv6PrefixLen, "active_ipv6_prefix_len")
-    KEY_DEFINE_STRING_VECTOR(kStripCompLimit, "strip_comp_limit")
-    KEY_DEFINE_STRING_VECTOR(kStripGlobIllum, "strip_glob_illum")
-    KEY_DEFINE_STRING_VECTOR(kStripLedCount, "strip_led_count")
-    KEY_DEFINE_STRING_VECTOR(kAnalogPwmLimit, "analog_pwm_limit")
+    KEY_DEFINE_NUMBER_VECTOR(kStripCompLimit, "strip_comp_limit")
+    KEY_DEFINE_NUMBER_VECTOR(kStripGlobIllum, "strip_glob_illum")
+    KEY_DEFINE_NUMBER_VECTOR(kStripLedCount, "strip_led_count")
+    KEY_DEFINE_NUMBER_VECTOR(kAnalogPwmLimit, "analog_pwm_limit")
 
 #define KEY_DEFINE_NUMBER_2D_VECTOR(KEY_CONSTANT, KEY_STRING)  \
     static constexpr const char *KEY_CONSTANT = KEY_STRING; \
