@@ -250,7 +250,76 @@ void Model::exportStaticsToDB() {
     }
 }
 
-void Model::exportToDB() {}
+void Model::exportToDB() {
+    SettingsDB::floatFixedVector_t nvec{};
+    SettingsDB::stringFixedVector_t svec{};
+
+    if (!SettingsDB::instance().hasStringVector(SettingsDB::kStripOutputType)) {
+        svec.clear();
+        for (size_t c = 0; c < stripN; c++) {
+            svec.push_back(NAMEOF_ENUM(strip_config[c].output_type));
+        }
+        SettingsDB::instance().setStringVector(SettingsDB::kStripOutputType, svec);
+    }
+
+    if (!SettingsDB::instance().hasStringVector(SettingsDB::kStripInputType)) {
+        svec.clear();
+        for (size_t c = 0; c < stripN; c++) {
+            svec.push_back(NAMEOF_ENUM(strip_config[c].input_type));
+        }
+        SettingsDB::instance().setStringVector(SettingsDB::kStripInputType, svec);
+    }
+
+    if (!SettingsDB::instance().hasNumberVector(SettingsDB::kStripStartupMode)) {
+        svec.clear();
+        for (size_t c = 0; c < stripN; c++) {
+            svec.push_back(NAMEOF_ENUM(strip_config[c].startup_mode));
+        }
+        SettingsDB::instance().setStringVector(SettingsDB::kStripStartupMode, svec);
+    }
+
+    if (!SettingsDB::instance().hasNumberVector(SettingsDB::kStripCompLimit)) {
+        nvec.clear();
+        for (size_t c = 0; c < stripN; c++) {
+            nvec.push_back(float(strip_config[c].comp_limit));
+        }
+        SettingsDB::instance().setNumberVector(SettingsDB::kStripCompLimit, nvec);
+    }
+
+    if (!SettingsDB::instance().hasNumberVector(SettingsDB::kStripLedCount)) {
+        nvec.clear();
+        for (size_t c = 0; c < stripN; c++) {
+            nvec.push_back(float(strip_config[c].led_count));
+        }
+        SettingsDB::instance().setNumberVector(SettingsDB::kStripLedCount, nvec);
+    }
+
+    //------------------------------------------------
+
+    if (!SettingsDB::instance().hasStringVector(SettingsDB::kAnalogOutputType)) {
+        svec.clear();
+        for (size_t c = 0; c < analogN; c++) {
+            svec.push_back(NAMEOF_ENUM(analog_config[c].output_type));
+        }
+        SettingsDB::instance().setStringVector(SettingsDB::kAnalogOutputType, svec);
+    }
+
+    if (!SettingsDB::instance().hasStringVector(SettingsDB::kAnalogInputType)) {
+        svec.clear();
+        for (size_t c = 0; c < analogN; c++) {
+            svec.push_back(NAMEOF_ENUM(analog_config[c].input_type));
+        }
+        SettingsDB::instance().setStringVector(SettingsDB::kAnalogInputType, svec);
+    }
+
+    if (!SettingsDB::instance().hasNumberVector(SettingsDB::kAnalogPwmLimit)) {
+        nvec.clear();
+        for (size_t c = 0; c < analogN; c++) {
+            nvec.push_back(float(analog_config[c].pwm_limit));
+        }
+        SettingsDB::instance().setNumberVector(SettingsDB::kAnalogPwmLimit, nvec);
+    }
+}
 
 void Model::importFromDB() {}
 

@@ -848,4 +848,60 @@ void SettingsDB::delStringVector(const char *key) {
     fdb_kv_del(&kvdb, keyS.c_str());
 }
 
+bool SettingsDB::hasNumber(const char *key) {
+    stringFixed_t keyD(key);
+    keyD.append(KEY_TYPE_NUMBER);
+    fdb_kv kv{};
+    return fdb_kv_get_obj(&kvdb, keyD.c_str(), &kv) ? true : false;
+}
+
+bool SettingsDB::hasBool(const char *key) {
+    stringFixed_t keyD(key);
+    keyD.append(KEY_TYPE_BOOL);
+    fdb_kv kv{};
+    return fdb_kv_get_obj(&kvdb, keyD.c_str(), &kv) ? true : false;
+}
+
+bool SettingsDB::hasString(const char *key) {
+    stringFixed_t keyD(key);
+    keyD.append(KEY_TYPE_STRING);
+    fdb_kv kv{};
+    return fdb_kv_get_obj(&kvdb, keyD.c_str(), &kv) ? true : false;
+}
+
+bool SettingsDB::hasNull(const char *key) {
+    stringFixed_t keyD(key);
+    keyD.append(KEY_TYPE_NULL);
+    fdb_kv kv{};
+    return fdb_kv_get_obj(&kvdb, keyD.c_str(), &kv) ? true : false;
+}
+
+bool SettingsDB::hasIP(const char *key) {
+    stringFixed_t keyD(key);
+    keyD.append(KEY_TYPE_STRING);
+    fdb_kv kv{};
+    return fdb_kv_get_obj(&kvdb, keyD.c_str(), &kv) ? true : false;
+}
+
+bool SettingsDB::hasNumberVector(const char *key) {
+    stringFixed_t keyD(key);
+    keyD.append(KEY_TYPE_NUMBER_VECTOR);
+    fdb_kv kv{};
+    return fdb_kv_get_obj(&kvdb, keyD.c_str(), &kv) ? true : false;
+}
+
+bool SettingsDB::hasStringVector(const char *key) {
+    stringFixed_t keyD(key);
+    keyD.append(KEY_TYPE_STRING_VECTOR);
+    fdb_kv kv{};
+    return fdb_kv_get_obj(&kvdb, keyD.c_str(), &kv) ? true : false;
+}
+
+bool SettingsDB::hasBoolVector(const char *key) {
+    stringFixed_t keyD(key);
+    keyD.append(KEY_TYPE_BOOL_VECTOR);
+    fdb_kv kv{};
+    return fdb_kv_get_obj(&kvdb, keyD.c_str(), &kv) ? true : false;
+}
+
 #endif  // #ifndef BOOTLOADER

@@ -90,6 +90,16 @@ class SettingsDB {
     void delBoolVector(const char *key);
     void delStringVector(const char *key);
 
+    bool hasNumber(const char *key);
+    bool hasBool(const char *key);
+    bool hasString(const char *key);
+    bool hasNull(const char *key);
+    bool hasIP(const char *key);
+
+    bool hasNumberVector(const char *key);
+    bool hasStringVector(const char *key);
+    bool hasBoolVector(const char *key);
+
     void erase();
 
     UINT jsonGETRequest(NX_PACKET *packet_ptr);
