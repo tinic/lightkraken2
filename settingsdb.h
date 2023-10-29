@@ -49,12 +49,14 @@ class SettingsDB {
 
     static SettingsDB &instance();
 
+    static constexpr size_t max_array_size_2d = 16;
     static constexpr size_t max_array_size = 32;
     static constexpr size_t max_string_size = 64;
     static constexpr size_t max_object_size = 4096;
 
     using stringFixed_t = fixed_containers::FixedString<max_string_size>;
     using floatFixedVector_t = fixed_containers::FixedVector<float, max_array_size>;
+    using floatFixedVector2D_t = fixed_containers::FixedVector<fixed_containers::FixedVector<float, max_array_size_2d>, max_array_size_2d>;
     using boolFixedVector_t = fixed_containers::FixedVector<bool, max_array_size>;
     using stringFixedVector_t = fixed_containers::FixedVector<fixed_containers::FixedString<max_string_size>, max_array_size>;
 
@@ -65,6 +67,7 @@ class SettingsDB {
     bool getIP(const char *key, NXD_ADDRESS *value, const NXD_ADDRESS *default_value = 0);
 
     bool getNumberVector(const char *key, floatFixedVector_t &vec);
+    bool getNumberVector2D(const char *key, floatFixedVector2D_t &vec);
     bool getBoolVector(const char *key, boolFixedVector_t &vec);
     bool getStringVector(const char *key, stringFixedVector_t &vec);
     bool getObject(const char *key, char *value, size_t *len, size_t max_len);
@@ -76,6 +79,7 @@ class SettingsDB {
     void setIP(const char *key, const NXD_ADDRESS *addr);
 
     void setNumberVector(const char *key, const floatFixedVector_t &vec);
+    void setNumberVector2D(const char *key, const floatFixedVector2D_t &vec);
     void setBoolVector(const char *key, const boolFixedVector_t &vec);
     void setStringVector(const char *key, const stringFixedVector_t &vec);
     void setObject(const char *key, const char *value, size_t len);
@@ -101,7 +105,7 @@ class SettingsDB {
 #define KEY_TYPE_BOOL "@b"
 #define KEY_TYPE_OBJECT "@o"
 #define KEY_TYPE_NUMBER_VECTOR "@F"
-#define KEY_TYPE_NUMBER_2D_VECTOR "@2"
+#define KEY_TYPE_NUMBER_VECTOR_2D "@2"
 #define KEY_TYPE_STRING_VECTOR "@S"
 #define KEY_TYPE_BOOL_VECTOR "@B"
 #define KEY_TYPE_NULL "@n"
@@ -111,7 +115,7 @@ class SettingsDB {
 #define KEY_TYPE_BOOL_CHAR 'b'
 #define KEY_TYPE_OBJECT_CHAR 'o'
 #define KEY_TYPE_NUMBER_VECTOR_CHAR 'F'
-#define KEY_TYPE_NUMBER_2D_VECTOR_CHAR "2"
+#define KEY_TYPE_NUMBER_VECTOR_2D_CHAR '2'
 #define KEY_TYPE_STRING_VECTOR_CHAR 'S'
 #define KEY_TYPE_BOOL_VECTOR_CHAR 'B'
 #define KEY_TYPE_NULL_CHAR 'n'
@@ -180,16 +184,16 @@ class SettingsDB {
     KEY_DEFINE_STRING_VECTOR(kStripLedCount, "strip_led_count")
     KEY_DEFINE_STRING_VECTOR(kAnalogPwmLimit, "analog_pwm_limit")
 
-#define KEY_DEFINE_NUMBER_2D_VECTOR(KEY_CONSTANT, KEY_STRING)  \
+#define KEY_DEFINE_NUMBER_VECTOR_2D(KEY_CONSTANT, KEY_STRING)  \
     static constexpr const char *KEY_CONSTANT = KEY_STRING; \
-    static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_NUMBER_2D_VECTOR;
+    static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_NUMBER_VECTOR_2D;
 
-    KEY_DEFINE_NUMBER_2D_VECTOR(kStripArtnetUniverse, "strip_artnet_universe")
-    KEY_DEFINE_NUMBER_2D_VECTOR(kStripe131Universe, "strip_e131_universe")
-    KEY_DEFINE_NUMBER_2D_VECTOR(kAnalogArtnetUniverse, "analog_artnet_universe")
-    KEY_DEFINE_NUMBER_2D_VECTOR(kAnalogArtnetChannel, "analog_artnet_channel")
-    KEY_DEFINE_NUMBER_2D_VECTOR(kAnaloge131Universe, "analog_e131_universe")
-    KEY_DEFINE_NUMBER_2D_VECTOR(kAnaloge131Channel, "analog_e131_channel")
+    KEY_DEFINE_NUMBER_VECTOR_2D(kStripArtnetUniverse, "strip_artnet_universe")
+    KEY_DEFINE_NUMBER_VECTOR_2D(kStripe131Universe, "strip_e131_universe")
+    KEY_DEFINE_NUMBER_VECTOR_2D(kAnalogArtnetUniverse, "analog_artnet_universe")
+    KEY_DEFINE_NUMBER_VECTOR_2D(kAnalogArtnetChannel, "analog_artnet_channel")
+    KEY_DEFINE_NUMBER_VECTOR_2D(kAnaloge131Universe, "analog_e131_universe")
+    KEY_DEFINE_NUMBER_VECTOR_2D(kAnaloge131Channel, "analog_e131_channel")
 
    private:
     void init();
@@ -209,6 +213,7 @@ class SettingsDB {
 
     fixed_containers::FixedString<max_string_size> array_key_name{};
     floatFixedVector_t scratch_float_vector{};
+    floatFixedVector2D_t scratch_float_vector_2d{};
     boolFixedVector_t scratch_bool_vector{};
     stringFixedVector_t scratch_string_vector{};
 

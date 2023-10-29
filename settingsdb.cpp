@@ -217,6 +217,27 @@ UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
                         }
                         emio::format_to(buf, "]").value();
                     } break;
+                    case KEY_TYPE_NUMBER_VECTOR_2D_CHAR: {
+                        std::array<float, max_array_size * max_array_size_2d + max_array_size_2d + 1> value;
+                        fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb),
+                                      fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, value.data(), sizeof(float) * value.size())));
+                        emio::format_to(buf, "{}\"{}\":[", comma, name_buf).value();
+                        const char *comma0 = "";
+                        size_t idx = 0;
+                        size_t rows = size_t(value[idx++]);
+                        for (size_t c = 0; c < rows; c++) {
+                            emio::format_to(buf, "{}[", comma0).value();
+                            size_t cols = size_t(value[idx++]);
+                            const char *comma1 = "";
+                            for (size_t d = 0; d < cols; d++) {
+                                emio::format_to(buf, "{}{}", comma1, value[idx++]).value();
+                                comma1 = ",";
+                            }
+                            emio::format_to(buf, "]").value();
+                            comma0 = ",";
+                        }
+                        emio::format_to(buf, "]").value();
+                    } break;
                     case KEY_TYPE_STRING_VECTOR_CHAR: {
                         size_t len = fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb),
                                                    fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, scratch_string_array.data(), max_string_size * max_array_size)));
@@ -589,6 +610,31 @@ bool SettingsDB::getNumberVector(const char *key, floatFixedVector_t &vec) {
     return false;
 }
 
+bool SettingsDB::getNumberVector2D(const char *key, floatFixedVector2D_t &vec) {
+    if (!key) {
+        return false;
+    }
+    vec.clear();
+    stringFixed_t keyF(key);
+    keyF.append(KEY_TYPE_NUMBER_VECTOR);
+    struct fdb_blob blob {};
+    std::array<float, max_array_size_2d * max_array_size_2d + max_array_size_2d + 1> raw;
+    if (fdb_kv_get_blob(&kvdb, keyF.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(raw.data()), raw.size() * sizeof(float))) > 0) {
+        size_t idx = 0;
+        size_t rows = size_t(raw[idx++]);
+        for (size_t c = 0; c < rows; c++) {
+            size_t cols = size_t(raw[idx++]);
+            fixed_containers::FixedVector<float, max_array_size_2d> row{};
+            for (size_t d = 0; d < cols; d++) {
+                row.push_back(raw[idx++]);
+            }
+            vec.push_back(row);
+        }
+        return true;
+    }
+    return false;
+}
+
 bool SettingsDB::getBoolVector(const char *key, fixed_containers::FixedVector<bool, max_array_size> &vec) {
     if (!key) {
         return false;
@@ -668,6 +714,36 @@ void SettingsDB::setNumberVector(const char *key, const floatFixedVector_t &vec)
 
     struct fdb_blob blob {};
     fdb_kv_set_blob(&kvdb, keyN.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(vec.data()), vec.size() * sizeof(float)));
+}
+
+void SettingsDB::setNumberVector2D(const char *key, const floatFixedVector2D_t &vec) {
+    stringFixed_t keyN(key);
+    keyN.append(KEY_TYPE_NUMBER_VECTOR);
+
+    scratch_float_vector_2d.clear();
+    if (getNumberVector2D(key, scratch_float_vector_2d)) {
+        if (vec.size() != scratch_float_vector_2d.size()) {
+            goto different;
+        }
+        for (size_t c = 0; c < vec.size(); c++) {
+            if (vec[c] != scratch_float_vector_2d[c]) {
+                goto different;
+            }
+        }
+    }
+    return;
+
+different:
+    fixed_containers::FixedVector<float, max_array_size_2d * max_array_size_2d + max_array_size_2d + 1> raw;
+    raw.push_back(float(vec.size()));
+    for (const fixed_containers::FixedVector<float, max_array_size_2d> &row : vec) {
+        raw.push_back(float(row.size()));
+        for (const float value : row) {
+            raw.push_back(value);
+        }
+    }
+    struct fdb_blob blob {};
+    fdb_kv_set_blob(&kvdb, keyN.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(raw.data()), raw.size() * sizeof(float)));
 }
 
 void SettingsDB::setBoolVector(const char *key, const fixed_containers::FixedVector<bool, max_array_size> &vec) {
