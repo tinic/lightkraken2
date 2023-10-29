@@ -91,6 +91,7 @@ class SettingsDB {
     void delIP(const char *key);
 
     void delNumberVector(const char *key);
+    void delNumberVector2D(const char *key);
     void delBoolVector(const char *key);
     void delStringVector(const char *key);
 
@@ -101,6 +102,7 @@ class SettingsDB {
     bool hasIP(const char *key);
 
     bool hasNumberVector(const char *key);
+    bool hasNumberVector2D(const char *key);
     bool hasStringVector(const char *key);
     bool hasBoolVector(const char *key);
 

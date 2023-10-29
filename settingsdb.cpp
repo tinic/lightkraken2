@@ -401,6 +401,7 @@ void SettingsDB::jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_t
                 SettingsDB::instance().delStringVector(data_buf);
                 SettingsDB::instance().delBoolVector(data_buf);
                 SettingsDB::instance().delNumberVector(data_buf);
+                SettingsDB::instance().delNumberVector2D(data_buf);
             }
             in_array = true;
             in_array_type = -1;
@@ -408,6 +409,7 @@ void SettingsDB::jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_t
             scratch_float_vector.clear();
             scratch_bool_vector.clear();
             scratch_string_vector.clear();
+            scratch_float_vector_2d.clear();
         } break;
         case LWJSON_STREAM_TYPE_ARRAY_END: {
             if (!in_delete_request) {
@@ -431,6 +433,7 @@ void SettingsDB::jsonStreamSettings(lwjson_stream_parser_t *jsp, lwjson_stream_t
             scratch_float_vector.clear();
             scratch_bool_vector.clear();
             scratch_string_vector.clear();
+            scratch_float_vector_2d.clear();
         } break;
         default:
             // not supported
@@ -718,7 +721,7 @@ void SettingsDB::setNumberVector(const char *key, const floatFixedVector_t &vec)
 
 void SettingsDB::setNumberVector2D(const char *key, const floatFixedVector2D_t &vec) {
     stringFixed_t keyN(key);
-    keyN.append(KEY_TYPE_NUMBER_VECTOR);
+    keyN.append(KEY_TYPE_NUMBER_VECTOR_2D);
 
     scratch_float_vector_2d.clear();
     if (getNumberVector2D(key, scratch_float_vector_2d)) {
@@ -730,8 +733,8 @@ void SettingsDB::setNumberVector2D(const char *key, const floatFixedVector2D_t &
                 goto different;
             }
         }
+        return;
     }
-    return;
 
 different:
     fixed_containers::FixedVector<float, max_array_size_2d * max_array_size_2d + max_array_size_2d + 1> raw;
@@ -912,6 +915,12 @@ void SettingsDB::delNumberVector(const char *key) {
     fdb_kv_del(&kvdb, keyN.c_str());
 }
 
+void SettingsDB::delNumberVector2D(const char *key) {
+    stringFixed_t keyN(key);
+    keyN.append(KEY_TYPE_NUMBER_VECTOR_2D);
+    fdb_kv_del(&kvdb, keyN.c_str());
+}
+
 void SettingsDB::delBoolVector(const char *key) {
     stringFixed_t keyB(key);
     keyB.append(KEY_TYPE_BOOL_VECTOR);
@@ -962,6 +971,13 @@ bool SettingsDB::hasIP(const char *key) {
 bool SettingsDB::hasNumberVector(const char *key) {
     stringFixed_t keyD(key);
     keyD.append(KEY_TYPE_NUMBER_VECTOR);
+    fdb_kv kv{};
+    return fdb_kv_get_obj(&kvdb, keyD.c_str(), &kv) ? true : false;
+}
+
+bool SettingsDB::hasNumberVector2D(const char *key) {
+    stringFixed_t keyD(key);
+    keyD.append(KEY_TYPE_NUMBER_VECTOR_2D);
     fdb_kv kv{};
     return fdb_kv_get_obj(&kvdb, keyD.c_str(), &kv) ? true : false;
 }

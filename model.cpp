@@ -34,6 +34,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <vector>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#include <magic_enum.hpp>
+#pragma GCC diagnostic pop
+
 #include "./settingsdb.h"
 
 #ifndef BOOTLOADER
@@ -253,6 +258,7 @@ void Model::exportStaticsToDB() {
 void Model::exportToDB() {
     SettingsDB::floatFixedVector_t nvec{};
     SettingsDB::stringFixedVector_t svec{};
+    SettingsDB::floatFixedVector2D_t dvec{};
 
     if (!SettingsDB::instance().hasStringVector(SettingsDB::kStripOutputType)) {
         svec.clear();
@@ -294,6 +300,30 @@ void Model::exportToDB() {
         SettingsDB::instance().setNumberVector(SettingsDB::kStripLedCount, nvec);
     }
 
+    if (!SettingsDB::instance().hasNumberVector2D(SettingsDB::kStripArtnetUniverse)) {
+        dvec.clear();
+        for (size_t c = 0; c < stripN; c++) {
+            fixed_containers::FixedVector<float, SettingsDB::max_array_size_2d> ivec{};
+            for (size_t d = 0; d < universeN; d++) {
+                ivec.push_back(float(strip_config[c].artnet[d]));
+            }
+            dvec.push_back(ivec);
+        }
+        SettingsDB::instance().setNumberVector2D(SettingsDB::kStripArtnetUniverse, dvec);
+    }
+
+    if (!SettingsDB::instance().hasNumberVector2D(SettingsDB::kStripe131Universe)) {
+        dvec.clear();
+        for (size_t c = 0; c < stripN; c++) {
+            fixed_containers::FixedVector<float, SettingsDB::max_array_size_2d> ivec{};
+            for (size_t d = 0; d < universeN; d++) {
+                ivec.push_back(float(strip_config[c].artnet[d]));
+            }
+            dvec.push_back(ivec);
+        }
+        SettingsDB::instance().setNumberVector2D(SettingsDB::kStripe131Universe, dvec);
+    }
+
     //------------------------------------------------
 
     if (!SettingsDB::instance().hasStringVector(SettingsDB::kAnalogOutputType)) {
@@ -319,9 +349,306 @@ void Model::exportToDB() {
         }
         SettingsDB::instance().setNumberVector(SettingsDB::kAnalogPwmLimit, nvec);
     }
+
+    if (!SettingsDB::instance().hasNumberVector2D(SettingsDB::kAnalogArtnetUniverse)) {
+        dvec.clear();
+        for (size_t c = 0; c < analogN; c++) {
+            fixed_containers::FixedVector<float, SettingsDB::max_array_size_2d> ivec{};
+            for (size_t d = 0; d < analogCompN; d++) {
+                ivec.push_back(float(analog_config[c].components[d].artnet.universe));
+            }
+            dvec.push_back(ivec);
+        }
+        SettingsDB::instance().setNumberVector2D(SettingsDB::kAnalogArtnetUniverse, dvec);
+    }
+
+    if (!SettingsDB::instance().hasNumberVector2D(SettingsDB::kAnalogArtnetChannel)) {
+        dvec.clear();
+        for (size_t c = 0; c < analogN; c++) {
+            fixed_containers::FixedVector<float, SettingsDB::max_array_size_2d> ivec{};
+            for (size_t d = 0; d < analogCompN; d++) {
+                ivec.push_back(float(analog_config[c].components[d].artnet.channel));
+            }
+            dvec.push_back(ivec);
+        }
+        SettingsDB::instance().setNumberVector2D(SettingsDB::kAnalogArtnetChannel, dvec);
+    }
+
+    if (!SettingsDB::instance().hasNumberVector2D(SettingsDB::kAnaloge131Universe)) {
+        dvec.clear();
+        for (size_t c = 0; c < analogN; c++) {
+            fixed_containers::FixedVector<float, SettingsDB::max_array_size_2d> ivec{};
+            for (size_t d = 0; d < analogCompN; d++) {
+                ivec.push_back(float(analog_config[c].components[d].e131.universe));
+            }
+            dvec.push_back(ivec);
+        }
+        SettingsDB::instance().setNumberVector2D(SettingsDB::kAnaloge131Universe, dvec);
+    }
+
+    if (!SettingsDB::instance().hasNumberVector2D(SettingsDB::kAnaloge131Channel)) {
+        dvec.clear();
+        for (size_t c = 0; c < analogN; c++) {
+            fixed_containers::FixedVector<float, SettingsDB::max_array_size_2d> ivec{};
+            for (size_t d = 0; d < analogCompN; d++) {
+                ivec.push_back(float(analog_config[c].components[d].e131.channel));
+            }
+            dvec.push_back(ivec);
+        }
+        SettingsDB::instance().setNumberVector2D(SettingsDB::kAnaloge131Channel, dvec);
+    }
 }
 
-void Model::importFromDB() {}
+bool Model::importFromDB() {
+    SettingsDB::floatFixedVector_t nvec{};
+    SettingsDB::stringFixedVector_t svec{};
+    SettingsDB::floatFixedVector2D_t dvec{};
+
+    if (SettingsDB::instance().getStringVector(SettingsDB::kStripOutputType, svec)) {
+        if (svec.size() >= stripN) {
+            for (size_t c = 0; c < stripN; c++) {
+                auto value = magic_enum::enum_cast<StripConfig::StripOutputType>(svec[c]);
+                if (value.has_value()) {
+                    strip_config[c].output_type = value.value();
+                } else {
+                    return false;
+                }
+            }
+        } else {
+            return false;
+        }
+    }
+
+    if (SettingsDB::instance().getStringVector(SettingsDB::kStripInputType, svec)) {
+        if (svec.size() >= stripN) {
+            for (size_t c = 0; c < stripN; c++) {
+                auto value = magic_enum::enum_cast<StripConfig::StripInputType>(svec[c]);
+                if (value.has_value()) {
+                    strip_config[c].input_type = value.value();
+                } else {
+                    return false;
+                }
+            }
+        } else {
+            return false;
+        }
+    }
+
+    if (SettingsDB::instance().getStringVector(SettingsDB::kStripStartupMode, svec)) {
+        if (svec.size() >= stripN) {
+            for (size_t c = 0; c < stripN; c++) {
+                auto value = magic_enum::enum_cast<StripConfig::StripStartupMode>(svec[c]);
+                if (value.has_value()) {
+                    strip_config[c].startup_mode = value.value();
+                } else {
+                    return false;
+                }
+            }
+        } else {
+            return false;
+        }
+    }
+
+    if (SettingsDB::instance().getNumberVector(SettingsDB::kStripCompLimit, nvec)) {
+        if (svec.size() >= stripN) {
+            for (size_t c = 0; c < stripN; c++) {
+                if ((nvec[c] < 0.0f) || (nvec[c] > 2.0f)) {
+                    return false;
+                }
+                strip_config[c].comp_limit = nvec[c];
+            }
+        } else {
+            return false;
+        }
+    }
+
+    if (SettingsDB::instance().getNumberVector(SettingsDB::kStripGlobIllum, nvec)) {
+        if (svec.size() >= stripN) {
+            for (size_t c = 0; c < stripN; c++) {
+                if ((nvec[c] < 0.0f) || (nvec[c] > 2.0f)) {
+                    return false;
+                }
+                strip_config[c].glob_illum = nvec[c];
+            }
+        } else {
+            return false;
+        }
+    }
+
+    if (SettingsDB::instance().getNumberVector(SettingsDB::kStripLedCount, nvec)) {
+        if (svec.size() >= stripN) {
+            for (size_t c = 0; c < stripN; c++) {
+                if ((nvec[c] < 0.0f) || (nvec[c] > float(maxLEDs))) {
+                    return false;
+                }
+                strip_config[c].led_count = uint16_t(nvec[c]);
+            }
+        } else {
+            return false;
+        }
+    }
+
+    if (SettingsDB::instance().getNumberVector2D(SettingsDB::kStripArtnetUniverse, dvec)) {
+        if (svec.size() >= stripN) {
+            for (size_t c = 0; c < stripN; c++) {
+                if (svec[c].size() >= universeN) {
+                    for (size_t d = 0; c < universeN; c++) {
+                        if ((dvec[c][d] < 0.0f) || (dvec[c][d] > float(maxUniverseID))) {
+                            return false;
+                        }
+                        strip_config[c].artnet[d] = uint16_t(dvec[c][d]);
+                    }
+                } else {
+                    return false;
+                }
+            }
+        } else {
+            return false;
+        }
+    }
+
+    if (SettingsDB::instance().getNumberVector2D(SettingsDB::kStripe131Universe, dvec)) {
+        if (svec.size() >= stripN) {
+            for (size_t c = 0; c < stripN; c++) {
+                if (svec[c].size() >= universeN) {
+                    for (size_t d = 0; c < universeN; c++) {
+                        if ((dvec[c][d] < 0.0f) || (dvec[c][d] > float(maxUniverseID+1))) {
+                            return false;
+                        }
+                        strip_config[c].e131[d] = uint16_t(dvec[c][d]);
+                    }
+                } else {
+                    return false;
+                }
+            }
+        } else {
+            return false;
+        }
+    }
+
+    // ----------------------------
+
+    if (SettingsDB::instance().getStringVector(SettingsDB::kAnalogOutputType, svec)) {
+        if (svec.size() >= stripN) {
+            for (size_t c = 0; c < stripN; c++) {
+                auto value = magic_enum::enum_cast<AnalogConfig::AnalogOutputType>(svec[c]);
+                if (value.has_value()) {
+                    analog_config[c].output_type = value.value();
+                } else {
+                    return false;
+                }
+            }
+        } else {
+            return false;
+        }
+    }
+
+    if (SettingsDB::instance().getStringVector(SettingsDB::kAnalogInputType, svec)) {
+        if (svec.size() >= stripN) {
+            for (size_t c = 0; c < stripN; c++) {
+                auto value = magic_enum::enum_cast<AnalogConfig::AnalogInputType>(svec[c]);
+                if (value.has_value()) {
+                    analog_config[c].input_type = value.value();
+                } else{
+                    return false;
+                } 
+            }
+        } else {
+            return false;
+        }
+    }
+
+    if (SettingsDB::instance().getNumberVector(SettingsDB::kAnalogPwmLimit, nvec)) {
+        if (svec.size() >= stripN) {
+            for (size_t c = 0; c < stripN; c++) {
+                if (nvec[c] < 0.0f || nvec[c] > 2.0f) {
+                    return false;
+                }
+                analog_config[c].pwm_limit = nvec[c];
+            }
+        } else {
+            return false;
+        }
+    }
+
+    if (SettingsDB::instance().getNumberVector2D(SettingsDB::kAnalogArtnetUniverse, dvec)) {
+        if (svec.size() >= analogN) {
+            for (size_t c = 0; c < analogN; c++) {
+                if (svec[c].size() >= analogCompN) {
+                    for (size_t d = 0; c < analogCompN; c++) {
+                        if ((dvec[c][d] < 0.0f) || (dvec[c][d] > float(maxUniverseID+1))) {
+                            return false;
+                        }
+                        analog_config[c].components[d].artnet.universe = uint16_t(dvec[c][d]);
+                    }
+                } else{
+                    return false;
+                } 
+            }
+        } else {
+            return false;
+        }
+    }
+
+    if (SettingsDB::instance().getNumberVector2D(SettingsDB::kAnalogArtnetChannel, dvec)) {
+        if (svec.size() >= analogN) {
+            for (size_t c = 0; c < analogN; c++) {
+                if (svec[c].size() >= analogCompN) {
+                    for (size_t d = 0; c < analogCompN; c++) {
+                        if ((dvec[c][d] < 0.0f) || (dvec[c][d] >= float(analogCompN))) {
+                            return false;
+                        }
+                        analog_config[c].components[d].artnet.channel = uint16_t(dvec[c][d]);
+                    }
+                } else{
+                    return false;
+                } 
+            }
+        } else {
+            return false;
+        }
+    }
+
+    if (SettingsDB::instance().getNumberVector2D(SettingsDB::kAnaloge131Universe, dvec)) {
+        if (svec.size() >= analogN) {
+            for (size_t c = 0; c < analogN; c++) {
+                if (svec[c].size() >= analogCompN) {
+                    for (size_t d = 0; c < analogCompN; c++) {
+                        if ((dvec[c][d] < 0.0f) || (dvec[c][d] > float(maxUniverseID+1))) {
+                            return false;
+                        }
+                        analog_config[c].components[d].e131.universe = uint16_t(dvec[c][d]);
+                    }
+                } else{
+                    return false;
+                } 
+            }
+        } else {
+            return false;
+        }
+    }
+
+    if (SettingsDB::instance().getNumberVector2D(SettingsDB::kAnalogArtnetChannel, dvec)) {
+        if (svec.size() >= analogN) {
+            for (size_t c = 0; c < analogN; c++) {
+                if (svec[c].size() >= analogCompN) {
+                    for (size_t d = 0; c < analogCompN; c++) {
+                        if ((dvec[c][d] < 0.0f) || (dvec[c][d] >= float(analogCompN))) {
+                            return false;
+                        }
+                        analog_config[c].components[d].e131.channel = uint16_t(dvec[c][d]);
+                    }
+                } else{
+                    return false;
+                } 
+            }
+        } else {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 void Model::init() {}
 

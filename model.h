@@ -33,6 +33,8 @@ struct Model {
     static constexpr size_t universeN = 6;
     static constexpr size_t analogCompN = 6;
     static constexpr size_t maxUniverses = stripN * universeN + analogN * analogCompN;
+    static constexpr size_t maxLEDs = 255 * universeN;
+    static constexpr size_t maxUniverseID = 65535;
 
     struct AnalogConfig {
         // clang-format off
@@ -277,7 +279,7 @@ struct Model {
         return strip_config[strip].e131[dmx512Index];
     }
 
-    void importFromDB();
+    bool importFromDB();
     void exportToDB();
     void exportStaticsToDB();
 
