@@ -31,10 +31,11 @@ SOFTWARE.
 
 #include "./model.h"
 #include "./network.h"
+#include "./random.h"
 #include "./settingsdb.h"
+#include "./systick.h"
 #include "./utils.h"
 #include "./webserver.h"
-#include "./systick.h"
 #include "stm32h5xx_hal.h"
 #include "stm32h5xx_ll_utils.h"
 
@@ -47,9 +48,7 @@ void thread_startup_entry(ULONG thread_input) {
 }
 
 extern "C" void tx_application_define(void *first_unused_memory);
-void tx_application_define(void *first_unused_memory) {
-    App::instance().setup(first_unused_memory);
-}
+void tx_application_define(void *first_unused_memory) { App::instance().setup(first_unused_memory); }
 
 App &App::instance() {
     static App app;
@@ -61,7 +60,6 @@ App &App::instance() {
 }
 
 void App::start() {
-
 #ifndef BOOTLOADER
     if (HAL_ICACHE_Disable() != 0) {
         while (1) {
@@ -80,6 +78,8 @@ void App::start() {
         while (1) {
         }
     }
+
+    PseudoRandom::instance().set_seed(0x1ED51ED5);
 
     Model::instance().exportToDB();
     Model::instance().exportStaticsToDB();
@@ -131,7 +131,7 @@ void App::start() {
     if (!WebServer::instance().start()) {
         return;
     }
-    
+
     printf(ESCAPE_FG_CYAN "App up.\n");
 }
 
@@ -149,5 +149,4 @@ void App::setup(void *first_unused_memory) {
     printf(ESCAPE_FG_CYAN "Consumed %d bytes of RAM.\n" ESCAPE_RESET, (int)(pointer - (uint8_t *)first_unused_memory));
 }
 
-void App::init() {
-}
+void App::init() {}
