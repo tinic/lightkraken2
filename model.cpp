@@ -89,21 +89,21 @@ void Model::exportStaticsToDB() {
                 const char *comma = "";
                 emio::format_to(buf, "\"{}\":[", NAMEOF(prop.strip)).value();
                 for (size_t c = 0; c < Model::OutputConfigProperties::OutputConfigMaxDevices; c++) {
-                    emio::format_to(buf, "{}{}", comma, prop.strip[c] ? 1 : 0).value();
+                    emio::format_to(buf, "{}{}", comma, prop.strip[c] ? "true" : "false").value();
                     comma = ",";
                 }
                 emio::format_to(buf, "],").value();
                 comma = "";
                 emio::format_to(buf, "\"{}\":[", NAMEOF(prop.analog)).value();
                 for (size_t c = 0; c < Model::OutputConfigProperties::OutputConfigMaxDevices; c++) {
-                    emio::format_to(buf, "{}{}", comma, prop.analog[c] ? 1 : 0).value();
+                    emio::format_to(buf, "{}{}", comma, prop.analog[c] ? "true" : "false").value();
                     comma = ",";
                 }
                 emio::format_to(buf, "],").value();
                 comma = "";
                 emio::format_to(buf, "\"{}\":[", NAMEOF(prop.has_clock)).value();
                 for (size_t c = 0; c < Model::OutputConfigProperties::OutputConfigMaxDevices; c++) {
-                    emio::format_to(buf, "{}{}", comma, prop.has_clock[c] ? 1 : 0).value();
+                    emio::format_to(buf, "{}{}", comma, prop.has_clock[c] ? "true" : "false").value();
                     comma = ",";
                 }
                 emio::format_to(buf, "],").value();
