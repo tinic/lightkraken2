@@ -30,6 +30,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "./model.h"
 #include "./sacn.h"
 #include "./strip.h"
+#include "./random.h"
 #include "stm32h5xx_hal.h"
 
 extern "C" void systick_handler(void) { Systick::instance().handler(); }
@@ -80,7 +81,7 @@ void Systick::schedulePollReply(const NXD_ADDRESS *from, uint16_t universe) {
         if (pollReply[c].delay <= 0) {
             pollReply[c].from = *from;
             pollReply[c].universe = universe;
-            // pollReply[c].delay = PseudoRandom::instance().get(100, 900);
+            pollReply[c].delay = PseudoRandom::instance().get(100, 900);
             return;
         }
     }

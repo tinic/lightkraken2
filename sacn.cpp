@@ -28,6 +28,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <algorithm>
 
 #include "./artnet.h"
+#include "./control.h"
+#include "./network.h"
 
 class DataPacket : public sACNPacket {
    public:
@@ -159,7 +161,7 @@ __attribute__((hot, flatten, optimize("O3"), optimize("unroll-loops"))) static v
     }
 }
 
-bool sACNPacket::verify(sACNPacket &packet, const uint8_t *buf, size_t len) { // cppcheck-suppress constParameterReference
+bool sACNPacket::verify(sACNPacket &packet, const uint8_t *buf, size_t len) {  // cppcheck-suppress constParameterReference
     PacketType type = sACNPacket::maybeValid(buf, len);
     if (type == PacketInvalid) {
         return false;
@@ -180,7 +182,6 @@ bool sACNPacket::verify(sACNPacket &packet, const uint8_t *buf, size_t len) { //
 }
 
 void sACNPacket::sendDiscovery() {
-#if 0
     struct sACNDiscovery {
         uint16_t preambleSize;
         uint16_t postPreambleSize;
@@ -197,33 +198,29 @@ void sACNPacket::sendDiscovery() {
         uint8_t page;
         uint8_t last;
         uint16_t universes[Model::maxUniverses];
-    }  __attribute__((packed)) discovery;
+    } __attribute__((packed)) discovery;
 
     size_t universeCount = 0;
     std::array<uint16_t, Model::maxUniverses> universes;
     Control::instance().collectAllActiveE131Universes(universes, universeCount);
-    std::sort(universes.begin(), universes.begin()+universeCount);  
-    size_t replySize = offsetof(sACNDiscovery, universes)+universeCount*sizeof(uint16_t);
-    
-    auto hton16 = [] (uint16_t v) {
-        return uint16_t((v>>8)|(v<< 8));
-    };
-    auto hton32 = [] (uint32_t v) {
-        return uint32_t(((v>>24)&0x000000FF)|((v>>8)&0x0000FF00)|((v<<24)&0xFF000000)|((v<<8)&0x00FF0000));
-    };
+    std::sort(universes.begin(), universes.begin() + universeCount);
+    size_t replySize = offsetof(sACNDiscovery, universes) + universeCount * sizeof(uint16_t);
+
+    auto hton16 = [](uint16_t v) { return uint16_t((v >> 8) | (v << 8)); };
+    auto hton32 = [](uint32_t v) { return uint32_t(((v >> 24) & 0x000000FF) | ((v >> 8) & 0x0000FF00) | ((v << 24) & 0xFF000000) | ((v << 8) & 0x00FF0000)); };
     memset(&discovery, 0, sizeof(discovery));
     discovery.preambleSize = hton16(0x0010);
     discovery.postPreambleSize = hton16(0x0000);
     memcpy(&discovery.packetIdentifier[0], "ASC-E1.17\0\0\0", 12);
-    discovery.flagsAndLengthRoot = hton16(0x7000 + replySize - offsetof(sACNDiscovery, flagsAndLengthRoot));
+    discovery.flagsAndLengthRoot = hton16(0x7000 + uint16_t(replySize - offsetof(sACNDiscovery, flagsAndLengthRoot)));
     discovery.vectorRoot = hton32(VECTOR_ROOT_E131_EXTENDED);
-    discovery.flagsAndLengthFraming = hton16(0x7000 + replySize - offsetof(sACNDiscovery, flagsAndLengthFraming));
-    for (size_t c=0; c<16; c++) {
-        discovery.cid[c] = NetConf::instance().netInterface()->hwaddr[c % 6];
+    discovery.flagsAndLengthFraming = hton16(0x7000 + uint16_t(replySize - offsetof(sACNDiscovery, flagsAndLengthFraming)));
+    for (size_t c = 0; c < 16; c++) {
+        discovery.cid[c] = Network::instance().MACAddr()[c % 6];
     }
     discovery.vectorFraming = hton32(VECTOR_E131_EXTENDED_DISCOVERY);
-    strcpy(reinterpret_cast<char *>(&discovery.sourceName[0]),NetConf::instance().netInterface()->hostname);
-    discovery.flagsAndLengthDiscovery = hton16(0x7000 + replySize - offsetof(sACNDiscovery, flagsAndLengthDiscovery));
+    strcpy(reinterpret_cast<char *>(&discovery.sourceName[0]), Network::instance().hostName());
+    discovery.flagsAndLengthDiscovery = hton16(0x7000 + uint16_t(replySize - offsetof(sACNDiscovery, flagsAndLengthDiscovery)));
     discovery.vectorDiscovery = hton32(VECTOR_UNIVERSE_DISCOVERY_UNIVERSE_LIST);
     discovery.page = 0;
     discovery.last = 0;
@@ -231,12 +228,10 @@ void sACNPacket::sendDiscovery() {
         discovery.universes[c] = hton16(universes[c]);
     }
 
-    struct ip4_addr broadcastAddr;
-    broadcastAddr.addr =  (NetConf::instance().netInterface()->ip_addr.addr &
-                        NetConf::instance().netInterface()->netmask.addr) | 
-                        ~NetConf::instance().netInterface()->netmask.addr;    
-    NetConf::instance().sendsACNUdpPacket(&broadcastAddr, ACN_SDT_MULTICAST_PORT, (const uint8_t *)&discovery, replySize);
-#endif  // #if 0
+    /*    struct ip4_addr broadcastAddr;
+        broadcastAddr.addr = (NetConf::instance().netInterface()->ip_addr.addr & NetConf::instance().netInterface()->netmask.addr) |
+                             ~NetConf::instance().netInterface()->netmask.addr;
+        NetConf::instance().sendsACNUdpPacket(&broadcastAddr, ACN_SDT_MULTICAST_PORT, (const uint8_t *)&discovery, replySize);*/
 }
 
 bool sACNPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t len, bool isBroadcast) {
@@ -247,36 +242,32 @@ bool sACNPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t le
     }
     switch (type) {
         case PacketData: {
-#if 0
-                    if (!Model::instance().broadcastEnabled() && isBroadcast) {
-                        return false;
-                    }
-                    DataPacket dataPacket;
-                    if (sACNPacket::verify(dataPacket, buf, len)) {
-                        lightkraken::Control::instance().setE131UniverseOutputData(dataPacket.universe(), dataPacket.data() + 1, dataPacket.datalen() - 1);
-                        syncuniverse = dataPacket.syncuniverse();
-                        if (dataPacket.syncuniverse() == 0) {
-                            Control::instance().sync();
-                            Control::instance().setEnableSyncMode(false);
-                        }
-                        return true;
-                    }
-#endif  // #if 0
+            if (!Model::instance().broadcastEnabled && isBroadcast) {
+                return false;
+            }
+            DataPacket dataPacket;
+            if (sACNPacket::verify(dataPacket, buf, len)) {
+                Control::instance().setE131UniverseOutputData(dataPacket.universe(), dataPacket.data() + 1, dataPacket.datalen() - 1);
+                syncuniverse = dataPacket.syncuniverse();
+                if (dataPacket.syncuniverse() == 0) {
+                    Control::instance().sync();
+                    Control::instance().setEnableSyncMode(false);
+                }
+                return true;
+            }
         } break;
         case PacketSync: {
-#if 0
-                    if (!Model::instance().broadcastEnabled() && isBroadcast) {
-                        return false;
-                    }
-                    SyncPacket syncPacket;
-                    if (sACNPacket::verify(syncPacket, buf, len)) {
-                        if (syncPacket.syncuniverse() == syncuniverse) {
-                            Control::instance().sync();
-                            Control::instance().setEnableSyncMode(false);
-                        }
-                        return true;
-                    }
-#endif  // #if 0
+            if (!Model::instance().broadcastEnabled && isBroadcast) {
+                return false;
+            }
+            SyncPacket syncPacket;
+            if (sACNPacket::verify(syncPacket, buf, len)) {
+                if (syncPacket.syncuniverse() == syncuniverse) {
+                    Control::instance().sync();
+                    Control::instance().setEnableSyncMode(false);
+                }
+                return true;
+            }
         } break;
         case PacketDiscovery: {
             DiscoveryPacket discoveryPacket;
@@ -293,33 +284,33 @@ bool sACNPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t le
 }
 
 void sACNPacket::leaveNetworks() {
-#if 0
     size_t universeCount = 0;
     std::array<uint16_t, Model::maxUniverses> universes;
     Control::instance().collectAllActiveE131Universes(universes, universeCount);
     for (size_t c = 0; c < universeCount; c++) {
+#if 0
         ip4_addr multicast_addr;
         IP4_ADDR(&multicast_addr, 239, 255, (universes[c] >> 8) & 0xFF, (universes[c] >> 0) & 0xFF);
         if (igmp_lookfor_group(NetConf::instance().netInterface(), &multicast_addr) == 0) {
             igmp_leavegroup_netif(NetConf::instance().netInterface(), &multicast_addr);
         }
-    }
 #endif  // #if 0
+    }
 }
 
 void sACNPacket::joinNetworks() {
-#if 0
     size_t universeCount = 0;
     std::array<uint16_t, Model::maxUniverses> universes;
     Control::instance().collectAllActiveE131Universes(universes, universeCount);
     for (size_t c = 0; c < universeCount; c++) {
+#if 0
         ip4_addr multicast_addr;
         IP4_ADDR(&multicast_addr, 239, 255, (universes[c] >> 8) & 0xFF, (universes[c] >> 0) & 0xFF);
         if (igmp_lookfor_group(NetConf::instance().netInterface(), &multicast_addr) == 0) {
             igmp_joingroup_netif(NetConf::instance().netInterface(), &multicast_addr);
         }
-    }
 #endif  // #if 0
+    }
 }
 
 uint16_t sACNPacket::syncuniverse = 0;
