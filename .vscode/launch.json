@@ -25,6 +25,7 @@
                     {
                         "port": 0,
                         "type": "console",
+                        "showOnStartup": true,
                         "label": "Output",
                         "encoding":"utf8"
                     }
