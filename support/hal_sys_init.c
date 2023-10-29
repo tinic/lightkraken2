@@ -116,11 +116,11 @@ void HAL_SuspendTick(void) { __HAL_TIM_DISABLE_IT(&htim1, TIM_IT_UPDATE); }
 
 void HAL_ResumeTick(void) { __HAL_TIM_ENABLE_IT(&htim1, TIM_IT_UPDATE); }
 
-void app_tickhandler(void);
+void systick_handler(void);
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {  // cppcheck-suppress constParameterPointer
     if (htim->Instance == TIM1) {
-        app_tickhandler();
+        systick_handler();
         HAL_IncTick();
     }
 }

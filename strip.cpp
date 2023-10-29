@@ -22,6 +22,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #include "./strip.h"
 
+#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -31,6 +32,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "./color.h"
 #include "./model.h"
+#include "./utils.h"
 
 #define __assume(cond)                        \
     do {                                      \
@@ -157,6 +159,7 @@ void Strip::init() {
         // Make a RAM copy; gets us a slight perf improvement
         hd108_lut = make_hd108_table();
     }
+    printf(ESCAPE_FG_CYAN "Strip up.\n");
 }
 
 void Strip::setRGBColorSpace(const RGBColorSpace &colorSpace) { converter.setRGBColorSpace(colorSpace); }

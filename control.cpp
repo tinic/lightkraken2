@@ -30,6 +30,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "./strip.h"
 #include "./color.h"
 #include "./systick.h"
+#include "./utils.h"
 
 Control &Control::instance() {
     static Control control;
@@ -737,8 +738,8 @@ void Control::init() {
         return SPI_2::instance().busy();
     };
     
-    DEBUG_PRINTF(("Control up.\n"));
 #endif  // #if 0
+    printf(ESCAPE_FG_CYAN "Control up.\n");
 }
 
 void Control::startupModePattern() {

@@ -144,6 +144,7 @@ void SettingsDB::init() {
         while (1) {
         }
     }
+    printf(ESCAPE_FG_CYAN "SettingsDB up.\n");
 }
 
 void SettingsDB::lock() { __disable_irq(); }

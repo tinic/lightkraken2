@@ -38,8 +38,6 @@ SOFTWARE.
 #include "./webserver.h"
 #include "./model.h"
 
-extern "C" void app_tickhandler(void) { App::instance().checkReset(); }
-
 static TX_THREAD thread_startup{};
 void thread_startup_entry(ULONG thread_input) {
     NX_PARAMETER_NOT_USED(thread_input);
@@ -140,15 +138,6 @@ void App::init() {
     bootCount++;
     SettingsDB::instance().setNumber(SettingsDB::kBootCount, bootCount);
 #endif  // #ifndef BOOTLOADER
+    printf(ESCAPE_FG_CYAN "App up.\n");
 }
 
-void App::checkReset() {
-    if (resetCount <= 0) {
-        return;
-    }
-    if (--resetCount <= 0) {
-        NVIC_SystemReset();
-    }
-}
-
-uint32_t App::systemTime() const { return HAL_GetTick(); }

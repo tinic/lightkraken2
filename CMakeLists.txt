@@ -191,6 +191,7 @@ set(COMMON_SOURCES
     ${PROJECT_SOURCE_DIR}/sacn.cpp
     ${PROJECT_SOURCE_DIR}/settingsdb.cpp
     ${PROJECT_SOURCE_DIR}/strip.cpp
+    ${PROJECT_SOURCE_DIR}/systick.cpp
     ${PROJECT_SOURCE_DIR}/webserver.cpp
     ${PROJECT_SOURCE_DIR}/support/fal_stm32h5xx.c
     ${PROJECT_SOURCE_DIR}/support/lan8742.c

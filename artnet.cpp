@@ -33,16 +33,17 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "./control.h"
 #include "./network.h"
 #include "./settingsdb.h"
+#include "./systick.h"
 #include "version.h"
 
 #ifndef BOOTLOADER
 
 static ArtSyncWatchDog syncWatchDog;
 
-void ArtSyncWatchDog::feed() { fedtime = App::instance().systemTime(); }
+void ArtSyncWatchDog::feed() { fedtime = Systick::instance().systemTime(); }
 
 bool ArtSyncWatchDog::starved() {
-    uint32_t now = App::instance().systemTime();
+    uint32_t now = Systick::instance().systemTime();
     if (fedtime == 0 || ((now - fedtime) > ArtSyncTimeout)) {
         fedtime = 0;
         return true;

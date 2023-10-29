@@ -27,6 +27,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "./model.h"
 #include "./pwmtimer.h"
+#include "./utils.h"
 
 Driver &Driver::instance() {
     static Driver driver;
@@ -403,4 +404,6 @@ void Driver::init() {
     PwmTimer3::instance().setPulse(0x0);
     PwmTimer4::instance().setPulse(0x0);
     PwmTimer5::instance().setPulse(0x0);
+
+    printf(ESCAPE_FG_CYAN "Driver up.\n");
 }

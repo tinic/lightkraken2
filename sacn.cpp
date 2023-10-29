@@ -29,8 +29,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "./artnet.h"
 
-namespace lightkraken {
-
 class DataPacket : public sACNPacket {
    public:
     DataPacket(){};
@@ -325,5 +323,3 @@ void sACNPacket::joinNetworks() {
 }
 
 uint16_t sACNPacket::syncuniverse = 0;
-
-}  // namespace lightkraken

@@ -40,6 +40,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #pragma GCC diagnostic pop
 
 #include "./settingsdb.h"
+#include "./utils.h"
 
 #ifndef BOOTLOADER
 
@@ -672,6 +673,8 @@ bool Model::importFromDB() {
     return true;
 }
 
-void Model::init() {}
+void Model::init() {
+    printf(ESCAPE_FG_CYAN "Model up.\n");
+}
 
 #endif  // #ifndef BOOTLOADER

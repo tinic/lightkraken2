@@ -28,6 +28,8 @@ SOFTWARE.
 #include "./model.h"
 #include "./network.h"
 #include "./settingsdb.h"
+#include "./systick.h"
+#include "./utils.h"
 #include "stm32h5xx_hal.h"
 
 typedef UINT (*requestNotifyFunc)(NX_HTTP_SERVER *server_ptr, UINT request_type, CHAR *resource, NX_PACKET *packet_ptr);
@@ -41,7 +43,9 @@ WebServer &WebServer::instance() {
     return webserver;
 }
 
-void WebServer::init() {}
+void WebServer::init() {
+    printf(ESCAPE_FG_CYAN "WebServer up.\n");
+}
 
 #ifdef BOOTLOADER
 UINT WebServer::postRequestUpload(NX_HTTP_SERVER *server_ptr, UINT request_type, const CHAR *resource, NX_PACKET *packet_ptr) {
@@ -86,7 +90,7 @@ UINT WebServer::requestNotify(NX_HTTP_SERVER *server_ptr, UINT request_type, con
         case NX_HTTP_SERVER_PUT_REQUEST: {
 #ifndef BOOTLOADER
             if (strcmp(resource, "/reset") == 0) {
-                App::instance().scheduleReset();
+                Systick::instance().scheduleReset();
                 nx_packet_release(packet_ptr);
                 nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, NX_NULL, NX_NULL,
                                                                0);

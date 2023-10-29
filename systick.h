@@ -25,6 +25,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <stdint.h>
 
+#include "nx_api.h"
+
 class Systick {
 public:
     static Systick &instance();
@@ -33,16 +35,14 @@ public:
 
 #ifndef BOOTLOADER
     uint64_t systemTick();
-//    void schedulePollReply(const ip_addr_t *from, uint16_t universe);
+    void schedulePollReply(const NXD_ADDRESS *from, uint16_t universe);
     void scheduleApply() { apply_scheduled = true; }
 #endif  // #ifndef BOOTLOADER
 
     void handler();
     
-    void scheduleReset(int32_t countdown = 2000, bool bootloader = false) { 
-        nvic_reset_delay = countdown; 
-        bootloader_after_reset = bootloader;
-    }
+    void scheduleReset(int32_t count = 2000) { resetCount = count; };
+    void checkReset();
     
 private:
 
@@ -50,14 +50,13 @@ private:
     void init();
 
     uint32_t system_time = 0;
-    bool bootloader_after_reset = false;
-    int32_t nvic_reset_delay = 0;
+    int32_t resetCount = 0;
 
 #ifndef BOOTLOADER
     bool apply_scheduled = false;
     struct {
-//        ip_addr_t from;
-        uint32_t universe;
+        NXD_ADDRESS from;
+        uint16_t universe;
         int32_t delay;
     } pollReply[8];
 #endif  // #ifndef BOOTLOADER

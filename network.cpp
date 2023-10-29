@@ -88,6 +88,8 @@ void Network::init() {
     SettingsDB::instance().setString(SettingsDB::kHostname, hostname);
     printf(ESCAPE_FG_GREEN "Hostname: '%s'\n" ESCAPE_RESET, hostname);
 #endif  // #ifndef BOOTLOADER
+
+    printf(ESCAPE_FG_CYAN "Network up.\n");
 }
 
 #ifndef BOOTLOADER

@@ -27,8 +27,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "nx_api.h"
 
-namespace lightkraken {
-
 class sACNPacket {
    public:
     enum {
@@ -62,7 +60,5 @@ class sACNPacket {
     static PacketType maybeValid(const uint8_t *buf, size_t len);
     static bool verify(sACNPacket &Packet, const uint8_t *buf, size_t len);
 };
-
-}  // namespace lightkraken
 
 #endif  // #ifndef _SACN_H_
