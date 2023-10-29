@@ -29,28 +29,32 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "./color.h"
 
 class Driver {
-public:
+   public:
     constexpr static size_t terminalN = 2;
-    
+
+    Driver() {}
     static Driver &instance();
 
-    const rgbww &srgbwwCIE(size_t terminal) const { terminal %= terminalN; return _srgbww[terminal]; }
+    const rgbww &srgbwwCIE(size_t terminal) const {
+        terminal %= terminalN;
+        return _srgbww[terminal];
+    }
     void setRGBWW(size_t terminal, const rgbww &rgb);
 
     void sync(size_t terminal);
-    
+
     void setRGBColorSpace(size_t terminal, const RGBColorSpace &rgbSpace) { colorConverter[terminal].setRGBColorSpace(rgbSpace); }
     void setPWMLimit(size_t terminal, float value) { pwm_limit[terminal] = value; }
 
-private:
+   private:
     void setPulse(size_t idx, uint16_t pulse);
 
     bool initialized = false;
     void init();
-    
-    float pwm_limit[terminalN];
-    rgbww _srgbww[terminalN];
-    ColorSpaceConverter colorConverter[terminalN]; 
+
+    float pwm_limit[terminalN]{};
+    rgbww _srgbww[terminalN]{};
+    ColorSpaceConverter colorConverter[terminalN]{};
 };
 
 #endif /* _DRIVER_H_ */

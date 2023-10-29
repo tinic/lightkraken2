@@ -22,15 +22,15 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #include "./systick.h"
 
-#include <stdio.h>
 #include <inttypes.h>
+#include <stdio.h>
 
 #include "./artnet.h"
 #include "./control.h"
 #include "./model.h"
+#include "./random.h"
 #include "./sacn.h"
 #include "./strip.h"
-#include "./random.h"
 #include "stm32h5xx_hal.h"
 
 extern "C" void systick_handler(void) { Systick::instance().handler(); }
@@ -149,9 +149,7 @@ void Systick::handler() {
     checkReset();
 }
 
-uint64_t Systick::systemTimeRAW() const {
-    return large_dwt_cyccnt();
-}
+uint64_t Systick::systemTimeRAW() const { return large_dwt_cyccnt(); }
 
 void Systick::init() { printf(("SysTick up.\n")); }
 

@@ -22,8 +22,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #include "./strip.h"
 
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <algorithm>
@@ -52,7 +52,7 @@ static ColorSpaceConverter converter;
 
 class manchester_bit_buf {
    public:
-    manchester_bit_buf(uint8_t *p) {
+    explicit manchester_bit_buf(uint8_t *p) {
         buf = p;
         byte = 0;
         bit_pos = 7;
@@ -137,11 +137,11 @@ void Strip::init() {
             double g_const = 0.760;
             double b_const = 0.550;
 
-            double ga_const = exp(-g_const) - 1.0;
+            double ga_const = exp(-g_const) - 1.0;  // cppcheck-suppress unpreciseMathCall
             double gai_const = +1.0 / ga_const;
             double gbi_const = -1.0 / g_const;
 
-            double ba_const = exp(-b_const) - 1.0;
+            double ba_const = exp(-b_const) - 1.0;  // cppcheck-suppress unpreciseMathCall
             double bai_const = +1.0 / ba_const;
             double bbi_const = -1.0 / b_const;
 
@@ -1393,17 +1393,17 @@ __attribute__((hot, flatten, optimize("O3"), optimize("unroll-loops"))) void Str
 
 __attribute__((hot, flatten, optimize("O3"), optimize("unroll-loops"))) void Strip::tls3001_alike_convert(size_t &len) {
     uint8_t *dst = spi_buf.data();
-    uint32_t reset = 0b11111111'11111110'10000000'00000000;  // 19 bits
-    uint32_t syncw = 0b11111111'11111110'00100000'00000000;  // 30 bits
-    uint32_t start = 0b11111111'11111110'01000000'00000000;  // 19 bits
     manchester_bit_buf buf(dst);
     if (!strip_reset) {
+        uint32_t reset = 0b11111111'11111110'10000000'00000000;  // 19 bits
+        uint32_t syncw = 0b11111111'11111110'00100000'00000000;  // 30 bits
         strip_reset = true;
         buf.push(reset, 19);
         buf.push(0, 4000);
         buf.push(syncw, 30);
         buf.push(0, 12 * int32_t(bytes_len / 3));
     } else {
+        uint32_t start = 0b11111111'11111110'01000000'00000000;  // 19 bits
         buf.push(start, 19);
         switch (nativeType()) {
             default: {

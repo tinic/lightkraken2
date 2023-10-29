@@ -38,12 +38,7 @@ class Strip {
         int8_t error;
     } __attribute__((packed));
 
-    enum NativeType {
-        NATIVE_RGB8,
-        NATIVE_RGBW8,
-        NATIVE_RGB16,
-        NATIVE_TYPE_COUNT
-    };
+    enum NativeType { NATIVE_RGB8, NATIVE_RGBW8, NATIVE_RGB16, NATIVE_TYPE_COUNT };
 
     static constexpr size_t dmxMaxLen = 512;
     static constexpr size_t bytesMaxLen = (dmxMaxLen * Model::universeN);
@@ -74,8 +69,8 @@ class Strip {
 
     void transfer();
 
-    std::function<void(const uint8_t *data, size_t len)> dmaTransferFunc {};
-    std::function<bool()> dmaBusyFunc {};
+    std::function<void(const uint8_t *data, size_t len)> dmaTransferFunc{};
+    std::function<bool()> dmaBusyFunc{};
 
     void setPendingTransferFlag() { transfer_flag = true; }
     bool pendingTransferFlag() {
@@ -120,8 +115,8 @@ class Strip {
     static bool hd108_lut_init;
     static std::array<std::array<uint16_t, 256>, 3> hd108_lut;
 
-    std::array<uint8_t, bytesMaxLen> comp_buf {};
-    std::array<uint8_t, spiMaxLen> spi_buf {};
+    std::array<uint8_t, bytesMaxLen> comp_buf{};
+    std::array<uint8_t, spiMaxLen> spi_buf{};
     size_t bytes_len = 0;
 };
 

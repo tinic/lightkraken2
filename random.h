@@ -26,24 +26,23 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <stdint.h>
 
 class PseudoRandom {
-public:
+   public:
     static PseudoRandom &instance();
-    
-    int32_t get(int32_t lower, int32_t upper) {
-        return (static_cast<int32_t>(get()) % (upper-lower)) + lower;
-    }
+
+    int32_t get(int32_t lower, int32_t upper) { return (static_cast<int32_t>(get()) % (upper - lower)) + lower; }
 
     void set_seed(uint32_t seed);
-private:
+
+   private:
     bool initialized = false;
     void init();
 
     uint32_t get();
 
-    uint32_t a = 0; 
-    uint32_t b = 0; 
-    uint32_t c = 0; 
-    uint32_t d = 0; 
+    uint32_t a = 0;
+    uint32_t b = 0;
+    uint32_t c = 0;
+    uint32_t d = 0;
 };
 
 #endif  // #ifndef _RANDOM_H_

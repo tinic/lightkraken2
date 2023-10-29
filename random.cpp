@@ -21,9 +21,9 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <stdint.h>
-
 #include "./random.h"
+
+#include <stdint.h>
 
 #include "stm32h5xx_hal.h"
 
@@ -39,12 +39,12 @@ PseudoRandom &PseudoRandom::instance() {
 void PseudoRandom::set_seed(uint32_t seed) {
     uint32_t i;
     a = 0xf1ea5eed, b = c = d = seed;
-    for (i=0; i<20; ++i) {
+    for (i = 0; i < 20; ++i) {
         (void)get();
     }
 }
 
-#define rot(x,k) (((x)<<(k))|((x)>>(32-(k))))
+#define rot(x, k) (((x) << (k)) | ((x) >> (32 - (k))))
 uint32_t PseudoRandom::get() {
     uint32_t e = a - rot(b, 27);
     a = b ^ rot(c, 17);
@@ -60,11 +60,7 @@ void PseudoRandom::init() {
         }
     }
 
-    set_seed(
-        HAL_GetUIDw0() ^
-        HAL_GetUIDw1() ^
-        HAL_GetUIDw2()
-    );
+    set_seed(HAL_GetUIDw0() ^ HAL_GetUIDw1() ^ HAL_GetUIDw2());
 
     if (HAL_ICACHE_Enable() != 0) {
         while (1) {

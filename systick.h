@@ -30,6 +30,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 class Systick {
    public:
+    Systick() {}
     static Systick &instance();
 
     uint64_t systemTimeRAW() const;

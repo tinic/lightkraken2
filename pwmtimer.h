@@ -26,63 +26,69 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <stdint.h>
 
 class PwmTimer {
-public:
+   public:
     constexpr static uint16_t pwmPeriod = 0x3fff;
 
     virtual void setPulse(uint16_t pulse) = 0;
-protected:
-    virtual ~PwmTimer() {};
+
+   protected:
+    virtual ~PwmTimer(){};
     bool initialized = false;
     virtual void init() = 0;
 };
 
 class PwmTimer0 : public PwmTimer {
-public:
+   public:
     static PwmTimer &instance();
-    virtual void setPulse(uint16_t pulse);
-private:
-    virtual void init();
+    virtual void setPulse(uint16_t pulse) override;
+
+   private:
+    virtual void init() override;
 };
 
 class PwmTimer1 : public PwmTimer {
-public:
+   public:
     static PwmTimer &instance();
-    virtual void setPulse(uint16_t pulse);
-private:
-    virtual void init();
+    virtual void setPulse(uint16_t pulse) override;
+
+   private:
+    virtual void init() override;
 };
 
 class PwmTimer2 : public PwmTimer {
-public:
+   public:
     static PwmTimer &instance();
-    virtual void setPulse(uint16_t pulse);
-private:
-    virtual void init();
+    virtual void setPulse(uint16_t pulse) override;
+
+   private:
+    virtual void init() override;
 };
 
 class PwmTimer3 : public PwmTimer {
-public:
+   public:
     static PwmTimer &instance();
-    virtual void setPulse(uint16_t pulse);
-private:
-    virtual void init();
+    virtual void setPulse(uint16_t pulse) override;
+
+   private:
+    virtual void init() override;
 };
 
 class PwmTimer4 : public PwmTimer {
-public:
+   public:
     static PwmTimer &instance();
-    virtual void setPulse(uint16_t pulse);
-private:
-    virtual void init();
+    virtual void setPulse(uint16_t pulse) override;
+
+   private:
+    virtual void init() override;
 };
 
 class PwmTimer5 : public PwmTimer {
-public:
+   public:
     static PwmTimer &instance();
     virtual void setPulse(uint16_t pulse);
-private:
+
+   private:
     virtual void init();
 };
-
 
 #endif  // #ifndef PWM_TIMER_H
