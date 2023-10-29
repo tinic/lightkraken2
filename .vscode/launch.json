@@ -16,7 +16,7 @@
             ],
             "openOCDLaunchCommands": ["adapter speed 12000"],
             "preLaunchTask": "STM32 upload",
-            /*"swoConfig": {
+            "swoConfig": {
                 "source": "probe",
                 "enabled": true,
                 "swoFrequency": 2000000,
@@ -25,11 +25,12 @@
                     {
                         "port": 0,
                         "type": "console",
+                        "showOnStartup": true,
                         "label": "Output",
                         "encoding":"utf8"
                     }
                 ]
-            }*/
+            }
         }
     ],
 }

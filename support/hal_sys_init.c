@@ -222,83 +222,14 @@ static void SystemClock_Config(void) {
     HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_PLL1Q, RCC_MCODIV_10);
 }
 
-UART_HandleTypeDef huart3;
-void HAL_UART_MspInit(UART_HandleTypeDef *huart) {  // cppcheck-suppress constParameterPointer
-#define ARD_D1_TX_Pin GPIO_PIN_6
-#define ARD_D1_TX_GPIO_Port GPIOB
-#define ARD_D0_RX_Pin GPIO_PIN_7
-#define ARD_D0_RX_GPIO_Port GPIOB
-#define T_VCP_TX_Pin GPIO_PIN_8
-#define T_VCP_TX_GPIO_Port GPIOD
-#define T_VCP_RX_Pin GPIO_PIN_9
-#define T_VCP_RX_GPIO_Port GPIOD
-
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-    RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
-    if (huart->Instance == USART3) {
-        PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART3;
-        PeriphClkInitStruct.Usart3ClockSelection = RCC_USART3CLKSOURCE_PCLK1;
-        if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
-            while (1) {
-            }
-        }
-
-        __HAL_RCC_USART3_CLK_ENABLE();
-
-        __HAL_RCC_GPIOD_CLK_ENABLE();
-        /**USART3 GPIO Configuration
-        PD8     ------> USART3_TX
-        PD9     ------> USART3_RX
-        */
-        GPIO_InitStruct.Pin = T_VCP_TX_Pin | T_VCP_RX_Pin;
-        GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-        GPIO_InitStruct.Pull = GPIO_PULLUP;
-        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-        GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
-        HAL_GPIO_Init(T_VCP_TX_GPIO_Port, &GPIO_InitStruct);
-    }
-}
-
 int __io_putchar(int ch) {
-    HAL_UART_Transmit(&huart3, (const uint8_t *)&ch, 1, HAL_MAX_DELAY);
+    ITM_SendChar(ch);
     return 1;
 };
 
 int __io_getchar(void) {
-    uint8_t byte = 0;
-    HAL_UART_Receive(&huart3, &byte, sizeof(byte), HAL_MAX_DELAY);
-    return byte;
+    return 0;
 };
-
-static void MX_USART3_UART_Init(void) {
-    huart3.Instance = USART3;
-    huart3.Init.BaudRate = 115200;
-    huart3.Init.WordLength = UART_WORDLENGTH_8B;
-    huart3.Init.StopBits = UART_STOPBITS_1;
-    huart3.Init.Parity = UART_PARITY_NONE;
-    huart3.Init.Mode = UART_MODE_TX;
-    huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-    huart3.Init.OverSampling = UART_OVERSAMPLING_16;
-    huart3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-    huart3.Init.ClockPrescaler = UART_PRESCALER_DIV1;
-    huart3.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-    if (HAL_UART_Init(&huart3) != HAL_OK) {
-        while (1) {
-        }
-    }
-    if (HAL_UARTEx_SetTxFifoThreshold(&huart3, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK) {
-        while (1) {
-        }
-    }
-    if (HAL_UARTEx_SetRxFifoThreshold(&huart3, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK) {
-        while (1) {
-        }
-    }
-    if (HAL_UARTEx_DisableFifoMode(&huart3) != HAL_OK) {
-        while (1) {
-        }
-    }
-}
 
 static ETH_DMADescTypeDef DMARxDscrTab[ETH_RX_DESC_CNT]; /* Ethernet Rx DMA Descriptors */
 static ETH_DMADescTypeDef DMATxDscrTab[ETH_TX_DESC_CNT]; /* Ethernet Tx DMA Descriptors */
@@ -408,8 +339,6 @@ void SYS_Init() {
 
     SystemClock_Config();
     SystemCoreClockUpdate();
-
-    MX_USART3_UART_Init();
 
     printf(ESCAPE_CLEAR_SCREEN ESCAPE_FG_BLUE "======================================================================\n" ESCAPE_RESET);
     printf(ESCAPE_FG_GREEN "Lightkraken2 is starting up.\n" ESCAPE_RESET);

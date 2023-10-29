@@ -81,6 +81,7 @@ App &App::instance() {
 
 void App::init() {
 #ifndef BOOTLOADER
+
     if (HAL_ICACHE_Disable() != 0) {
         while (1) {
         }
@@ -99,6 +100,7 @@ void App::init() {
         }
     }
 
+    Model::instance().exportToDB();
     Model::instance().exportStaticsToDB();
 
     emio::static_buffer<64> uID{};

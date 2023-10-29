@@ -73,7 +73,6 @@ __attribute__((weak)) int _write(int file, const char *ptr, int len) {
     int DataIdx;
 
     for (DataIdx = 0; DataIdx < len; DataIdx++) {
-//        ITM_SendChar(*ptr++);
         __io_putchar(*ptr++);
     }
     return len;

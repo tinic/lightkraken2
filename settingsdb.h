@@ -94,6 +94,16 @@ class SettingsDB {
     void delBoolVector(const char *key);
     void delStringVector(const char *key);
 
+    bool hasNumber(const char *key);
+    bool hasBool(const char *key);
+    bool hasString(const char *key);
+    bool hasNull(const char *key);
+    bool hasIP(const char *key);
+
+    bool hasNumberVector(const char *key);
+    bool hasStringVector(const char *key);
+    bool hasBoolVector(const char *key);
+
     void erase();
 
     UINT jsonGETRequest(NX_PACKET *packet_ptr);
@@ -179,10 +189,10 @@ class SettingsDB {
     static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_NUMBER_VECTOR;
 
     KEY_DEFINE_NUMBER_VECTOR(kActiveIPv6PrefixLen, "active_ipv6_prefix_len")
-    KEY_DEFINE_STRING_VECTOR(kStripCompLimit, "strip_comp_limit")
-    KEY_DEFINE_STRING_VECTOR(kStripGlobIllum, "strip_glob_illum")
-    KEY_DEFINE_STRING_VECTOR(kStripLedCount, "strip_led_count")
-    KEY_DEFINE_STRING_VECTOR(kAnalogPwmLimit, "analog_pwm_limit")
+    KEY_DEFINE_NUMBER_VECTOR(kStripCompLimit, "strip_comp_limit")
+    KEY_DEFINE_NUMBER_VECTOR(kStripGlobIllum, "strip_glob_illum")
+    KEY_DEFINE_NUMBER_VECTOR(kStripLedCount, "strip_led_count")
+    KEY_DEFINE_NUMBER_VECTOR(kAnalogPwmLimit, "analog_pwm_limit")
 
 #define KEY_DEFINE_NUMBER_VECTOR_2D(KEY_CONSTANT, KEY_STRING)  \
     static constexpr const char *KEY_CONSTANT = KEY_STRING; \
