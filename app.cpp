@@ -29,43 +29,26 @@ SOFTWARE.
 #include <emio/format.hpp>
 #endif  // #ifndef BOOTLOADER
 
-#include "stm32h5xx_hal.h"
-#include "stm32h5xx_ll_utils.h"
-
+#include "./model.h"
 #include "./network.h"
 #include "./settingsdb.h"
 #include "./utils.h"
 #include "./webserver.h"
-#include "./model.h"
+#include "./systick.h"
+#include "stm32h5xx_hal.h"
+#include "stm32h5xx_ll_utils.h"
 
 static TX_THREAD thread_startup{};
+extern "C" void thread_startup_entry(ULONG thread_input);
 void thread_startup_entry(ULONG thread_input) {
     NX_PARAMETER_NOT_USED(thread_input);
-
-    if (!Network::instance().start()) {
-        return;
-    }
-
-    if (!WebServer::instance().start()) {
-        return;
-    }
-
+    App::instance().start();
     tx_thread_relinquish();
 }
 
 extern "C" void tx_application_define(void *first_unused_memory);
 void tx_application_define(void *first_unused_memory) {
-    uint8_t *pointer = (uint8_t *)first_unused_memory;
-
-    const size_t startup_stack_size = 8192;
-    tx_thread_create(&thread_startup, (CHAR *)"startup", thread_startup_entry, 0, pointer, startup_stack_size, 1, 1, TX_NO_TIME_SLICE, TX_AUTO_START);
-    pointer = pointer + startup_stack_size;
-
-    pointer = Network::instance().setup(pointer);
-
-    pointer = WebServer::instance().setup(pointer);
-
-    printf(ESCAPE_FG_CYAN "Consumed %d bytes of RAM.\n" ESCAPE_RESET, (int)(pointer - (uint8_t *)first_unused_memory));
+    App::instance().setup(first_unused_memory);
 }
 
 App &App::instance() {
@@ -77,9 +60,9 @@ App &App::instance() {
     return app;
 }
 
-void App::init() {
-#ifndef BOOTLOADER
+void App::start() {
 
+#ifndef BOOTLOADER
     if (HAL_ICACHE_Disable() != 0) {
         while (1) {
         }
@@ -138,6 +121,33 @@ void App::init() {
     bootCount++;
     SettingsDB::instance().setNumber(SettingsDB::kBootCount, bootCount);
 #endif  // #ifndef BOOTLOADER
+
+    Systick::instance().start();
+
+    if (!Network::instance().start()) {
+        return;
+    }
+
+    if (!WebServer::instance().start()) {
+        return;
+    }
+    
     printf(ESCAPE_FG_CYAN "App up.\n");
 }
 
+void App::setup(void *first_unused_memory) {
+    uint8_t *pointer = (uint8_t *)first_unused_memory;
+
+    const size_t startup_stack_size = 8192;
+    tx_thread_create(&thread_startup, (CHAR *)"startup", thread_startup_entry, 0, pointer, startup_stack_size, 1, 1, TX_NO_TIME_SLICE, TX_AUTO_START);
+    pointer = pointer + startup_stack_size;
+
+    pointer = Network::instance().setup(pointer);
+
+    pointer = WebServer::instance().setup(pointer);
+
+    printf(ESCAPE_FG_CYAN "Consumed %d bytes of RAM.\n" ESCAPE_RESET, (int)(pointer - (uint8_t *)first_unused_memory));
+}
+
+void App::init() {
+}

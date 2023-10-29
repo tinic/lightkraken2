@@ -44,6 +44,8 @@ public:
     void scheduleReset(int32_t count = 2000) { resetCount = count; };
     void checkReset();
     
+    void start() { started = true; }
+
 private:
 
     bool initialized = false;
@@ -51,6 +53,7 @@ private:
 
     uint32_t system_time = 0;
     int32_t resetCount = 0;
+    bool started = false;
 
 #ifndef BOOTLOADER
     bool apply_scheduled = false;

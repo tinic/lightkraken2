@@ -24,12 +24,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <stdio.h>
 
+#include "./artnet.h"
 #include "./control.h"
 #include "./model.h"
-#include "./strip.h"
 #include "./sacn.h"
-#include "./artnet.h"
-
+#include "./strip.h"
 #include "stm32h5xx_hal.h"
 
 extern "C" void systick_handler(void) { Systick::instance().handler(); }
@@ -82,7 +81,7 @@ void Systick::schedulePollReply(const NXD_ADDRESS *from, uint16_t universe) {
         if (pollReply[c].delay <= 0) {
             pollReply[c].from = *from;
             pollReply[c].universe = universe;
-            //pollReply[c].delay = PseudoRandom::instance().get(100, 900);
+            // pollReply[c].delay = PseudoRandom::instance().get(100, 900);
             return;
         }
     }
@@ -90,6 +89,10 @@ void Systick::schedulePollReply(const NXD_ADDRESS *from, uint16_t universe) {
 #endif  // #ifndef BOOTLOADER
 
 void Systick::handler() {
+    if (!started) {
+        return;
+    }
+    
 #ifndef BOOTLOADER
 
     static uint32_t set_color = 1;

@@ -7,6 +7,8 @@
 class App {
    public:
     static App &instance();
+    void start();
+    void setup(void *first_unused_memory);
    private:
     void init();
     bool initialized = false;
