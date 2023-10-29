@@ -127,12 +127,12 @@ class ColorSpaceConverter {
    private:
     inline int32_t mul_fixed(int32_t x, int32_t y) const { return int32_t((int64_t(x) * int64_t(y)) >> fixed_shift); }
 
-    float srgbl2ledl[9];
-    float ledl2srgbl[9];
+    float srgbl2ledl[9] {};
+    float ledl2srgbl[9] {};
 
-    int32_t srgb_2_srgbl_lookup_fixed[256];
-    int32_t srgbl2ledl_fixed[9];
-    int32_t ledl2srgbl_fixed[9];
+    int32_t srgb_2_srgbl_lookup_fixed[256] {};
+    int32_t srgbl2ledl_fixed[9] {};
+    int32_t ledl2srgbl_fixed[9] {};
 
     void sRGBL2LEDL(float *ledl, const float *srgbl) const;
     void LEDL2sRGBL(float *ledl, const float *srgbl) const;
