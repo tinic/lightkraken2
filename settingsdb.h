@@ -162,6 +162,7 @@ class SettingsDB {
     static constexpr const char *KEY_CONSTANT##_t = KEY_STRING KEY_TYPE_BOOL;
 
     KEY_DEFINE_BOOL(kBroadcastEnabled, "broadcast_enabled")
+    KEY_DEFINE_BOOL(kBurstModeEnabled, "burst_mode_enabled")
 
 #define KEY_DEFINE_STRING_VECTOR(KEY_CONSTANT, KEY_STRING)  \
     static constexpr const char *KEY_CONSTANT = KEY_STRING; \

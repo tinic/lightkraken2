@@ -26,6 +26,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <stdint.h>
 #include <string.h>
 
+#include "./color.h"
+
 struct Model {
    public:
     static constexpr size_t stripN = 2;
@@ -33,39 +35,37 @@ struct Model {
     static constexpr size_t universeN = 6;
     static constexpr size_t analogCompN = 6;
     static constexpr size_t maxUniverses = stripN * universeN + analogN * analogCompN;
-    static constexpr size_t maxLEDs = 255 * universeN;
+    static constexpr size_t maxLEDs = 512 * universeN;
     static constexpr size_t maxUniverseID = 65535;
 
     bool broadcastEnabled = false;
+    bool burstMode = false;
 
     struct AnalogConfig {
         // clang-format off
         enum AnalogOutputType { 
             RGB, 
             RGBW, 
-            RGBWW, 
             RGBWWW,
             OUTPUT_COUNT};
 
         enum AnalogInputType { 
             RGB8, 
             RGBW8, 
-            RGBWW8, 
             RGBWWW8, 
+            RGB8_SRGB, 
+            RGBW8_SRGB, 
+            RGBWWW8_SRGB, 
             RGB16_MSB, 
-            RGBW8_MSB, 
-            RGBWW8_MSB, 
-            RGBWWW8_MSB, 
-            RGB8_LSB, 
-            RGBW8_LSB, 
-            RGBWW8_LSB, 
-            RGBWWW8_LSB,
+            RGBW16_MSB, 
+            RGBWWW16_MSB, 
             INPUT_COUNT};
         // clang-format on
 
         AnalogOutputType output_type;
         AnalogInputType input_type;
         float pwm_limit;
+        RGBColorSpace rgbSpace;
         struct Component {
             struct {
                 uint16_t universe;
@@ -80,6 +80,7 @@ struct Model {
     } analog_config[analogN] = {
         // clang-format off
         { AnalogConfig::RGB, AnalogConfig::RGB8, 1.0,
+            RGBColorSpace(),
             { { 0,  0, 1,  0, 0 }, 
               { 0,  1, 1,  1, 0 }, 
               { 0,  2, 1,  2, 0 }, 
@@ -87,6 +88,7 @@ struct Model {
               { 0,  4, 1,  4, 0 }, 
               { 0,  5, 1,  5, 0 } } },
         { AnalogConfig::RGB, AnalogConfig::RGB8, 1.0, 
+            RGBColorSpace(),
             { { 0,  6, 1,  6, 0 }, 
               { 0,  7, 1,  7, 0 }, 
               { 0,  8, 1,  8, 0 }, 
@@ -114,6 +116,8 @@ struct Model {
             TM1829, 
             WS2801, 
             HD108,
+            WS2816,
+            SK6812_RGBW,
             OUTPUT_COUNT};
 
         enum StripInputType { 
@@ -142,11 +146,13 @@ struct Model {
         float comp_limit;
         float glob_illum;
         uint16_t led_count;
+        rgb8 color;
+        RGBColorSpace rgbSpace;
         uint16_t artnet[universeN];
         uint16_t e131[universeN];
     } strip_config[stripN] = {
-        {StripConfig::WS2812, StripConfig::RGB8, StripConfig::COLOR, 1.0, 1.0, 255, {0, 0, 0, 0, 0, 0}, {1, 0, 0, 0, 0, 0}},
-        {StripConfig::WS2812, StripConfig::RGB8, StripConfig::COLOR, 1.0, 1.0, 255, {1, 0, 0, 0, 0, 0}, {2, 0, 0, 0, 0, 0}},
+        {StripConfig::WS2812, StripConfig::RGB8, StripConfig::COLOR, 1.0, 1.0, 255, rgb8(), RGBColorSpace(), {0, 0, 0, 0, 0, 0}, {1, 0, 0, 0, 0, 0}},
+        {StripConfig::WS2812, StripConfig::RGB8, StripConfig::COLOR, 1.0, 1.0, 255, rgb8(), RGBColorSpace(), {1, 0, 0, 0, 0, 0}, {2, 0, 0, 0, 0, 0}},
     };
 
     // clang-format off

@@ -20,11 +20,16 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+#include "./control.h"
+
+#include <math.h>
 #include <stdint.h>
 #include <string.h>
-#include <math.h>
 
-#include "./control.h"
+#include "./driver.h"
+#include "./strip.h"
+#include "./color.h"
+#include "./systick.h"
 
 Control &Control::instance() {
     static Control control;
@@ -36,56 +41,51 @@ Control &Control::instance() {
 }
 
 void Control::sync() {
-#if 0
-    switch(Model::instance().outputConfig()) {
-    case Model::OUTPUT_CONFIG_DUAL_STRIP: {
-        for (size_t c = 0; c < lightkraken::Model::stripN; c++) {
-            lightkraken::Strip::get(c).transfer();
-        }
-    } break;
-    case Model::OUTPUT_CONFIG_RGB_DUAL_STRIP: {
-        Driver::instance().sync(0);
-        for (size_t c = 0; c < lightkraken::Model::stripN; c++) {
-            lightkraken::Strip::get(c).transfer();
-        }
-    } break;
-    case Model::OUTPUT_CONFIG_RGB_STRIP: {
-        Driver::instance().sync(0);
-        for (size_t c = 1; c < lightkraken::Model::stripN; c++) {
-            lightkraken::Strip::get(c).transfer();
-        }
-    } break;
-    case Model::OUTPUT_CONFIG_RGBW_STRIP: {
-        Driver::instance().sync(0);
-        for (size_t c = 1; c < lightkraken::Model::stripN; c++) {
-            lightkraken::Strip::get(c).transfer();
-        }
-    } break;
-    case Model::OUTPUT_CONFIG_RGB_RGB: {
-        for (size_t c = 0; c < Model::analogN; c++) {
-            Driver::instance().sync(c);
-        }
-    } break;
-    case Model::OUTPUT_CONFIG_RGBWWW: {
-        for (size_t c = 0; c < 1; c++) {
-            Driver::instance().sync(c);
-        }
-    } break;
-    default: {
-    } break;
+    switch (Model::instance().outputConfig()) {
+        case Model::DUAL_STRIP: {
+            for (size_t c = 0; c < Model::stripN; c++) {
+                Strip::get(c).transfer();
+            }
+        } break;
+        case Model::RGB_DUAL_STRIP: {
+            Driver::instance().sync(0);
+            for (size_t c = 0; c < Model::stripN; c++) {
+                Strip::get(c).transfer();
+            }
+        } break;
+        case Model::RGB_STRIP: {
+            Driver::instance().sync(0);
+            for (size_t c = 1; c < Model::stripN; c++) {
+                Strip::get(c).transfer();
+            }
+        } break;
+        case Model::RGBW_STRIP: {
+            Driver::instance().sync(0);
+            for (size_t c = 1; c < Model::stripN; c++) {
+                Strip::get(c).transfer();
+            }
+        } break;
+        case Model::RGB_RGB: {
+            for (size_t c = 0; c < Model::analogN; c++) {
+                Driver::instance().sync(c);
+            }
+        } break;
+        case Model::RGBWWW: {
+            for (size_t c = 0; c < 1; c++) {
+                Driver::instance().sync(c);
+            }
+        } break; 
+        default: {
+        } break;
     }
-#endif  // #if 0
 }
 
 void Control::collectAllActiveArtnetUniverses(std::array<uint16_t, Model::maxUniverses> &universes, size_t &universeCount) {
-#if 0
     universeCount = 0;
     class UniqueCollector {
-    public:
-        UniqueCollector() {
-            memset(&collected_universes[0], 0xFF, sizeof(collected_universes));
-        }
-    
+       public:
+        UniqueCollector() { memset(&collected_universes[0], 0xFF, sizeof(collected_universes)); }
+
         void maybeAcquire(uint16_t universe) {
             for (size_t c = 0; c < Model::maxUniverses; c++) {
                 if (collected_universes[c] == universe) {
@@ -106,178 +106,176 @@ void Control::collectAllActiveArtnetUniverses(std::array<uint16_t, Model::maxUni
                 universes[universeCount++] = collected_universes[c];
             }
         }
-    private:
-        uint16_t collected_universes[Model::maxUniverses];
-    } uniqueCollector;
 
-    switch(Model::instance().outputConfig()) {
-    case Model::OUTPUT_CONFIG_DUAL_STRIP: {
-        for (size_t c = 0; c < lightkraken::Model::stripN; c++) {
-            for (size_t d = 0; d < Model::universeN; d++) {
-                if (Strip::get(c).isUniverseActive(d, Strip::InputType(Model::instance().stripConfig(c).input_type))) {
-                    uniqueCollector.maybeAcquire(Model::instance().artnetStrip(c,d));
-                }
-            }
-        }
-    } break;
-    case Model::OUTPUT_CONFIG_RGB_DUAL_STRIP: {
-        for (size_t c = 0; c < 3; c++) { 
-            uniqueCollector.maybeAcquire(Model::instance().analogConfig(0).components[c].artnet.universe);
-        }
-        for (size_t c = 0; c < lightkraken::Model::stripN; c++) {
-            for (size_t d = 0; d < Model::universeN; d++) {
-                if (Strip::get(c).isUniverseActive(d, Strip::InputType(Model::instance().stripConfig(c).input_type))) {
-                    uniqueCollector.maybeAcquire(Model::instance().artnetStrip(c, d));
-                }
-            }
-        }
-    } break;
-    case Model::OUTPUT_CONFIG_RGB_STRIP: {
-        for (size_t c = 0; c < 3; c++) { 
-            uniqueCollector.maybeAcquire(Model::instance().analogConfig(0).components[c].artnet.universe);
-        }
-        for (size_t c = 1; c < lightkraken::Model::stripN; c++) {
-            for (size_t d = 0; d < Model::universeN; d++) {
-                if (Strip::get(c).isUniverseActive(d, Strip::InputType(Model::instance().stripConfig(c).input_type))) {
-                    uniqueCollector.maybeAcquire(Model::instance().artnetStrip(c, d));
-                }
-            }
-        }
-    } break;
-    case Model::OUTPUT_CONFIG_RGBW_STRIP: {
-        for (size_t c = 0; c < 4; c++) { 
-            uniqueCollector.maybeAcquire(Model::instance().analogConfig(0).components[c].artnet.universe);
-        }
-        for (size_t c = 1; c < lightkraken::Model::stripN; c++) {
-            for (size_t d = 0; d < Model::universeN; d++) {
-                if (Strip::get(c).isUniverseActive(d, Strip::InputType(Model::instance().stripConfig(c).input_type))) {
-                    uniqueCollector.maybeAcquire(Model::instance().artnetStrip(c, d));
-                }
-            }
-        }
-    } break;
-    case Model::OUTPUT_CONFIG_RGB_RGB: {
-        for (size_t c = 0; c < Model::analogN; c++) {
-            for (size_t d = 0; d < 3; d++) { 
-                uniqueCollector.maybeAcquire(Model::instance().analogConfig(c).components[d].artnet.universe);
-            }
-        }
-    } break;
-    case Model::OUTPUT_CONFIG_RGBWWW: {
-        for (size_t c = 0; c < 1; c++) {
-            for (size_t d = 0; d < 5; d++) { 
-                uniqueCollector.maybeAcquire(Model::instance().analogConfig(c).components[d].artnet.universe);
-            }
-        }
-    } break;
-    default: {
-    } break;
-    }
-    uniqueCollector.fillArray(universes, universeCount);
-#endif  // #if 0
-}
-
-void Control::collectAllActiveE131Universes(std::array<uint16_t, Model::maxUniverses> &universes, size_t &universeCount) {
-#if 0
-    universeCount = 0;
-    class UniqueCollector {
-    public:
-        UniqueCollector() {
-            memset(&collected_universes[0], 0xFF, sizeof(collected_universes));
-        }
-    
-        void maybeAcquire(uint16_t universe) {
-            for (size_t c = 0; c < Model::maxUniverses; c++) {
-                if (collected_universes[c] == universe) {
-                    return;
-                }
-                if (collected_universes[c] == 0xFFFF) {
-                    collected_universes[c] = universe;
-                    return;
-                }
-            }
-        }
-
-        void fillArray(std::array<uint16_t, Model::maxUniverses> &universes, size_t &universeCount) {
-            for (size_t c = 0; c < Model::maxUniverses; c++) {
-                if (collected_universes[c] == 0xFFFF) {
-                    return;
-                }
-                universes[universeCount++] = collected_universes[c];
-            }
-        }
-    private:
+       private:
         uint16_t collected_universes[Model::maxUniverses];
     } uniqueCollector;
 
     switch (Model::instance().outputConfig()) {
-    case Model::OUTPUT_CONFIG_DUAL_STRIP: {
-            for (size_t c = 0; c < lightkraken::Model::stripN; c++) {
+        case Model::DUAL_STRIP: {
+            for (size_t c = 0; c < Model::stripN; c++) {
                 for (size_t d = 0; d < Model::universeN; d++) {
-                    if (Strip::get(c).isUniverseActive(d, Strip::InputType(Model::instance().stripConfig(c).input_type))) {
-                        uniqueCollector.maybeAcquire(Model::instance().e131Strip(c, d));
+                    if (Strip::get(c).isUniverseActive(d, Model::instance().stripConfig(c).input_type)) {
+                        uniqueCollector.maybeAcquire(Model::instance().artnetStrip(c, d));
                     }
                 }
             }
         } break;
-    case Model::OUTPUT_CONFIG_RGB_DUAL_STRIP: {
-            for (size_t c = 0; c < 3; c++) { 
-                uniqueCollector.maybeAcquire(Model::instance().analogConfig(0).components[c].e131.universe);
+        case Model::RGB_DUAL_STRIP: {
+            for (size_t c = 0; c < 3; c++) {
+                uniqueCollector.maybeAcquire(Model::instance().analogConfig(0).components[c].artnet.universe);
             }
-            for (size_t c = 0; c < lightkraken::Model::stripN; c++) {
+            for (size_t c = 0; c < Model::stripN; c++) {
                 for (size_t d = 0; d < Model::universeN; d++) {
-                    if (Strip::get(c).isUniverseActive(d, Strip::InputType(Model::instance().stripConfig(c).input_type))) {
-                        uniqueCollector.maybeAcquire(Model::instance().e131Strip(c, d));
+                    if (Strip::get(c).isUniverseActive(d, Model::instance().stripConfig(c).input_type)) {
+                        uniqueCollector.maybeAcquire(Model::instance().artnetStrip(c, d));
                     }
                 }
             }
         } break;
-    case Model::OUTPUT_CONFIG_RGB_STRIP: {
-            for (size_t c = 0; c < 3; c++) { 
-                uniqueCollector.maybeAcquire(Model::instance().analogConfig(0).components[c].e131.universe);
+        case Model::RGB_STRIP: {
+            for (size_t c = 0; c < 3; c++) {
+                uniqueCollector.maybeAcquire(Model::instance().analogConfig(0).components[c].artnet.universe);
             }
-            for (size_t c = 1; c < lightkraken::Model::stripN; c++) {
+            for (size_t c = 1; c < Model::stripN; c++) {
                 for (size_t d = 0; d < Model::universeN; d++) {
-                    if (Strip::get(c).isUniverseActive(d, Strip::InputType(Model::instance().stripConfig(c).input_type))) {
-                        uniqueCollector.maybeAcquire(Model::instance().e131Strip(c, d));
+                    if (Strip::get(c).isUniverseActive(d, Model::instance().stripConfig(c).input_type)) {
+                        uniqueCollector.maybeAcquire(Model::instance().artnetStrip(c, d));
                     }
                 }
             }
         } break;
-    case Model::OUTPUT_CONFIG_RGBW_STRIP: {
-            for (size_t c = 0; c < 4; c++) { 
-                uniqueCollector.maybeAcquire(Model::instance().analogConfig(0).components[c].e131.universe);
+        case Model::RGBW_STRIP: {
+            for (size_t c = 0; c < 4; c++) {
+                uniqueCollector.maybeAcquire(Model::instance().analogConfig(0).components[c].artnet.universe);
             }
-            for (size_t c = 1; c < lightkraken::Model::stripN; c++) {
+            for (size_t c = 1; c < Model::stripN; c++) {
                 for (size_t d = 0; d < Model::universeN; d++) {
-                    if (Strip::get(c).isUniverseActive(d, Strip::InputType(Model::instance().stripConfig(c).input_type))) {
-                        uniqueCollector.maybeAcquire(Model::instance().e131Strip(c, d));
+                    if (Strip::get(c).isUniverseActive(d, Model::instance().stripConfig(c).input_type)) {
+                        uniqueCollector.maybeAcquire(Model::instance().artnetStrip(c, d));
                     }
                 }
             }
         } break;
-    case Model::OUTPUT_CONFIG_RGB_RGB: {
+        case Model::RGB_RGB: {
             for (size_t c = 0; c < Model::analogN; c++) {
-                for (size_t d = 0; d < 3; d++) { 
-                    uniqueCollector.maybeAcquire(Model::instance().analogConfig(c).components[d].e131.universe);
+                for (size_t d = 0; d < 3; d++) {
+                    uniqueCollector.maybeAcquire(Model::instance().analogConfig(c).components[d].artnet.universe);
                 }
             }
         } break;
-    case Model::OUTPUT_CONFIG_RGBWWW: {
+        case Model::RGBWWW: {
             for (size_t c = 0; c < 1; c++) {
-                for (size_t d = 0; d < 5; d++) { 
+                for (size_t d = 0; d < 5; d++) {
+                    uniqueCollector.maybeAcquire(Model::instance().analogConfig(c).components[d].artnet.universe);
+                }
+            }
+        } break;
+        default: {
+        } break;
+    }
+
+    uniqueCollector.fillArray(universes, universeCount);
+}
+
+void Control::collectAllActiveE131Universes(std::array<uint16_t, Model::maxUniverses> &universes, size_t &universeCount) {
+    universeCount = 0;
+    class UniqueCollector {
+       public:
+        UniqueCollector() { memset(&collected_universes[0], 0xFF, sizeof(collected_universes)); }
+
+        void maybeAcquire(uint16_t universe) {
+            for (size_t c = 0; c < Model::maxUniverses; c++) {
+                if (collected_universes[c] == universe) {
+                    return;
+                }
+                if (collected_universes[c] == 0xFFFF) {
+                    collected_universes[c] = universe;
+                    return;
+                }
+            }
+        }
+
+        void fillArray(std::array<uint16_t, Model::maxUniverses> &universes, size_t &universeCount) {
+            for (size_t c = 0; c < Model::maxUniverses; c++) {
+                if (collected_universes[c] == 0xFFFF) {
+                    return;
+                }
+                universes[universeCount++] = collected_universes[c];
+            }
+        }
+
+       private:
+        uint16_t collected_universes[Model::maxUniverses];
+    } uniqueCollector;
+
+    switch (Model::instance().outputConfig()) {
+        case Model::DUAL_STRIP: {
+            for (size_t c = 0; c < Model::stripN; c++) {
+                for (size_t d = 0; d < Model::universeN; d++) {
+                    if (Strip::get(c).isUniverseActive(d, Model::instance().stripConfig(c).input_type)) {
+                        uniqueCollector.maybeAcquire(Model::instance().e131Strip(c, d));
+                    }
+                }
+            }
+        } break;
+        case Model::RGB_DUAL_STRIP: {
+            for (size_t c = 0; c < 3; c++) {
+                uniqueCollector.maybeAcquire(Model::instance().analogConfig(0).components[c].e131.universe);
+            }
+            for (size_t c = 0; c < Model::stripN; c++) {
+                for (size_t d = 0; d < Model::universeN; d++) {
+                    if (Strip::get(c).isUniverseActive(d, Model::instance().stripConfig(c).input_type)) {
+                        uniqueCollector.maybeAcquire(Model::instance().e131Strip(c, d));
+                    }
+                }
+            }
+        } break;
+        case Model::RGB_STRIP: {
+            for (size_t c = 0; c < 3; c++) {
+                uniqueCollector.maybeAcquire(Model::instance().analogConfig(0).components[c].e131.universe);
+            }
+            for (size_t c = 1; c < Model::stripN; c++) {
+                for (size_t d = 0; d < Model::universeN; d++) {
+                    if (Strip::get(c).isUniverseActive(d, Model::instance().stripConfig(c).input_type)) {
+                        uniqueCollector.maybeAcquire(Model::instance().e131Strip(c, d));
+                    }
+                }
+            }
+        } break;
+        case Model::RGBW_STRIP: {
+            for (size_t c = 0; c < 4; c++) {
+                uniqueCollector.maybeAcquire(Model::instance().analogConfig(0).components[c].e131.universe);
+            }
+            for (size_t c = 1; c < Model::stripN; c++) {
+                for (size_t d = 0; d < Model::universeN; d++) {
+                    if (Strip::get(c).isUniverseActive(d, Model::instance().stripConfig(c).input_type)) {
+                        uniqueCollector.maybeAcquire(Model::instance().e131Strip(c, d));
+                    }
+                }
+            }
+        } break;
+        case Model::RGB_RGB: {
+            for (size_t c = 0; c < Model::analogN; c++) {
+                for (size_t d = 0; d < 3; d++) {
                     uniqueCollector.maybeAcquire(Model::instance().analogConfig(c).components[d].e131.universe);
                 }
             }
         } break;
-    default: {
+        case Model::RGBWWW: {
+            for (size_t c = 0; c < 1; c++) {
+                for (size_t d = 0; d < 5; d++) {
+                    uniqueCollector.maybeAcquire(Model::instance().analogConfig(c).components[d].e131.universe);
+                }
+            }
+        } break;
+        default: {
         } break;
     }
     uniqueCollector.fillArray(universes, universeCount);
-#endif  // #if 0
 }
 
-void Control::interateAllActiveArtnetUniverses(std::function<void (uint16_t universe)> callback) {
+void Control::interateAllActiveArtnetUniverses(std::function<void(uint16_t universe)> callback) {
     size_t universeCount = 0;
     std::array<uint16_t, Model::maxUniverses> universes;
     collectAllActiveArtnetUniverses(universes, universeCount);
@@ -290,7 +288,6 @@ void Control::interateAllActiveArtnetUniverses(std::function<void (uint16_t univ
 void Control::setArtnetUniverseOutputDataForDriver(size_t terminals, size_t components, uint16_t uni, const uint8_t *data, size_t len) {
     clearStartup();
 
-#if 0
     rgbww rgb[Driver::terminalN];
     for (size_t c = 0; c < terminals; c++) {
         rgb[c] = Driver::instance().srgbwwCIE(c);
@@ -353,13 +350,11 @@ void Control::setArtnetUniverseOutputDataForDriver(size_t terminals, size_t comp
             Driver::instance().sync(c);
         }
     }
-#endif  // #if 0
 }
 
 void Control::setE131UniverseOutputDataForDriver(size_t terminals, size_t components, uint16_t uni, const uint8_t *data, size_t len) {
     clearStartup();
 
-#if 0
     rgbww rgb[Driver::terminalN];
     for (size_t c = 0; c < terminals; c++) {
         rgb[c] = Driver::instance().srgbwwCIE(c);
@@ -422,209 +417,206 @@ void Control::setE131UniverseOutputDataForDriver(size_t terminals, size_t compon
             Driver::instance().sync(c);
         }
     }
-#endif  // #if 0
 }
-
 
 void Control::setArtnetUniverseOutputData(uint16_t uni, const uint8_t *data, size_t len, bool nodriver) {
     clearStartup();
 
-#if 0
-    PerfMeasure perf(PerfMeasure::SLOT_SET_DATA);
-    switch(Model::instance().outputConfig()) {
-    case Model::OUTPUT_CONFIG_DUAL_STRIP: {
-        for (size_t c = 0; c < Model::stripN; c++) {
-            bool set = false;
-            for (size_t d = 0; d < Model::universeN; d++) {
-                if (Model::instance().artnetStrip(c,d) == uni) {
-                    lightkraken::Strip::get(c).setUniverseData(d, data, len, Strip::InputType(Model::instance().stripConfig(c).input_type));
-                    set = true;
+    switch (Model::instance().outputConfig()) {
+        case Model::DUAL_STRIP: {
+            for (size_t c = 0; c < Model::stripN; c++) {
+                bool set = false;
+                for (size_t d = 0; d < Model::universeN; d++) {
+                    if (Model::instance().artnetStrip(c, d) == uni) {
+                        Strip::get(c).setUniverseData(d, data, len, Model::instance().stripConfig(c).input_type);
+                        set = true;
+                    }
+                }
+                if (set) {
+                    setDataReceived();
+                }
+                if (set && !syncMode) {
+                    Strip::get(c).transfer();
                 }
             }
-            if (set) {
-                setDataReceived();
+        } break;
+        case Model::RGB_DUAL_STRIP: {
+            if (!nodriver) {
+                setArtnetUniverseOutputDataForDriver(1, 3, uni, data, len);
             }
-            if (set && !syncMode) {
-                lightkraken::Strip::get(c).transfer();
-            }
-        }
-    } break;
-    case Model::OUTPUT_CONFIG_RGB_DUAL_STRIP: {
-        if (!nodriver) {
-            setArtnetUniverseOutputDataForDriver(1, 3, uni, data, len);
-        }
-        for (size_t c = 0; c < Model::stripN; c++) {
-            bool set = false;
-            for (size_t d = 0; d < Model::universeN; d++) {
-                if (Model::instance().artnetStrip(c, d) == uni) {
-                    lightkraken::Strip::get(c).setUniverseData(d, data, len, Strip::InputType(Model::instance().stripConfig(c).input_type));
-                    set = true;
+            for (size_t c = 0; c < Model::stripN; c++) {
+                bool set = false;
+                for (size_t d = 0; d < Model::universeN; d++) {
+                    if (Model::instance().artnetStrip(c, d) == uni) {
+                        Strip::get(c).setUniverseData(d, data, len, Model::instance().stripConfig(c).input_type);
+                        set = true;
+                    }
+                }
+                if (set) {
+                    setDataReceived();
+                }
+                if (set && !syncMode) {
+                    Strip::get(c).transfer();
                 }
             }
-            if (set) {
-                setDataReceived();
+        } break;
+        case Model::RGB_STRIP: {
+            if (!nodriver) {
+                setArtnetUniverseOutputDataForDriver(1, 3, uni, data, len);
             }
-            if (set && !syncMode) {
-                lightkraken::Strip::get(c).transfer();
-            }
-        }
-    } break;
-    case Model::OUTPUT_CONFIG_RGB_STRIP: {
-        if (!nodriver) {
-            setArtnetUniverseOutputDataForDriver(1, 3, uni, data, len);
-        }
-        for (size_t c = 1; c < Model::stripN; c++) {
-            bool set = false;
-            for (size_t d = 0; d < Model::universeN; d++) {
-                if (Model::instance().artnetStrip(c, d) == uni) {
-                    lightkraken::Strip::get(c).setUniverseData(d, data, len, Strip::InputType(Model::instance().stripConfig(c).input_type));
-                    set = true;
+            for (size_t c = 1; c < Model::stripN; c++) {
+                bool set = false;
+                for (size_t d = 0; d < Model::universeN; d++) {
+                    if (Model::instance().artnetStrip(c, d) == uni) {
+                        Strip::get(c).setUniverseData(d, data, len, Model::instance().stripConfig(c).input_type);
+                        set = true;
+                    }
+                }
+                if (set) {
+                    setDataReceived();
+                }
+                if (set && !syncMode) {
+                    Strip::get(c).transfer();
                 }
             }
-            if (set) {
-                setDataReceived();
+        } break;
+        case Model::RGBW_STRIP: {
+            if (!nodriver) {
+                setArtnetUniverseOutputDataForDriver(1, 4, uni, data, len);
             }
-            if (set && !syncMode) {
-                lightkraken::Strip::get(c).transfer();
-            }
-        }
-    } break;
-    case Model::OUTPUT_CONFIG_RGBW_STRIP: {
-        if (!nodriver) {
-            setArtnetUniverseOutputDataForDriver(1, 4, uni, data, len);
-        }
-        for (size_t c = 1; c < Model::stripN; c++) {
-            bool set = false;
-            for (size_t d = 0; d < Model::universeN; d++) {
-                if (Model::instance().artnetStrip(c, d) == uni) {
-                    lightkraken::Strip::get(c).setUniverseData(d, data, len, Strip::InputType(Model::instance().stripConfig(c).input_type));
-                    set = true;
+            for (size_t c = 1; c < Model::stripN; c++) {
+                bool set = false;
+                for (size_t d = 0; d < Model::universeN; d++) {
+                    if (Model::instance().artnetStrip(c, d) == uni) {
+                        Strip::get(c).setUniverseData(d, data, len, Model::instance().stripConfig(c).input_type);
+                        set = true;
+                    }
+                }
+                if (set) {
+                    setDataReceived();
+                }
+                if (set && !syncMode) {
+                    Strip::get(c).transfer();
                 }
             }
-            if (set) {
-                setDataReceived();
+        } break;
+        case Model::RGB_RGB: {
+            if (!nodriver) {
+                setArtnetUniverseOutputDataForDriver(Model::analogN, 3, uni, data, len);
             }
-            if (set && !syncMode) {
-                lightkraken::Strip::get(c).transfer();
+        } break;
+        case Model::RGBWWW: {
+            if (!nodriver) {
+                setArtnetUniverseOutputDataForDriver(Model::analogN, 5, uni, data, len);
             }
-        }
-    } break;
-    case Model::OUTPUT_CONFIG_RGB_RGB: {
-        if (!nodriver) {
-            setArtnetUniverseOutputDataForDriver(Model::analogN, 3, uni, data, len);
-        }
-    } break;
-    case Model::OUTPUT_CONFIG_RGBWWW: {
-        if (!nodriver) {
-            setArtnetUniverseOutputDataForDriver(Model::analogN, 5, uni, data, len);
-        }
-    } break;
+        } break;
+        case Model::CONFIG_COUNT:
+        default: {
+        } break;
     }
-#endif  // #if 0
 }
 
 void Control::setE131UniverseOutputData(uint16_t uni, const uint8_t *data, size_t len, bool nodriver) {
     clearStartup();
 
-#if 0
-    PerfMeasure perf(PerfMeasure::SLOT_SET_DATA);
-    switch(Model::instance().outputConfig()) {
-    case Model::OUTPUT_CONFIG_DUAL_STRIP: {
-        for (size_t c = 0; c < Model::stripN; c++) {
-            bool set = false;
-            for (size_t d = 0; d < Model::universeN; d++) {
-                if (Model::instance().e131Strip(c,d) == uni) {
-                    lightkraken::Strip::get(c).setUniverseData(d, data, len, Strip::InputType(Model::instance().stripConfig(c).input_type));
-                    set = true;
+    switch (Model::instance().outputConfig()) {
+        case Model::DUAL_STRIP: {
+            for (size_t c = 0; c < Model::stripN; c++) {
+                bool set = false;
+                for (size_t d = 0; d < Model::universeN; d++) {
+                    if (Model::instance().e131Strip(c, d) == uni) {
+                        Strip::get(c).setUniverseData(d, data, len, Model::instance().stripConfig(c).input_type);
+                        set = true;
+                    }
+                }
+                if (set) {
+                    setDataReceived();
+                }
+                if (set && !syncMode) {
+                    Strip::get(c).transfer();
                 }
             }
-            if (set) {
-                setDataReceived();
+        } break;
+        case Model::RGB_DUAL_STRIP: {
+            if (!nodriver) {
+                setE131UniverseOutputDataForDriver(1, 3, uni, data, len);
             }
-            if (set && !syncMode) {
-                lightkraken::Strip::get(c).transfer();
-            }
-        }
-    } break;
-    case Model::OUTPUT_CONFIG_RGB_DUAL_STRIP: {
-        if (!nodriver) {
-            setE131UniverseOutputDataForDriver(1, 3, uni, data, len);
-        }
-        for (size_t c = 0; c < Model::stripN; c++) {
-            bool set = false;
-            for (size_t d = 0; d < Model::universeN; d++) {
-                if (Model::instance().e131Strip(c, d) == uni) {
-                    lightkraken::Strip::get(c).setUniverseData(d, data, len, Strip::InputType(Model::instance().stripConfig(c).input_type));
-                    set = true;
+            for (size_t c = 0; c < Model::stripN; c++) {
+                bool set = false;
+                for (size_t d = 0; d < Model::universeN; d++) {
+                    if (Model::instance().e131Strip(c, d) == uni) {
+                        Strip::get(c).setUniverseData(d, data, len, Model::instance().stripConfig(c).input_type);
+                        set = true;
+                    }
+                }
+                if (set) {
+                    setDataReceived();
+                }
+                if (set && !syncMode) {
+                    Strip::get(c).transfer();
                 }
             }
-            if (set) {
-                setDataReceived();
+        } break;
+        case Model::RGB_STRIP: {
+            if (!nodriver) {
+                setE131UniverseOutputDataForDriver(1, 3, uni, data, len);
             }
-            if (set && !syncMode) {
-                lightkraken::Strip::get(c).transfer();
-            }
-        }
-    } break;
-    case Model::OUTPUT_CONFIG_RGB_STRIP: {
-        if (!nodriver) {
-            setE131UniverseOutputDataForDriver(1, 3, uni, data, len);
-        }
-        for (size_t c = 1; c < Model::stripN; c++) {
-            bool set = false;
-            for (size_t d = 0; d < Model::universeN; d++) {
-                if (Model::instance().e131Strip(c, d) == uni) {
-                    lightkraken::Strip::get(c).setUniverseData(d, data, len, Strip::InputType(Model::instance().stripConfig(c).input_type));
-                    set = true;
+            for (size_t c = 1; c < Model::stripN; c++) {
+                bool set = false;
+                for (size_t d = 0; d < Model::universeN; d++) {
+                    if (Model::instance().e131Strip(c, d) == uni) {
+                        Strip::get(c).setUniverseData(d, data, len, Model::instance().stripConfig(c).input_type);
+                        set = true;
+                    }
+                }
+                if (set) {
+                    setDataReceived();
+                }
+                if (set && !syncMode) {
+                    Strip::get(c).transfer();
                 }
             }
-            if (set) {
-                setDataReceived();
+        } break;
+        case Model::RGBW_STRIP: {
+            if (!nodriver) {
+                setE131UniverseOutputDataForDriver(1, 4, uni, data, len);
             }
-            if (set && !syncMode) {
-                lightkraken::Strip::get(c).transfer();
-            }
-        }
-    } break;
-    case Model::OUTPUT_CONFIG_RGBW_STRIP: {
-        if (!nodriver) {
-            setE131UniverseOutputDataForDriver(1, 4, uni, data, len);
-        }
-        for (size_t c = 1; c < Model::stripN; c++) {
-            bool set = false;
-            for (size_t d = 0; d < Model::universeN; d++) {
-                if (Model::instance().e131Strip(c, d) == uni) {
-                    lightkraken::Strip::get(c).setUniverseData(d, data, len, Strip::InputType(Model::instance().stripConfig(c).input_type));
-                    set = true;
+            for (size_t c = 1; c < Model::stripN; c++) {
+                bool set = false;
+                for (size_t d = 0; d < Model::universeN; d++) {
+                    if (Model::instance().e131Strip(c, d) == uni) {
+                        Strip::get(c).setUniverseData(d, data, len, Model::instance().stripConfig(c).input_type);
+                        set = true;
+                    }
+                }
+                if (set) {
+                    setDataReceived();
+                }
+                if (set && !syncMode) {
+                    Strip::get(c).transfer();
                 }
             }
-            if (set) {
-                setDataReceived();
+        } break;
+        case Model::RGB_RGB: {
+            if (!nodriver) {
+                setE131UniverseOutputDataForDriver(Model::analogN, 3, uni, data, len);
             }
-            if (set && !syncMode) {
-                lightkraken::Strip::get(c).transfer();
+        } break;
+        case Model::RGBWWW: {
+            if (!nodriver) {
+                setE131UniverseOutputDataForDriver(Model::analogN, 5, uni, data, len);
             }
-        }
-    } break;
-    case Model::OUTPUT_CONFIG_RGB_RGB: {
-        if (!nodriver) {
-            setE131UniverseOutputDataForDriver(Model::analogN, 3, uni, data, len);
-        }
-    } break;
-    case Model::OUTPUT_CONFIG_RGBWWW: {
-        if (!nodriver) {
-            setE131UniverseOutputDataForDriver(Model::analogN, 5, uni, data, len);
-        }
-    } break;
+        } break;
+        case Model::CONFIG_COUNT:
+        default: {
+        } break;
     }
-#endif  // #if 0
 }
 
 void Control::setColor() {
-#if 0
     uint8_t buf[Strip::bytesMaxLen];
     for (size_t c = 0; c < Model::stripN; c++) {
-        size_t cpp = lightkraken::Strip::get(c).getBytesPerPixel();
+        size_t cpp = Strip::get(c).getBytesPerPixel();
         size_t len = 0;
         switch(cpp) {
             case 3: {
@@ -634,7 +626,7 @@ void Control::setColor() {
                     buf[d + 2] = (Model::instance().stripConfig(c).color.b) & 0xFF;
                     len += 3;
                 }
-				lightkraken::Strip::get(c).setData(buf, len, Strip::INPUT_dRGB8);
+				Strip::get(c).setData(buf, len, Model::StripConfig::StripInputType::RGB8);
             } break;
             case 4: {
                 for (size_t d = 0; d <= sizeof(buf)-4; d += 4) {
@@ -644,7 +636,7 @@ void Control::setColor() {
                     buf[d + 3] = (Model::instance().stripConfig(c).color.x) & 0xFF;
                     len += 4;
                 }
-				lightkraken::Strip::get(c).setData(buf, len, Strip::INPUT_dRGBW8);
+				Strip::get(c).setData(buf, len, Model::StripConfig::StripInputType::RGBW8);
             } break;
             case 6: {
                 for (size_t d = 0; d <= sizeof(buf)-6; d += 6) {
@@ -656,72 +648,72 @@ void Control::setColor() {
                     buf[d + 5] = (Model::instance().stripConfig(c).color.b) & 0xFF;
                     len += 6;
                 }
-				lightkraken::Strip::get(c).setData(buf, len, Strip::INPUT_dRGB16MSB);
+				Strip::get(c).setData(buf, len, Model::StripConfig::StripInputType::RGB16_MSB);
             } break;
         }
     }
-#endif  // #if 0
 }
 
 void Control::update() {
-#if 0
-	if (inStartup()) {
-		startupModePattern();
-		sync();
-	} else if (color_scheduled) {
+    if (inStartup()) {
+        startupModePattern();
+        sync();
+    } else if (color_scheduled) {
         color_scheduled = false;
         setColor();
-        switch(Model::instance().outputConfig()) {
-        case Model::OUTPUT_CONFIG_DUAL_STRIP: {
-            for (size_t c = 0; c < lightkraken::Model::stripN; c++) {
-                lightkraken::Strip::get(c).transfer();
-            }
-        } break;
-        case Model::OUTPUT_CONFIG_RGB_DUAL_STRIP: {
-            for (size_t c = 0; c < lightkraken::Model::stripN; c++) {
-                lightkraken::Strip::get(c).transfer();
-            }
-        } break;
-        case Model::OUTPUT_CONFIG_RGB_STRIP: {
-            for (size_t c = 1; c < lightkraken::Model::stripN; c++) {
-                lightkraken::Strip::get(c).transfer();
-            }
-        } break;
-        case Model::OUTPUT_CONFIG_RGBW_STRIP: {
-            for (size_t c = 1; c < lightkraken::Model::stripN; c++) {
-                lightkraken::Strip::get(c).transfer();
-            }
-        } break;
-        case Model::OUTPUT_CONFIG_RGB_RGB: {
-        } break;
-        case Model::OUTPUT_CONFIG_RGBWWW: {
-        } break;
-        default: {
-        } break;
+        switch (Model::instance().outputConfig()) {
+            case Model::DUAL_STRIP: {
+                for (size_t c = 0; c < Model::stripN; c++) {
+                    Strip::get(c).transfer();
+                }
+            } break;
+            case Model::RGB_DUAL_STRIP: {
+                for (size_t c = 0; c < Model::stripN; c++) {
+                    Strip::get(c).transfer();
+                }
+            } break;
+            case Model::RGB_STRIP: {
+                for (size_t c = 1; c < Model::stripN; c++) {
+                    Strip::get(c).transfer();
+                }
+            } break;
+            case Model::RGBW_STRIP: {
+                for (size_t c = 1; c < Model::stripN; c++) {
+                    Strip::get(c).transfer();
+                }
+            } break;
+            case Model::RGB_RGB: {
+            } break;
+            case Model::RGBWWW: {
+            } break;
+            case Model::CONFIG_COUNT:
+            default: {
+            } break;
         }
     }
 
-    lightkraken::SPI_0::instance().setFast(lightkraken::Strip::get(0).needsClock() == false);
-    lightkraken::SPI_2::instance().setFast(lightkraken::Strip::get(1).needsClock() == false);
+#if 0
+    SPI_0::instance().setFast(Strip::get(0).needsClock() == false);
+    SPI_2::instance().setFast(Strip::get(1).needsClock() == false);
     
     switch(Model::instance().outputConfig()) {
-    case Model::OUTPUT_CONFIG_DUAL_STRIP: {
-        lightkraken::SPI_2::instance().update();
-        lightkraken::SPI_0::instance().update();
+    case Model::DUAL_STRIP: {
+        SPI_2::instance().update();
+        SPI_0::instance().update();
     } break;
-    case Model::OUTPUT_CONFIG_RGB_DUAL_STRIP: {
-        lightkraken::SPI_2::instance().update();
-        lightkraken::SPI_0::instance().update();
+    case Model::RGB_DUAL_STRIP: {
+        SPI_2::instance().update();
+        SPI_0::instance().update();
     } break;
-    case Model::OUTPUT_CONFIG_RGB_STRIP: {
-        lightkraken::SPI_2::instance().update();
+    case Model::RGB_STRIP: {
+        SPI_2::instance().update();
     } break;
-    case Model::OUTPUT_CONFIG_RGBW_STRIP: {
-        lightkraken::SPI_2::instance().update();
+    case Model::RGBW_STRIP: {
+        SPI_2::instance().update();
     } break;
-    case Model::OUTPUT_CONFIG_RGB_RGB: {
+    case Model::RGB_RGB: {
     } break;
-    case Model::OUTPUT_CONFIG_RGBWWW: {
+    case Model::RGBWWW: {
     } break;
     default: {
     } break;
@@ -731,18 +723,17 @@ void Control::update() {
 
 void Control::init() {
 #if 0
-
-    lightkraken::Strip::get(0).dmaTransferFunc = [](const uint8_t *data, size_t len) {
-        SPI_0::instance().transfer(data, len, lightkraken::Strip::get(0).needsClock());
+    Strip::get(0).dmaTransferFunc = [](const uint8_t *data, size_t len) {
+        SPI_0::instance().transfer(data, len, Strip::get(0).needsClock());
     };
-    lightkraken::Strip::get(0).dmaBusyFunc = []() {
+    Strip::get(0).dmaBusyFunc = []() {
         return SPI_0::instance().busy();
     };
 
-    lightkraken::Strip::get(1).dmaTransferFunc = [](const uint8_t *data, size_t len) {
-        SPI_2::instance().transfer(data, len, lightkraken::Strip::get(1).needsClock());
+    Strip::get(1).dmaTransferFunc = [](const uint8_t *data, size_t len) {
+        SPI_2::instance().transfer(data, len, Strip::get(1).needsClock());
     };
-    lightkraken::Strip::get(1).dmaBusyFunc = []() {
+    Strip::get(1).dmaBusyFunc = []() {
         return SPI_2::instance().busy();
     };
     
@@ -751,14 +742,12 @@ void Control::init() {
 }
 
 void Control::startupModePattern() {
-#if 0
-    PerfMeasure perf(PerfMeasure::SLOT_SET_DATA);
 	auto effect = [=] (size_t strip) {
 		switch (Model::instance().stripConfig(strip).startup_mode) {
-			case Strip::STARTUP_MODE_COLOR: {	
+			case Model::StripConfig::COLOR: {	
 				uint8_t buf[Strip::bytesMaxLen];
-				size_t l = lightkraken::Strip::get(strip).getPixelLen();
-                size_t cpp = lightkraken::Strip::get(strip).getBytesPerPixel();
+				size_t l = Strip::get(strip).getPixelLen();
+                size_t cpp = Strip::get(strip).getBytesPerPixel();
 				for (size_t c = 0; c < l; c++) {
                     switch(cpp) {
                         case 3: {
@@ -784,18 +773,18 @@ void Control::startupModePattern() {
                 }
                 switch(cpp) {
                     default:
-                    case 3: lightkraken::Strip::get(strip).setData(buf, l * cpp, Strip::INPUT_dRGB8); break;
-                    case 4: lightkraken::Strip::get(strip).setData(buf, l * cpp, Strip::INPUT_dRGBW8); break;
-                    case 6: lightkraken::Strip::get(strip).setData(buf, l * cpp, Strip::INPUT_dRGB16MSB); break;
+                    case 3: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGB8); break;
+                    case 4: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGBW8); break;
+                    case 6: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGB16_MSB); break;
                 }
 			} break;
-			case Strip::STARTUP_MODE_RAINBOW: {	
+			case Model::StripConfig::RAINBOW: {	
 				uint8_t buf[Strip::bytesMaxLen];
-				float h = 1.0f - fmod( Systick::instance().systemTime() / 10000.f, 1.0f);
-				size_t l = lightkraken::Strip::get(strip).getPixelLen();
-                size_t cpp = lightkraken::Strip::get(strip).getBytesPerPixel();
+				float h = 1.0f - fmod( float(Systick::instance().systemTime()) / 10000.f, 1.0f);
+				size_t l = Strip::get(strip).getPixelLen();
+                size_t cpp = Strip::get(strip).getBytesPerPixel();
 				for (size_t c = 0; c < l; c++) {
-					hsv col_hsv(fmod(h + c * (1.0f / 255.0f), 1.0f), 1.0f, 1.0f);
+					hsv col_hsv(fmod(h + float(c) * (1.0f / 255.0f), 1.0f), 1.0f, 1.0f);
 					rgb col_rgb(col_hsv);
 					rgb8 col_rgb8(col_rgb);
                     switch(cpp) {
@@ -822,18 +811,18 @@ void Control::startupModePattern() {
 				}
                 switch(cpp) {
                     default:
-                    case 3: lightkraken::Strip::get(strip).setData(buf, l * cpp, Strip::INPUT_dRGB8); break;
-                    case 4: lightkraken::Strip::get(strip).setData(buf, l * cpp, Strip::INPUT_dRGBW8); break;
-                    case 6: lightkraken::Strip::get(strip).setData(buf, l * cpp, Strip::INPUT_dRGB16MSB); break;
+                    case 3: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGB8); break;
+                    case 4: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGBW8); break;
+                    case 6: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGB16_MSB); break;
                 }
 			} break;
-			case Strip::STARTUP_MODE_TRACER: {	
+			case Model::StripConfig::TRACER: {	
 				uint8_t buf[Strip::bytesMaxLen];
-				float h = 1.0f - fmod( Systick::instance().systemTime() / 5000.f, 1.0f);
-				size_t l = lightkraken::Strip::get(strip).getPixelLen();
-                size_t cpp = lightkraken::Strip::get(strip).getBytesPerPixel();
+				float h = 1.0f - fmod( float(Systick::instance().systemTime()) / 5000.f, 1.0f);
+				size_t l = Strip::get(strip).getPixelLen();
+                size_t cpp = Strip::get(strip).getBytesPerPixel();
 				for (size_t c = 0; c < l; c++) {
-					size_t i = std::clamp(size_t(l * fmod(h + (c / float(l)), 1.0f)), size_t(0), l);
+					size_t i = std::clamp(size_t(float(l) * fmod(h + (float(c) / float(l)), 1.0f)), size_t(0), l);
 					if (i == 0) {
                         switch(cpp) {
                             case 3: {
@@ -882,18 +871,18 @@ void Control::startupModePattern() {
 				}
                 switch(cpp) {
                     default:
-                    case 3: lightkraken::Strip::get(strip).setData(buf, l * cpp, Strip::INPUT_dRGB8); break;
-                    case 4: lightkraken::Strip::get(strip).setData(buf, l * cpp, Strip::INPUT_dRGBW8); break;
-                    case 6: lightkraken::Strip::get(strip).setData(buf, l * cpp, Strip::INPUT_dRGB16MSB); break;
+                    case 3: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGB8); break;
+                    case 4: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGBW8); break;
+                    case 6: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGB16_MSB); break;
                 }
 			} break;
-			case Strip::STARTUP_MODE_SOLID_TRACER: {	
+			case Model::StripConfig::SOLID_TRACER: {	
 				uint8_t buf[Strip::bytesMaxLen];
-				float h = 1.0f - fmod( Systick::instance().systemTime() / 5000.f, 1.0f);
-				size_t l = lightkraken::Strip::get(strip).getPixelLen() + 1;
-                size_t cpp = lightkraken::Strip::get(strip).getBytesPerPixel();
+				float h = 1.0f - fmod( float(Systick::instance().systemTime()) / 5000.f, 1.0f);
+				size_t l = Strip::get(strip).getPixelLen() + 1;
+                size_t cpp = Strip::get(strip).getBytesPerPixel();
 				for (size_t c = 0; c < l; c++) {
-					size_t i = std::clamp(size_t(l * fmod(h + (c / float(l)), 1.0f)), size_t(0), l);
+					size_t i = std::clamp(size_t(float(l) * fmod(h + (float(c) / float(l)), 1.0f)), size_t(0), l);
 					if (c < i) {
                         switch(cpp) {
                             case 3: {
@@ -942,29 +931,32 @@ void Control::startupModePattern() {
 				}
                 switch(cpp) {
                     default:
-                    case 3: lightkraken::Strip::get(strip).setData(buf, l * cpp, Strip::INPUT_dRGB8); break;
-                    case 4: lightkraken::Strip::get(strip).setData(buf, l * cpp, Strip::INPUT_dRGBW8); break;
-                    case 6: lightkraken::Strip::get(strip).setData(buf, l * cpp, Strip::INPUT_dRGB16MSB); break;
+                    case 3: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGB8); break;
+                    case 4: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGBW8); break;
+                    case 6: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGB16_MSB); break;
                 }
 			} break;
+			case Model::StripConfig::NODATA: {	
+            } break;
+			case Model::StripConfig::STARTUP_COUNT: {	
+            } break;
 		}
 	};
 
     switch(Model::instance().outputConfig()) {
-    case Model::OUTPUT_CONFIG_RGB_DUAL_STRIP:
-    case Model::OUTPUT_CONFIG_DUAL_STRIP: {
+    case Model::RGB_DUAL_STRIP:
+    case Model::DUAL_STRIP: {
         for (size_t c = 0; c < Model::stripN; c++) {
         	effect(c);
         }
 	} break;
-    case Model::OUTPUT_CONFIG_RGB_STRIP:
-    case Model::OUTPUT_CONFIG_RGBW_STRIP: {
+    case Model::RGB_STRIP:
+    case Model::RGBW_STRIP: {
         for (size_t c = 1; c < Model::stripN; c++) {
         	effect(c);
         }
 	} break;
 	default: {
 	} break;
-	} 
-#endif  // #if 0
+	}
 }

@@ -182,11 +182,15 @@ set(COMMON_SOURCES
     ${PROJECT_SOURCE_DIR}/main.c
     ${PROJECT_SOURCE_DIR}/artnet.cpp
     ${PROJECT_SOURCE_DIR}/app.cpp
+    ${PROJECT_SOURCE_DIR}/color.cpp
     ${PROJECT_SOURCE_DIR}/control.cpp
+    ${PROJECT_SOURCE_DIR}/driver.cpp
     ${PROJECT_SOURCE_DIR}/network.cpp
     ${PROJECT_SOURCE_DIR}/model.cpp
+    ${PROJECT_SOURCE_DIR}/pwmtimer.cpp
     ${PROJECT_SOURCE_DIR}/sacn.cpp
     ${PROJECT_SOURCE_DIR}/settingsdb.cpp
+    ${PROJECT_SOURCE_DIR}/strip.cpp
     ${PROJECT_SOURCE_DIR}/webserver.cpp
     ${PROJECT_SOURCE_DIR}/support/fal_stm32h5xx.c
     ${PROJECT_SOURCE_DIR}/support/lan8742.c

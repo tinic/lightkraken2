@@ -264,6 +264,10 @@ void Model::exportToDB() {
         SettingsDB::instance().setBool(SettingsDB::kBroadcastEnabled, broadcastEnabled);
     }
 
+    if (!SettingsDB::instance().hasBool(SettingsDB::kBurstModeEnabled)) {
+        SettingsDB::instance().setBool(SettingsDB::kBurstModeEnabled, burstMode);
+    }
+
     if (!SettingsDB::instance().hasStringVector(SettingsDB::kStripOutputType)) {
         svec.clear();
         for (size_t c = 0; c < stripN; c++) {
@@ -408,9 +412,18 @@ bool Model::importFromDB() {
     SettingsDB::stringFixedVector_t svec{};
     SettingsDB::floatFixedVector2D_t dvec{};
 
-    bool be = false;
-    if (SettingsDB::instance().getBool(SettingsDB::kStripOutputType, &be)) {
-        broadcastEnabled = be;
+    {
+        bool be = false;
+        if (SettingsDB::instance().getBool(SettingsDB::kStripOutputType, &be)) {
+            broadcastEnabled = be;
+        }
+    }
+
+    {
+        bool bm = false;
+        if (SettingsDB::instance().getBool(SettingsDB::kBurstModeEnabled, &bm)) {
+            burstMode = bm;
+        }
     }
 
     if (SettingsDB::instance().getStringVector(SettingsDB::kStripOutputType, svec)) {
