@@ -79,8 +79,6 @@ void App::start() {
         }
     }
 
-    PseudoRandom::instance().set_seed(0x1ED51ED5);
-
     Model::instance().exportToDB();
     Model::instance().exportStaticsToDB();
 
