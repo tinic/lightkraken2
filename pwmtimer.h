@@ -85,10 +85,10 @@ class PwmTimer4 : public PwmTimer {
 class PwmTimer5 : public PwmTimer {
    public:
     static PwmTimer &instance();
-    virtual void setPulse(uint16_t pulse);
+    virtual void setPulse(uint16_t pulse) override;
 
    private:
-    virtual void init();
+    virtual void init() override;
 };
 
 #endif  // #ifndef PWM_TIMER_H

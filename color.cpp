@@ -116,7 +116,7 @@ void ColorSpaceConverter::sRGBL2sRGB(float *srgb, const float *srgbl) const {
     srgb[2] = b;
 }
 
-void ColorSpaceConverter::CIE2CIEL(float *ciel, const float *cie) const {
+void ColorSpaceConverter::CIE2CIEL(float *ciel, const float *cie) const {   // cppcheck-suppress funcArgOrderDifferent
     float r = (cie[0] > 0.08f) ? powf((cie[0] + 0.160f) / 1.160f, 3.0f) : (cie[0] / 9.03296296296296296294f);
     float g = (cie[1] > 0.08f) ? powf((cie[1] + 0.160f) / 1.160f, 3.0f) : (cie[1] / 9.03296296296296296294f);
     float b = (cie[2] > 0.08f) ? powf((cie[2] + 0.160f) / 1.160f, 3.0f) : (cie[2] / 9.03296296296296296294f);
@@ -125,7 +125,7 @@ void ColorSpaceConverter::CIE2CIEL(float *ciel, const float *cie) const {
     ciel[2] = b;
 }
 
-void ColorSpaceConverter::CIEL2CIE(float *cie, const float *ciel) const {
+void ColorSpaceConverter::CIEL2CIE(float *cie, const float *ciel) const {   // cppcheck-suppress funcArgOrderDifferent
     float r = (ciel[0] > 0.00885645167903563081f) ? ((powf(ciel[0], 1.0f / 3.0f) * 1.160f) - 0.160f) : (ciel[0] * 9.03296296296296296294f);
     float g = (ciel[1] > 0.00885645167903563081f) ? ((powf(ciel[1], 1.0f / 3.0f) * 1.160f) - 0.160f) : (ciel[1] * 9.03296296296296296294f);
     float b = (ciel[2] > 0.00885645167903563081f) ? ((powf(ciel[2], 1.0f / 3.0f) * 1.160f) - 0.160f) : (ciel[2] * 9.03296296296296296294f);
