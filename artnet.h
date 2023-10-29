@@ -33,8 +33,8 @@ class ArtSyncWatchDog {
     void feed();
 
    private:
-    constexpr static uint32_t ArtSyncTimeout = 4000;
-    uint32_t fedtime = 0;
+    constexpr static double ArtSyncTimeout = 4.0;
+    double fedtime = 0;
 };
 
 class ArtNetPacket {

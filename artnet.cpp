@@ -43,7 +43,7 @@ static ArtSyncWatchDog syncWatchDog;
 void ArtSyncWatchDog::feed() { fedtime = Systick::instance().systemTime(); }
 
 bool ArtSyncWatchDog::starved() {
-    uint32_t now = Systick::instance().systemTime();
+    double now = Systick::instance().systemTime();
     if (fedtime == 0 || ((now - fedtime) > ArtSyncTimeout)) {
         fedtime = 0;
         return true;

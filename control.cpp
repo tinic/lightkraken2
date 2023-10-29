@@ -781,7 +781,7 @@ void Control::startupModePattern() {
 			} break;
 			case Model::StripConfig::RAINBOW: {	
 				uint8_t buf[Strip::bytesMaxLen];
-				float h = 1.0f - fmod( float(Systick::instance().systemTime()) / 10000.f, 1.0f);
+				float h = 1.0f - fmod(float(Systick::instance().systemTime()) / 10.0f, 1.0f);
 				size_t l = Strip::get(strip).getPixelLen();
                 size_t cpp = Strip::get(strip).getBytesPerPixel();
 				for (size_t c = 0; c < l; c++) {
@@ -819,7 +819,7 @@ void Control::startupModePattern() {
 			} break;
 			case Model::StripConfig::TRACER: {	
 				uint8_t buf[Strip::bytesMaxLen];
-				float h = 1.0f - fmod( float(Systick::instance().systemTime()) / 5000.f, 1.0f);
+				float h = 1.0f - fmod( float(Systick::instance().systemTime()) / 5.0f, 1.0f);
 				size_t l = Strip::get(strip).getPixelLen();
                 size_t cpp = Strip::get(strip).getBytesPerPixel();
 				for (size_t c = 0; c < l; c++) {
@@ -879,7 +879,7 @@ void Control::startupModePattern() {
 			} break;
 			case Model::StripConfig::SOLID_TRACER: {	
 				uint8_t buf[Strip::bytesMaxLen];
-				float h = 1.0f - fmod( float(Systick::instance().systemTime()) / 5000.f, 1.0f);
+				float h = 1.0f - fmod( float(Systick::instance().systemTime()) / 5.0f, 1.0f);
 				size_t l = Strip::get(strip).getPixelLen() + 1;
                 size_t cpp = Strip::get(strip).getBytesPerPixel();
 				for (size_t c = 0; c < l; c++) {

@@ -26,32 +26,31 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <stdint.h>
 
 #include "nx_api.h"
+#include "stm32h5xx_hal.h"
 
 class Systick {
-public:
+   public:
     static Systick &instance();
-    
-    uint32_t systemTime() const { return system_time; }
+
+    uint64_t systemTimeRAW() const;
+    double systemTime() const { return double(systemTimeRAW()) / double(SystemCoreClock); }
 
 #ifndef BOOTLOADER
-    uint64_t systemTick();
     void schedulePollReply(const NXD_ADDRESS *from, uint16_t universe);
     void scheduleApply() { apply_scheduled = true; }
 #endif  // #ifndef BOOTLOADER
 
     void handler();
-    
+
     void scheduleReset(int32_t count = 2000) { resetCount = count; };
     void checkReset();
-    
+
     void start() { started = true; }
 
-private:
-
+   private:
     bool initialized = false;
     void init();
 
-    uint32_t system_time = 0;
     int32_t resetCount = 0;
     bool started = false;
 
@@ -63,7 +62,6 @@ private:
         int32_t delay;
     } pollReply[8];
 #endif  // #ifndef BOOTLOADER
-    
 };
 
 #endif  // #ifndef SYSTICK_H

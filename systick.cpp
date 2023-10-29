@@ -23,6 +23,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "./systick.h"
 
 #include <stdio.h>
+#include <inttypes.h>
 
 #include "./artnet.h"
 #include "./control.h"
@@ -42,8 +43,6 @@ Systick &Systick::instance() {
     return systick;
 }
 
-#ifndef BOOTLOADER
-
 static uint64_t large_dwt_cyccnt() {
     static constexpr uint32_t TRCENA = 0x01000000;
     static constexpr uint32_t CYCCNTENA = 0x00000001;
@@ -58,9 +57,9 @@ static uint64_t large_dwt_cyccnt() {
     static bool init = false;
     if (!init) {
         init = true;
-        *SCB_DEMCR = *SCB_DEMCR | TRCENA;         // TRCENA
-        *DWT_CYCCNT = 0;                          // reset the counter
-        *DWT_CONTROL = *DWT_CONTROL | CYCCNTENA;  // enable the counter
+        *SCB_DEMCR |= TRCENA;       // TRCENA
+        *DWT_CYCCNT = 0;            // reset the counter
+        *DWT_CONTROL |= CYCCNTENA;  // enable the counter
     }
 
     uint32_t CURRENT_DWT_CYCCNT = *DWT_CYCCNT;
@@ -74,7 +73,7 @@ static uint64_t large_dwt_cyccnt() {
     return LARGE_DWT_CYCCNT + CURRENT_DWT_CYCCNT;
 }
 
-uint64_t Systick::systemTick() { return large_dwt_cyccnt(); }
+#ifndef BOOTLOADER
 
 void Systick::schedulePollReply(const NXD_ADDRESS *from, uint16_t universe) {
     for (int32_t c = 0; c < 8; c++) {
@@ -92,7 +91,10 @@ void Systick::handler() {
     if (!started) {
         return;
     }
-    
+
+    // Handle wrap around if required
+    large_dwt_cyccnt();
+
 #ifndef BOOTLOADER
 
     static uint32_t set_color = 1;
@@ -104,9 +106,6 @@ void Systick::handler() {
     if ((sacn_discovery++ & 0x3FFF) == 0x0) {
         sACNPacket::sendDiscovery();
     }
-
-    // Handle wrap around if required
-    large_dwt_cyccnt();
 
     for (int32_t c = 0; c < 8; c++) {
         if (pollReply[c].delay > 0) {
@@ -148,8 +147,10 @@ void Systick::handler() {
 #endif  // #if 0
 
     checkReset();
+}
 
-    system_time++;
+uint64_t Systick::systemTimeRAW() const {
+    return large_dwt_cyccnt();
 }
 
 void Systick::init() { printf(("SysTick up.\n")); }
