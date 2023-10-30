@@ -48,7 +48,6 @@ class SPI_0 : public SPI {
 
    protected:
     virtual ~SPI_0(){};
-    bool initialized = false;
     virtual void init() override;
 };
 
@@ -61,7 +60,6 @@ class SPI_1 : public SPI {
 
    protected:
     virtual ~SPI_1(){};
-    bool initialized = false;
     virtual void init() override;
 };
 

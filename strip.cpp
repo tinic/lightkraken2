@@ -94,9 +94,9 @@ class manchester_bit_buf {
 
 Strip &Strip::get(size_t index) {
     static Strip strips[Model::stripN];
-    static bool init = false;
-    if (!init) {
-        init = true;
+    static bool strip_init = false;
+    if (!strip_init) {
+        strip_init = true;
         for (size_t c = 0; c < Model::stripN; c++) {
             strips[c].init();
         }
@@ -320,7 +320,7 @@ size_t Strip::getComponentBytes(Model::StripConfig::StripInputType input_type) c
 }
 
 void Strip::setData(const uint8_t *data, const size_t len, const Model::StripConfig::StripInputType input_type) {
-    auto transfer = [=, this](const std::vector<int> &order) {
+    auto trans = [=, this](const std::vector<int> &order) {
         const size_t input_size = getBytesPerInputPixel(input_type);
         const size_t input_pad = size_t(dmxMaxLen / input_size) * order.size() * getComponentBytes(input_type);
         size_t left = len;
@@ -345,30 +345,30 @@ void Strip::setData(const uint8_t *data, const size_t len, const Model::StripCon
         case Model::StripConfig::StripOutputType::GS8202:
         case Model::StripConfig::StripOutputType::UCS1904: {
             const std::vector<int> order = {1, 0, 2};
-            transfer(order);
+            trans(order);
         } break;
         case Model::StripConfig::StripOutputType::APA107:
         case Model::StripConfig::StripOutputType::APA102:
         case Model::StripConfig::StripOutputType::TM1829: {
             const std::vector<int> order = {2, 1, 0};
-            transfer(order);
+            trans(order);
         } break;
         case Model::StripConfig::StripOutputType::HD108:
         case Model::StripConfig::StripOutputType::TLS3001: {
             const std::vector<int> order = {0, 1, 2};
-            transfer(order);
+            trans(order);
         } break;
         case Model::StripConfig::StripOutputType::SK6812_RGBW: {
             const std::vector<int> order = {1, 0, 2, 3};
-            transfer(order);
+            trans(order);
         } break;
         case Model::StripConfig::StripOutputType::LPD8806: {
             const std::vector<int> order = {2, 0, 1};
-            transfer(order);
+            trans(order);
         } break;
         case Model::StripConfig::StripOutputType::WS2801: {
             const std::vector<int> order = {1, 0, 2};
-            transfer(order);
+            trans(order);
         } break;
     }
 }
@@ -387,7 +387,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
         return;
     }
 
-    auto transfer = [=, this](const std::vector<size_t> &order) {
+    auto trans = [=, this](const std::vector<size_t> &order) {
         const uint32_t limit_8bit = uint32_t(std::clamp(comp_limit, 0.0f, 1.0f) * 255.f);
         const uint32_t limit_16bit = uint32_t(std::clamp(comp_limit, 0.0f, 1.0f) * 65535.f);
         const size_t input_size = getBytesPerInputPixel(input_type);
@@ -423,7 +423,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     default: {
                     } break;
                     case NATIVE_RGB8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += order_size) {
                             for (size_t d = 0; d < pixel_pad; d++) {
                                 buf[n + order[d]] = uint8_t(std::min(limit_8bit, uint32_t(data[c + d])));
@@ -431,7 +431,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                         }
                     } break;
                     case NATIVE_RGBW8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 4) {
                             uint32_t r = std::min(limit_8bit, uint32_t(data[c + 0]));
                             uint32_t g = std::min(limit_8bit, uint32_t(data[c + 1]));
@@ -445,7 +445,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     } break;
                     case NATIVE_RGB16: {
                         if (output_type == Model::StripConfig::StripOutputType::WS2816) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                             for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 3) {
                                 auto read_buf = [=](const size_t i) {
                                     uint32_t v = uint32_t(data[c + i]);
@@ -463,7 +463,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                             return;
                         }
                         if (output_type == Model::StripConfig::StripOutputType::HD108) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                             for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 3) {
                                 auto read_buf = [=](const size_t i) {
                                     uint32_t v = uint32_t(data[c + i]);
@@ -491,7 +491,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     default: {
                     } break;
                     case NATIVE_RGB8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 3) {
                             uint32_t r = uint32_t(data[c + 0]);
                             uint32_t g = uint32_t(data[c + 1]);
@@ -504,7 +504,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                         }
                     } break;
                     case NATIVE_RGBW8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += order_size) {
                             for (size_t d = 0; d < pixel_pad; d++) {
                                 buf[n + order[d]] = uint8_t(std::min(limit_8bit, uint32_t(data[c + d])));
@@ -513,7 +513,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     } break;
                     case NATIVE_RGB16: {
                         if (output_type == Model::StripConfig::StripOutputType::WS2816) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                             for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 3) {
                                 auto read_buf = [=](const size_t i) {
                                     uint32_t v = uint32_t(data[c + i]);
@@ -540,7 +540,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                             return;
                         }
                         if (output_type == Model::StripConfig::StripOutputType::HD108) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                             for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 3) {
                                 auto read_buf = [=](const size_t i) {
                                     uint32_t v = uint32_t(data[c + i]);
@@ -577,7 +577,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     default: {
                     } break;
                     case NATIVE_RGB8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 3) {
                             uint8_t sr = data[c + 0];
                             uint8_t sg = data[c + 1];
@@ -599,7 +599,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                         }
                     } break;
                     case NATIVE_RGBW8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 3) {
                             uint8_t sr = data[c + 0];
                             uint8_t sg = data[c + 1];
@@ -689,7 +689,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     default: {
                     } break;
                     case NATIVE_RGB8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 3) {
                             uint8_t sr = uint8_t(data[c + 0]);
                             uint8_t sg = uint8_t(data[c + 1]);
@@ -708,7 +708,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                         }
                     } break;
                     case NATIVE_RGBW8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 4) {
                             uint8_t sr = uint8_t(data[c + 0]);
                             uint8_t sg = uint8_t(data[c + 1]);
@@ -798,7 +798,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     default: {
                     } break;
                     case NATIVE_RGB8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += order_size) {
                             for (size_t d = 0; d < pixel_pad; d++) {
                                 buf[n + order[d]] = uint8_t(std::min(limit_8bit, uint32_t(data[c + d * 2 + 1])));
@@ -806,7 +806,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                         }
                     } break;
                     case NATIVE_RGBW8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 4) {
                             auto read_buf = [=](const size_t i) { return uint32_t(data[c + i * 2 + 1]); };
                             auto write_buf = [=](const size_t i, const uint8_t p) { buf[n + order[i]] = p; };
@@ -825,7 +825,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     } break;
                     case NATIVE_RGB16: {
                         if (output_type == Model::StripConfig::StripOutputType::WS2816) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                             for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 3) {
                                 auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))); };
                                 auto write_buf = [=](const size_t i, const uint16_t p) {
@@ -839,7 +839,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                             return;
                         }
                         if (output_type == Model::StripConfig::StripOutputType::HD108) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                             for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 3) {
                                 auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))); };
                                 auto write_buf = [=](const size_t i, const uint16_t p) {
@@ -860,7 +860,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     default: {
                     } break;
                     case NATIVE_RGB8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += order_size) {
                             for (size_t d = 0; d < pixel_pad; d++) {
                                 buf[n + order[d]] = uint8_t(std::min(limit_8bit, uint32_t(data[c + d * 2 + 0])));
@@ -868,7 +868,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                         }
                     } break;
                     case NATIVE_RGBW8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 4) {
                             auto read_buf = [=](const size_t i) { return uint32_t(data[c + i * 2]); };
                             auto write_buf = [=](const size_t i, const uint8_t p) { buf[n + order[i]] = p; };
@@ -887,7 +887,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     } break;
                     case NATIVE_RGB16: {
                         if (output_type == Model::StripConfig::StripOutputType::WS2816) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                             for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 3) {
                                 auto read_buf = [=](const size_t i) {
                                     return uint32_t(__builtin_bswap16(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))));
@@ -903,7 +903,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                             return;
                         }
                         if (output_type == Model::StripConfig::StripOutputType::HD108) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                             for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 3) {
                                 auto read_buf = [=](const size_t i) {
                                     return uint32_t(__builtin_bswap16(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))));
@@ -926,7 +926,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     default: {
                     } break;
                     case NATIVE_RGB8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
                             auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2 + 1]))); };
                             auto write_buf = [=](const size_t i, const uint8_t p) { buf[n + order[i]] = p; };
@@ -942,7 +942,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                         }
                     } break;
                     case NATIVE_RGBW8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += order_size) {
                             for (size_t d = 0; d < pixel_pad; d++) {
                                 buf[n + order[d]] = uint8_t(std::min(limit_8bit, uint32_t(data[c + d * 2 + 1])));
@@ -951,7 +951,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     } break;
                     case NATIVE_RGB16: {
                         if (output_type == Model::StripConfig::StripOutputType::WS2816) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                             for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
                                 auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))); };
                                 auto write_buf = [=](const size_t i, const uint16_t p) {
@@ -970,7 +970,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                             return;
                         }
                         if (output_type == Model::StripConfig::StripOutputType::HD108) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                             for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
                                 auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))); };
                                 auto write_buf = [=](const size_t i, const uint16_t p) {
@@ -996,7 +996,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     default: {
                     } break;
                     case NATIVE_RGB8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
                             auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2 + 0]))); };
 
@@ -1011,7 +1011,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                         }
                     } break;
                     case NATIVE_RGBW8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += order_size) {
                             for (size_t d = 0; d < pixel_pad; d++) {
                                 buf[n + order[d]] = uint8_t(std::min(limit_8bit, uint32_t(data[c + d * 2 + 0])));
@@ -1020,7 +1020,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     } break;
                     case NATIVE_RGB16: {
                         if (output_type == Model::StripConfig::StripOutputType::WS2816) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                             for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
                                 auto read_buf = [=](const size_t i) {
                                     return uint32_t(__builtin_bswap16(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))));
@@ -1045,7 +1045,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                             return;
                         }
                         if (output_type == Model::StripConfig::StripOutputType::HD108) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);
+                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]); // cppcheck-suppress constVariablePointer
                             for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
                                 auto read_buf = [=](const size_t i) {
                                     return uint32_t(__builtin_bswap16(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))));
@@ -1087,30 +1087,30 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
         case Model::StripConfig::StripOutputType::GS8202:
         case Model::StripConfig::StripOutputType::UCS1904: {
             const std::vector<size_t> order = {1, 0, 2};
-            transfer(order);
+            trans(order);
         } break;
         case Model::StripConfig::StripOutputType::APA107:
         case Model::StripConfig::StripOutputType::APA102:
         case Model::StripConfig::StripOutputType::TM1829: {
             const std::vector<size_t> order = {2, 1, 0};
-            transfer(order);
+            trans(order);
         } break;
         case Model::StripConfig::StripOutputType::HD108:
         case Model::StripConfig::StripOutputType::TLS3001: {
             const std::vector<size_t> order = {0, 1, 2};
-            transfer(order);
+            trans(order);
         } break;
         case Model::StripConfig::StripOutputType::SK6812_RGBW: {
             const std::vector<size_t> order = {1, 0, 2, 3};
-            transfer(order);
+            trans(order);
         } break;
         case Model::StripConfig::StripOutputType::LPD8806: {
             const std::vector<size_t> order = {2, 0, 1};
-            transfer(order);
+            trans(order);
         } break;
         case Model::StripConfig::StripOutputType::WS2801: {
             const std::vector<size_t> order = {1, 0, 2};
-            transfer(order);
+            trans(order);
         } break;
     }
 }

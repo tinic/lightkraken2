@@ -33,7 +33,7 @@ TIM_HandleTypeDef htim15 {};
 TIM_HandleTypeDef htim16 {};
 TIM_HandleTypeDef htim17 {};
 
-void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim_pwm) {
+void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim_pwm) { // cppcheck-suppress constParameterPointer
     if (htim_pwm->Instance == TIM2) {
         __HAL_RCC_TIM2_CLK_ENABLE();
     } else if (htim_pwm->Instance == TIM5) {
@@ -43,7 +43,7 @@ void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim_pwm) {
     }
 }
 
-void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim_base) {
+void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim_base) { // cppcheck-suppress constParameterPointer
     if (htim_base->Instance == TIM13) {
         __HAL_RCC_TIM13_CLK_ENABLE();
     } else if (htim_base->Instance == TIM16) {
@@ -53,7 +53,7 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim_base) {
     }
 }
 
-static void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim) {
+static void HAL_TIM_MspPostInit(const TIM_HandleTypeDef *htim) {
     GPIO_InitTypeDef GPIO_InitStruct {};
     if (htim->Instance == TIM2) {
         __HAL_RCC_GPIOA_CLK_ENABLE();

@@ -72,7 +72,7 @@ static void MX_GPDMA2_Init(void) {
 SPI_HandleTypeDef hspi1;
 SPI_HandleTypeDef hspi2;
 
-void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {
+void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) { // cppcheck-suppress constParameterPointer
     GPIO_InitTypeDef GPIO_InitStruct {};
     RCC_PeriphCLKInitTypeDef PeriphClkInitStruct {};
     if (hspi->Instance == SPI1) {
