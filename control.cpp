@@ -31,6 +31,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "./color.h"
 #include "./systick.h"
 #include "./utils.h"
+#include "./spi.h"
 
 Control &Control::instance() {
     static Control control;
@@ -693,24 +694,23 @@ void Control::update() {
         }
     }
 
-#if 0
     SPI_0::instance().setFast(Strip::get(0).needsClock() == false);
-    SPI_2::instance().setFast(Strip::get(1).needsClock() == false);
+    SPI_1::instance().setFast(Strip::get(1).needsClock() == false);
     
     switch(Model::instance().outputConfig()) {
     case Model::DUAL_STRIP: {
-        SPI_2::instance().update();
         SPI_0::instance().update();
+        SPI_1::instance().update();
     } break;
     case Model::RGB_DUAL_STRIP: {
-        SPI_2::instance().update();
         SPI_0::instance().update();
+        SPI_1::instance().update();
     } break;
     case Model::RGB_STRIP: {
-        SPI_2::instance().update();
+        SPI_0::instance().update();
     } break;
     case Model::RGBW_STRIP: {
-        SPI_2::instance().update();
+        SPI_0::instance().update();
     } break;
     case Model::RGB_RGB: {
     } break;
@@ -719,11 +719,9 @@ void Control::update() {
     default: {
     } break;
     }
-#endif  // #if 0
 }
 
 void Control::init() {
-#if 0
     Strip::get(0).dmaTransferFunc = [](const uint8_t *data, size_t len) {
         SPI_0::instance().transfer(data, len, Strip::get(0).needsClock());
     };
@@ -732,13 +730,12 @@ void Control::init() {
     };
 
     Strip::get(1).dmaTransferFunc = [](const uint8_t *data, size_t len) {
-        SPI_2::instance().transfer(data, len, Strip::get(1).needsClock());
+        SPI_1::instance().transfer(data, len, Strip::get(1).needsClock());
     };
     Strip::get(1).dmaBusyFunc = []() {
-        return SPI_2::instance().busy();
+        return SPI_1::instance().busy();
     };
-    
-#endif  // #if 0
+
     printf(ESCAPE_FG_CYAN "Control up.\n");
 }
 
