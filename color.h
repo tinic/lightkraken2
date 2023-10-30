@@ -134,12 +134,14 @@ class ColorSpaceConverter {
     int32_t srgbl2ledl_fixed[9] {};
     int32_t ledl2srgbl_fixed[9] {};
 
+#if 0
     void sRGBL2LEDL(float *ledl, const float *srgbl) const;
     void LEDL2sRGBL(float *ledl, const float *srgbl) const;
     void sRGB2sRGBL(float *srgbl, const float *srgb) const;
     void sRGBL2sRGB(float *srgb, const float *srgbl) const;
     void CIE2CIEL(float *cie, const float *ciel) const;  // cppcheck-suppress funcArgOrderDifferent
     void CIEL2CIE(float *ciel, const float *cie) const;  // cppcheck-suppress funcArgOrderDifferent
+#endif  // #if 0
     void invertMatrix(float *r, const float *a) const;
     void concatMatrix(float *d, const float *a, const float *b) const;
     void generateRGBMatrix(float xw, float yw, float xr, float yr, float xg, float yg, float xb, float yb, float *rgb2xyz, float *xyz2rgb) const;

@@ -616,41 +616,40 @@ void Control::setE131UniverseOutputData(uint16_t uni, const uint8_t *data, size_
 }
 
 void Control::setColor() {
-    uint8_t buf[Strip::bytesMaxLen];
     for (size_t c = 0; c < Model::stripN; c++) {
         size_t cpp = Strip::get(c).getBytesPerPixel();
         size_t len = 0;
         switch(cpp) {
             case 3: {
-                for (size_t d = 0; d <= sizeof(buf)-3; d += 3) {
-                    buf[d + 0] = (Model::instance().stripConfig(c).color.r) & 0xFF;
-                    buf[d + 1] = (Model::instance().stripConfig(c).color.g) & 0xFF;
-                    buf[d + 2] = (Model::instance().stripConfig(c).color.b) & 0xFF;
+                for (size_t d = 0; d <= color_buf.size()-3; d += 3) {
+                    color_buf[d + 0] = (Model::instance().stripConfig(c).color.r) & 0xFF;
+                    color_buf[d + 1] = (Model::instance().stripConfig(c).color.g) & 0xFF;
+                    color_buf[d + 2] = (Model::instance().stripConfig(c).color.b) & 0xFF;
                     len += 3;
                 }
-				Strip::get(c).setData(buf, len, Model::StripConfig::StripInputType::RGB8);
+				Strip::get(c).setData(color_buf.data(), len, Model::StripConfig::StripInputType::RGB8);
             } break;
             case 4: {
-                for (size_t d = 0; d <= sizeof(buf)-4; d += 4) {
-                    buf[d + 0] = (Model::instance().stripConfig(c).color.r) & 0xFF;
-                    buf[d + 1] = (Model::instance().stripConfig(c).color.g) & 0xFF;
-                    buf[d + 2] = (Model::instance().stripConfig(c).color.b) & 0xFF;
-                    buf[d + 3] = (Model::instance().stripConfig(c).color.x) & 0xFF;
+                for (size_t d = 0; d <= color_buf.size()-4; d += 4) {
+                    color_buf[d + 0] = (Model::instance().stripConfig(c).color.r) & 0xFF;
+                    color_buf[d + 1] = (Model::instance().stripConfig(c).color.g) & 0xFF;
+                    color_buf[d + 2] = (Model::instance().stripConfig(c).color.b) & 0xFF;
+                    color_buf[d + 3] = (Model::instance().stripConfig(c).color.x) & 0xFF;
                     len += 4;
                 }
-				Strip::get(c).setData(buf, len, Model::StripConfig::StripInputType::RGBW8);
+				Strip::get(c).setData(color_buf.data(), len, Model::StripConfig::StripInputType::RGBW8);
             } break;
             case 6: {
-                for (size_t d = 0; d <= sizeof(buf)-6; d += 6) {
-                    buf[d + 0] = 
-                    buf[d + 1] = (Model::instance().stripConfig(c).color.r) & 0xFF;
-                    buf[d + 2] = 
-                    buf[d + 3] = (Model::instance().stripConfig(c).color.g) & 0xFF;
-                    buf[d + 4] = 
-                    buf[d + 5] = (Model::instance().stripConfig(c).color.b) & 0xFF;
+                for (size_t d = 0; d <= color_buf.size()-6; d += 6) {
+                    color_buf[d + 0] = 
+                    color_buf[d + 1] = (Model::instance().stripConfig(c).color.r) & 0xFF;
+                    color_buf[d + 2] = 
+                    color_buf[d + 3] = (Model::instance().stripConfig(c).color.g) & 0xFF;
+                    color_buf[d + 4] = 
+                    color_buf[d + 5] = (Model::instance().stripConfig(c).color.b) & 0xFF;
                     len += 6;
                 }
-				Strip::get(c).setData(buf, len, Model::StripConfig::StripInputType::RGB16_MSB);
+				Strip::get(c).setData(color_buf.data(), len, Model::StripConfig::StripInputType::RGB16_MSB);
             } break;
         }
     }
@@ -740,44 +739,42 @@ void Control::init() {
 }
 
 void Control::startupModePattern() {
-	auto effect = [=] (size_t strip) {
+	auto effect = [this] (size_t strip) {
 		switch (Model::instance().stripConfig(strip).startup_mode) {
 			case Model::StripConfig::COLOR: {	
-				uint8_t buf[Strip::bytesMaxLen];
 				size_t l = Strip::get(strip).getPixelLen();
                 size_t cpp = Strip::get(strip).getBytesPerPixel();
 				for (size_t c = 0; c < l; c++) {
                     switch(cpp) {
                         case 3: {
-                            buf[c*3+0] = Model::instance().stripConfig(strip).color.r;
-                            buf[c*3+1] = Model::instance().stripConfig(strip).color.g;
-                            buf[c*3+2] = Model::instance().stripConfig(strip).color.b;
+                            color_buf[c*3+0] = Model::instance().stripConfig(strip).color.r;
+                            color_buf[c*3+1] = Model::instance().stripConfig(strip).color.g;
+                            color_buf[c*3+2] = Model::instance().stripConfig(strip).color.b;
                         } break;
                         case 4: {
-                            buf[c*4+0] = Model::instance().stripConfig(strip).color.r;
-                            buf[c*4+1] = Model::instance().stripConfig(strip).color.g;
-                            buf[c*4+2] = Model::instance().stripConfig(strip).color.b;
-                            buf[c*4+3] = Model::instance().stripConfig(strip).color.x;
+                            color_buf[c*4+0] = Model::instance().stripConfig(strip).color.r;
+                            color_buf[c*4+1] = Model::instance().stripConfig(strip).color.g;
+                            color_buf[c*4+2] = Model::instance().stripConfig(strip).color.b;
+                            color_buf[c*4+3] = Model::instance().stripConfig(strip).color.x;
                         } break;
                         case 6: {
-                            buf[c*6 + 0] = 
-                            buf[c*6 + 1] = (Model::instance().stripConfig(strip).color.r) & 0xFF;
-                            buf[c*6 + 2] = 
-                            buf[c*6 + 3] = (Model::instance().stripConfig(strip).color.g) & 0xFF;
-                            buf[c*6 + 4] = 
-                            buf[c*6 + 5] = (Model::instance().stripConfig(strip).color.b) & 0xFF;
+                            color_buf[c*6 + 0] = 
+                            color_buf[c*6 + 1] = (Model::instance().stripConfig(strip).color.r) & 0xFF;
+                            color_buf[c*6 + 2] = 
+                            color_buf[c*6 + 3] = (Model::instance().stripConfig(strip).color.g) & 0xFF;
+                            color_buf[c*6 + 4] = 
+                            color_buf[c*6 + 5] = (Model::instance().stripConfig(strip).color.b) & 0xFF;
                         } break;
                     }
                 }
                 switch(cpp) {
                     default:
-                    case 3: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGB8); break;
-                    case 4: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGBW8); break;
-                    case 6: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGB16_MSB); break;
+                    case 3: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGB8); break;
+                    case 4: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGBW8); break;
+                    case 6: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGB16_MSB); break;
                 }
 			} break;
 			case Model::StripConfig::RAINBOW: {	
-				uint8_t buf[Strip::bytesMaxLen];
 				float h = 1.0f - fmod(float(Systick::instance().systemTime()) / 10.0f, 1.0f);
 				size_t l = Strip::get(strip).getPixelLen();
                 size_t cpp = Strip::get(strip).getBytesPerPixel();
@@ -787,35 +784,34 @@ void Control::startupModePattern() {
 					rgb8 col_rgb8(col_rgb);
                     switch(cpp) {
                         case 3: {
-                            buf[c*3+0] = col_rgb8.red();
-                            buf[c*3+1] = col_rgb8.green();
-                            buf[c*3+2] = col_rgb8.blue();
+                            color_buf[c*3+0] = col_rgb8.red();
+                            color_buf[c*3+1] = col_rgb8.green();
+                            color_buf[c*3+2] = col_rgb8.blue();
                         } break;
                         case 4: {
-                            buf[c*4+0] = col_rgb8.red();
-                            buf[c*4+1] = col_rgb8.green();
-                            buf[c*4+2] = col_rgb8.blue();
-                            buf[c*4+3] = 0;
+                            color_buf[c*4+0] = col_rgb8.red();
+                            color_buf[c*4+1] = col_rgb8.green();
+                            color_buf[c*4+2] = col_rgb8.blue();
+                            color_buf[c*4+3] = 0;
                         } break;
                         case 6: {
-                            buf[c*6 + 0] = 
-                            buf[c*6 + 1] = col_rgb8.red();
-                            buf[c*6 + 2] = 
-                            buf[c*6 + 3] = col_rgb8.green();
-                            buf[c*6 + 4] = 
-                            buf[c*6 + 5] = col_rgb8.blue();
+                            color_buf[c*6 + 0] = 
+                            color_buf[c*6 + 1] = col_rgb8.red();
+                            color_buf[c*6 + 2] = 
+                            color_buf[c*6 + 3] = col_rgb8.green();
+                            color_buf[c*6 + 4] = 
+                            color_buf[c*6 + 5] = col_rgb8.blue();
                         } break;
                     }
 				}
                 switch(cpp) {
                     default:
-                    case 3: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGB8); break;
-                    case 4: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGBW8); break;
-                    case 6: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGB16_MSB); break;
+                    case 3: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGB8); break;
+                    case 4: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGBW8); break;
+                    case 6: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGB16_MSB); break;
                 }
 			} break;
 			case Model::StripConfig::TRACER: {	
-				uint8_t buf[Strip::bytesMaxLen];
 				float h = 1.0f - fmod( float(Systick::instance().systemTime()) / 5.0f, 1.0f);
 				size_t l = Strip::get(strip).getPixelLen();
                 size_t cpp = Strip::get(strip).getBytesPerPixel();
@@ -824,58 +820,57 @@ void Control::startupModePattern() {
 					if (i == 0) {
                         switch(cpp) {
                             case 3: {
-                                buf[c*3+0] = 0xFF;
-                                buf[c*3+1] = 0xFF;
-                                buf[c*3+2] = 0xFF;
+                                color_buf[c*3+0] = 0xFF;
+                                color_buf[c*3+1] = 0xFF;
+                                color_buf[c*3+2] = 0xFF;
                             } break;
                             case 4: {
-                                buf[c*4+0] = 0xFF;
-                                buf[c*4+1] = 0xFF;
-                                buf[c*4+2] = 0xFF;
-                                buf[c*4+3] = 0xFF;
+                                color_buf[c*4+0] = 0xFF;
+                                color_buf[c*4+1] = 0xFF;
+                                color_buf[c*4+2] = 0xFF;
+                                color_buf[c*4+3] = 0xFF;
                             } break;
                             case 6: {
-                                buf[c*6+0] = 0xFF;
-                                buf[c*6+1] = 0xFF;
-                                buf[c*6+2] = 0xFF;
-                                buf[c*6+4] = 0xFF;
-                                buf[c*6+5] = 0xFF;
-                                buf[c*6+6] = 0xFF;
+                                color_buf[c*6+0] = 0xFF;
+                                color_buf[c*6+1] = 0xFF;
+                                color_buf[c*6+2] = 0xFF;
+                                color_buf[c*6+4] = 0xFF;
+                                color_buf[c*6+5] = 0xFF;
+                                color_buf[c*6+6] = 0xFF;
                             } break;
                         }
 					} else {
                         switch(cpp) {
                             case 3: {
-                                buf[c*3+0] = 0x00;
-                                buf[c*3+1] = 0x00;
-                                buf[c*3+2] = 0x00;
+                                color_buf[c*3+0] = 0x00;
+                                color_buf[c*3+1] = 0x00;
+                                color_buf[c*3+2] = 0x00;
                             } break;
                             case 4: {
-                                buf[c*4+0] = 0x00;
-                                buf[c*4+1] = 0x00;
-                                buf[c*4+2] = 0x00;
-                                buf[c*4+3] = 0x00;
+                                color_buf[c*4+0] = 0x00;
+                                color_buf[c*4+1] = 0x00;
+                                color_buf[c*4+2] = 0x00;
+                                color_buf[c*4+3] = 0x00;
                             } break;
                             case 6: {
-                                buf[c*6+0] = 0x00;
-                                buf[c*6+1] = 0x00;
-                                buf[c*6+2] = 0x00;
-                                buf[c*6+3] = 0x00;
-                                buf[c*6+4] = 0x00;
-                                buf[c*6+5] = 0x00;
+                                color_buf[c*6+0] = 0x00;
+                                color_buf[c*6+1] = 0x00;
+                                color_buf[c*6+2] = 0x00;
+                                color_buf[c*6+3] = 0x00;
+                                color_buf[c*6+4] = 0x00;
+                                color_buf[c*6+5] = 0x00;
                             } break;
                         }
 					}
 				}
                 switch(cpp) {
                     default:
-                    case 3: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGB8); break;
-                    case 4: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGBW8); break;
-                    case 6: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGB16_MSB); break;
+                    case 3: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGB8); break;
+                    case 4: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGBW8); break;
+                    case 6: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGB16_MSB); break;
                 }
 			} break;
 			case Model::StripConfig::SOLID_TRACER: {	
-				uint8_t buf[Strip::bytesMaxLen];
 				float h = 1.0f - fmod( float(Systick::instance().systemTime()) / 5.0f, 1.0f);
 				size_t l = Strip::get(strip).getPixelLen() + 1;
                 size_t cpp = Strip::get(strip).getBytesPerPixel();
@@ -884,54 +879,54 @@ void Control::startupModePattern() {
 					if (c < i) {
                         switch(cpp) {
                             case 3: {
-                                buf[c*3+0] = 0xFF;
-                                buf[c*3+1] = 0xFF;
-                                buf[c*3+2] = 0xFF;
+                                color_buf[c*3+0] = 0xFF;
+                                color_buf[c*3+1] = 0xFF;
+                                color_buf[c*3+2] = 0xFF;
                             } break;
                             case 4: {
-                                buf[c*4+0] = 0xFF;
-                                buf[c*4+1] = 0xFF;
-                                buf[c*4+2] = 0xFF;
-                                buf[c*4+3] = 0xFF;
+                                color_buf[c*4+0] = 0xFF;
+                                color_buf[c*4+1] = 0xFF;
+                                color_buf[c*4+2] = 0xFF;
+                                color_buf[c*4+3] = 0xFF;
                             } break;
                             case 6: {
-                                buf[c*6+0] = 0xFF;
-                                buf[c*6+1] = 0xFF;
-                                buf[c*6+2] = 0xFF;
-                                buf[c*6+4] = 0xFF;
-                                buf[c*6+5] = 0xFF;
-                                buf[c*6+6] = 0xFF;
+                                color_buf[c*6+0] = 0xFF;
+                                color_buf[c*6+1] = 0xFF;
+                                color_buf[c*6+2] = 0xFF;
+                                color_buf[c*6+4] = 0xFF;
+                                color_buf[c*6+5] = 0xFF;
+                                color_buf[c*6+6] = 0xFF;
                             } break;
                         }
 					} else {
                         switch(cpp) {
                             case 3: {
-                                buf[c*3+0] = 0x00;
-                                buf[c*3+1] = 0x00;
-                                buf[c*3+2] = 0x00;
+                                color_buf[c*3+0] = 0x00;
+                                color_buf[c*3+1] = 0x00;
+                                color_buf[c*3+2] = 0x00;
                             } break;
                             case 4: {
-                                buf[c*4+0] = 0x00;
-                                buf[c*4+1] = 0x00;
-                                buf[c*4+2] = 0x00;
-                                buf[c*4+3] = 0x00;
+                                color_buf[c*4+0] = 0x00;
+                                color_buf[c*4+1] = 0x00;
+                                color_buf[c*4+2] = 0x00;
+                                color_buf[c*4+3] = 0x00;
                             } break;
                             case 6: {
-                                buf[c*6+0] = 0x00;
-                                buf[c*6+1] = 0x00;
-                                buf[c*6+2] = 0x00;
-                                buf[c*6+3] = 0x00;
-                                buf[c*6+4] = 0x00;
-                                buf[c*6+5] = 0x00;
+                                color_buf[c*6+0] = 0x00;
+                                color_buf[c*6+1] = 0x00;
+                                color_buf[c*6+2] = 0x00;
+                                color_buf[c*6+3] = 0x00;
+                                color_buf[c*6+4] = 0x00;
+                                color_buf[c*6+5] = 0x00;
                             } break;
                         }
 					}
 				}
                 switch(cpp) {
                     default:
-                    case 3: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGB8); break;
-                    case 4: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGBW8); break;
-                    case 6: Strip::get(strip).setData(buf, l * cpp, Model::StripConfig::StripInputType::RGB16_MSB); break;
+                    case 3: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGB8); break;
+                    case 4: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGBW8); break;
+                    case 6: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGB16_MSB); break;
                 }
 			} break;
 			case Model::StripConfig::NODATA: {	

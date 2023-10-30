@@ -254,6 +254,10 @@ void Model::exportStaticsToDB() {
         static constexpr auto data = outputConfigType();
         SettingsDB::instance().setObject(SettingsDB::kOutputConfigTypes, data.c_str(), data.size() + 1);
     }
+
+    SettingsDB::instance().setNumber(SettingsDB::kMaxUniverses, universeN);
+    SettingsDB::instance().setNumber(SettingsDB::kMaxStrips, stripN);
+    SettingsDB::instance().setNumber(SettingsDB::kMaxAnalog, analogN);
 }
 
 void Model::exportToDB() {

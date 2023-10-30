@@ -26,6 +26,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <functional>
 
 #include "./model.h"
+#include "./strip.h"
 
 class Control {
    public:
@@ -56,6 +57,8 @@ class Control {
     void startupModePattern();
 
    private:
+    std::array<uint8_t, Strip::bytesMaxLen> color_buf {};
+
     bool in_startup = true;
     bool color_scheduled = false;
     bool data_received = false;

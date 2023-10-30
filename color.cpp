@@ -80,6 +80,7 @@ void ColorSpaceConverter::setRGBColorSpace(const RGBColorSpace &rgbSpace) {
     }
 }
 
+#if 0
 void ColorSpaceConverter::sRGBL2LEDL(float *ledl, const float *srgbl) const {
     float r = srgbl2ledl[0] * srgbl[0] + srgbl2ledl[1] * srgbl[1] + srgbl2ledl[2] * srgbl[2];
     float g = srgbl2ledl[3] * srgbl[0] + srgbl2ledl[4] * srgbl[1] + srgbl2ledl[5] * srgbl[2];
@@ -133,6 +134,7 @@ void ColorSpaceConverter::CIEL2CIE(float *cie, const float *ciel) const {   // c
     cie[1] = g;
     cie[2] = b;
 }
+#endif  // #if 0
 
 void ColorSpaceConverter::invertMatrix(float *r, const float *a) const {
     float d = 1.0f / (+a[0] * (a[4] * a[8] - a[7] * a[5]) - a[1] * (a[3] * a[8] - a[5] * a[6]) + a[2] * (a[3] * a[7] - a[4] * a[6]));

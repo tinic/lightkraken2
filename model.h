@@ -32,7 +32,7 @@ struct Model {
    public:
     static constexpr size_t stripN = 2;
     static constexpr size_t analogN = 2;
-    static constexpr size_t universeN = 6;
+    static constexpr size_t universeN = 16;
     static constexpr size_t analogCompN = 6;
     static constexpr size_t maxUniverses = stripN * universeN + analogN * analogCompN;
     static constexpr size_t maxLEDs = 512 * universeN;

@@ -156,6 +156,9 @@ class SettingsDB {
 
     KEY_DEFINE_NUMBER(kBootCount, "boot_count")
     KEY_DEFINE_NUMBER(kUserIPv6PrefixLen, "user_ipv6_prefix_len")
+    KEY_DEFINE_NUMBER(kMaxUniverses, "max_universes")
+    KEY_DEFINE_NUMBER(kMaxStrips, "max_strips")
+    KEY_DEFINE_NUMBER(kMaxAnalog, "max_analog")
 
 #define KEY_DEFINE_BOOL(KEY_CONSTANT, KEY_STRING)           \
     static constexpr const char *KEY_CONSTANT = KEY_STRING; \
