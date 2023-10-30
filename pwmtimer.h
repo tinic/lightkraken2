@@ -27,9 +27,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 class PwmTimer {
    public:
-    constexpr static uint16_t pwmPeriod = 0x3fff;
+    constexpr static uint16_t initPulse = 0x7fff;
+    constexpr static uint16_t pwmPeriod = 0xffff;
 
     virtual void setPulse(uint16_t pulse) = 0;
+    virtual void start() = 0;
+    virtual void stop() = 0;
 
    protected:
     virtual ~PwmTimer(){};
@@ -41,6 +44,8 @@ class PwmTimer0 : public PwmTimer {
    public:
     static PwmTimer &instance();
     virtual void setPulse(uint16_t pulse) override;
+    virtual void start() override;
+    virtual void stop() override;
 
    private:
     virtual void init() override;
@@ -50,6 +55,8 @@ class PwmTimer1 : public PwmTimer {
    public:
     static PwmTimer &instance();
     virtual void setPulse(uint16_t pulse) override;
+    virtual void start() override;
+    virtual void stop() override;
 
    private:
     virtual void init() override;
@@ -59,6 +66,8 @@ class PwmTimer2 : public PwmTimer {
    public:
     static PwmTimer &instance();
     virtual void setPulse(uint16_t pulse) override;
+    virtual void start() override;
+    virtual void stop() override;
 
    private:
     virtual void init() override;
@@ -68,6 +77,8 @@ class PwmTimer3 : public PwmTimer {
    public:
     static PwmTimer &instance();
     virtual void setPulse(uint16_t pulse) override;
+    virtual void start() override;
+    virtual void stop() override;
 
    private:
     virtual void init() override;
@@ -77,6 +88,8 @@ class PwmTimer4 : public PwmTimer {
    public:
     static PwmTimer &instance();
     virtual void setPulse(uint16_t pulse) override;
+    virtual void start() override;
+    virtual void stop() override;
 
    private:
     virtual void init() override;
@@ -86,6 +99,8 @@ class PwmTimer5 : public PwmTimer {
    public:
     static PwmTimer &instance();
     virtual void setPulse(uint16_t pulse) override;
+    virtual void start() override;
+    virtual void stop() override;
 
    private:
     virtual void init() override;

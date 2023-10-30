@@ -41,7 +41,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 static constexpr size_t ws2816b_error_extent_n = 438;
 static constexpr std::array<uint16_t, ws2816b_error_extent_n> make_ws2816b_error_lut() {
-    std::array<uint16_t, ws2816b_error_extent_n> lut = {0};
+    std::array<uint16_t, ws2816b_error_extent_n> lut {};
     for (size_t c = 0; c < lut.size(); c++) {
         lut[c] = uint16_t((c * 255) / lut.size());
     }
@@ -119,7 +119,7 @@ void Strip::init() {
     if (!ws2812_lut_init) {
         ws2812_lut_init = true;
         auto make_ws2812_table = []() constexpr -> std::array<uint32_t, 256> {
-            std::array<uint32_t, 256> table = {0};
+            std::array<uint32_t, 256> table {};
             for (uint32_t c = 0; c < 256; c++) {
                 table[c] =
                     0x88888888 | (((c >> 4) | (c << 6) | (c << 16) | (c << 26)) & 0x04040404) | (((c >> 1) | (c << 9) | (c << 19) | (c << 29)) & 0x40404040);

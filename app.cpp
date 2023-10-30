@@ -36,6 +36,7 @@ SOFTWARE.
 #include "./systick.h"
 #include "./utils.h"
 #include "./webserver.h"
+#include "./pwmtimer.h"
 #include "stm32h5xx_hal.h"
 #include "stm32h5xx_ll_utils.h"
 
@@ -61,6 +62,14 @@ App &App::instance() {
 
 void App::start() {
 #ifndef BOOTLOADER
+
+    PwmTimer0::instance().start();
+    PwmTimer1::instance().start();
+    PwmTimer2::instance().start();
+    PwmTimer3::instance().start();
+    PwmTimer4::instance().start();
+    PwmTimer5::instance().start();
+
     if (HAL_ICACHE_Disable() != 0) {
         while (1) {
         }
