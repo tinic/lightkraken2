@@ -149,6 +149,7 @@ class SettingsDB {
 
     KEY_DEFINE_STRING(kActiveIPv4, "active_ipv4_addr")
     KEY_DEFINE_STRING(kActiveIPv4NetMask, "active_ipv4_netmask")
+    KEY_DEFINE_STRING(kOutputConfig, "output_config")
 
 #define KEY_DEFINE_NUMBER(KEY_CONSTANT, KEY_STRING)         \
     static constexpr const char *KEY_CONSTANT = KEY_STRING; \

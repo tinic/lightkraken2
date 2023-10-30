@@ -85,6 +85,7 @@ void Model::exportStaticsToDB() {
             for (Model::OutputConfigProperties prop : Model::outputConfigProperties) {
                 emio::format_to(buf, "{}{{", comma_outer).value();
                 emio::format_to(buf, "\"{}\":\"{}\",", NAMEOF(prop.label), prop.label).value();
+                emio::format_to(buf, "\"{}\":\"{}\",", NAMEOF(prop.output_config), NAMEOF_ENUM(prop.output_config)).value();
                 emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.strip_n), prop.strip_n).value();
                 emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.analog_n), prop.analog_n).value();
                 const char *comma = "";
@@ -273,6 +274,11 @@ void Model::exportToDB() {
         SettingsDB::instance().setBool(SettingsDB::kBurstModeEnabled, burstMode);
     }
 
+    if (!SettingsDB::instance().hasString(SettingsDB::kOutputConfig)) {
+        auto config = magic_enum::enum_name(output_config);
+        SettingsDB::instance().setString(SettingsDB::kOutputConfig, std::string(config).c_str());
+    }
+
     if (!SettingsDB::instance().hasStringVector(SettingsDB::kStripOutputType)) {
         svec.clear();
         for (size_t c = 0; c < stripN; c++) {
@@ -419,7 +425,7 @@ bool Model::importFromDB() {
 
     {
         bool be = false;
-        if (SettingsDB::instance().getBool(SettingsDB::kStripOutputType, &be)) {
+        if (SettingsDB::instance().getBool(SettingsDB::kBroadcastEnabled, &be)) {
             broadcastEnabled = be;
         }
     }
@@ -431,10 +437,24 @@ bool Model::importFromDB() {
         }
     }
 
+    // ----------------------------
+
+    char outputConfig[SettingsDB::max_string_size] {};
+    if (SettingsDB::instance().getString(SettingsDB::kOutputConfig, outputConfig, SettingsDB::max_string_size)) {
+        auto value = magic_enum::enum_cast<OutputConfig>(outputConfig, magic_enum::case_insensitive);
+        if (value.has_value()) {
+            output_config = value.value();
+        } else {
+            return false;
+        }
+    }
+
+    // ----------------------------
+
     if (SettingsDB::instance().getStringVector(SettingsDB::kStripOutputType, svec)) {
         if (svec.size() >= stripN) {
             for (size_t c = 0; c < stripN; c++) {
-                auto value = magic_enum::enum_cast<StripConfig::StripOutputType>(svec[c]);
+                auto value = magic_enum::enum_cast<StripConfig::StripOutputType>(svec[c], magic_enum::case_insensitive);
                 if (value.has_value()) {
                     strip_config[c].output_type = value.value();
                 } else {
@@ -449,7 +469,7 @@ bool Model::importFromDB() {
     if (SettingsDB::instance().getStringVector(SettingsDB::kStripInputType, svec)) {
         if (svec.size() >= stripN) {
             for (size_t c = 0; c < stripN; c++) {
-                auto value = magic_enum::enum_cast<StripConfig::StripInputType>(svec[c]);
+                auto value = magic_enum::enum_cast<StripConfig::StripInputType>(svec[c], magic_enum::case_insensitive);
                 if (value.has_value()) {
                     strip_config[c].input_type = value.value();
                 } else {
@@ -464,7 +484,7 @@ bool Model::importFromDB() {
     if (SettingsDB::instance().getStringVector(SettingsDB::kStripStartupMode, svec)) {
         if (svec.size() >= stripN) {
             for (size_t c = 0; c < stripN; c++) {
-                auto value = magic_enum::enum_cast<StripConfig::StripStartupMode>(svec[c]);
+                auto value = magic_enum::enum_cast<StripConfig::StripStartupMode>(svec[c], magic_enum::case_insensitive);
                 if (value.has_value()) {
                     strip_config[c].startup_mode = value.value();
                 } else {
@@ -558,7 +578,7 @@ bool Model::importFromDB() {
     if (SettingsDB::instance().getStringVector(SettingsDB::kAnalogOutputType, svec)) {
         if (svec.size() >= stripN) {
             for (size_t c = 0; c < stripN; c++) {
-                auto value = magic_enum::enum_cast<AnalogConfig::AnalogOutputType>(svec[c]);
+                auto value = magic_enum::enum_cast<AnalogConfig::AnalogOutputType>(svec[c], magic_enum::case_insensitive);
                 if (value.has_value()) {
                     analog_config[c].output_type = value.value();
                 } else {
@@ -573,7 +593,7 @@ bool Model::importFromDB() {
     if (SettingsDB::instance().getStringVector(SettingsDB::kAnalogInputType, svec)) {
         if (svec.size() >= stripN) {
             for (size_t c = 0; c < stripN; c++) {
-                auto value = magic_enum::enum_cast<AnalogConfig::AnalogInputType>(svec[c]);
+                auto value = magic_enum::enum_cast<AnalogConfig::AnalogInputType>(svec[c]), magic_enum::case_insensitive;
                 if (value.has_value()) {
                     analog_config[c].input_type = value.value();
                 } else{

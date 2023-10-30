@@ -194,6 +194,7 @@ struct Model {
     static constexpr struct OutputConfigProperties {
         static constexpr size_t OutputConfigMaxDevices = 3;
         const char *label;
+        OutputConfig output_config;
         uint8_t strip_n;
         uint8_t analog_n;
         bool strip[OutputConfigMaxDevices];
@@ -201,12 +202,12 @@ struct Model {
         bool has_clock[OutputConfigMaxDevices];
         uint8_t components[OutputConfigMaxDevices];
     } outputConfigProperties[CONFIG_COUNT] = {
-        {"2 x RGB Strip",                    2, 0, {true,  true,  false}, {false, false, false}, {true,   true,  false}, {0, 0, 0}},
-        {"1 x RGB Strip + 1 x Analog RGB",   1, 1, {true,  false, false}, {false, true,  false}, {false,  true,  false}, {0, 3, 0}},
-        {"2 x RGB Strip + 1 x Analog RGB",   2, 1, {true,  true,  false}, {false, false, true }, {false,  false, false}, {0, 3, 0}},
-        {"1 x RGB Strip + 1 x Analog RGB+W", 1, 1, {true,  false, false}, {false, true,  false}, {false,  false, false}, {0, 4, 0}},
-        {"2 x Analog RGB",                   0, 2, {false, false, false}, {true,  true,  false}, {false,  false, false}, {3, 3, 0}},
-        {"1 x Analog RGB+W+WW",              0, 1, {false, false, false}, {true,  false, false}, {false,  false, false}, {6, 0, 0}},
+        {"2 x RGB Strip",                    DUAL_STRIP,     2, 0, {true,  true,  false}, {false, false, false}, {true,   true,  false}, {0, 0, 0}},
+        {"1 x RGB Strip + 1 x Analog RGB",   RGB_STRIP,      1, 1, {true,  false, false}, {false, true,  false}, {false,  true,  false}, {0, 3, 0}},
+        {"2 x RGB Strip + 1 x Analog RGB",   RGB_DUAL_STRIP, 2, 1, {true,  true,  false}, {false, false, true }, {false,  false, false}, {0, 3, 0}},
+        {"1 x RGB Strip + 1 x Analog RGB+W", RGBW_STRIP,     1, 1, {true,  false, false}, {false, true,  false}, {false,  false, false}, {0, 4, 0}},
+        {"2 x Analog RGB",                   RGB_RGB,        0, 2, {false, false, false}, {true,  true,  false}, {false,  false, false}, {3, 3, 0}},
+        {"1 x Analog RGB+W+WW",              RGBWWW,         0, 1, {false, false, false}, {true,  false, false}, {false,  false, false}, {6, 0, 0}},
     };
     // clang-format on
 
