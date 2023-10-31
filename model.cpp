@@ -25,12 +25,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <emio/buffer.hpp>
 #include <emio/format.hpp>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Weffc++"
-#include <fixed_containers/fixed_string.hpp>
-#include <fixed_containers/fixed_vector.hpp>
-#pragma GCC diagnostic pop
-
 #include <string>
 #include <vector>
 
