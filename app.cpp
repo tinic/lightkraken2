@@ -37,6 +37,7 @@ SOFTWARE.
 #include "./utils.h"
 #include "./webserver.h"
 #include "./pwmtimer.h"
+#include "./control.h"
 #include "stm32h5xx_hal.h"
 #include "stm32h5xx_ll_utils.h"
 
@@ -139,6 +140,14 @@ void App::start() {
         return;
     }
 
+#ifndef BOOTLOADER
+    if (!Control::instance().start()) {
+        return;        
+    }
+
+    Model::instance().applyToControl();
+#endif  // #ifndef BOOTLOADER
+
     printf(ESCAPE_FG_CYAN "App up.\n");
 }
 
@@ -152,6 +161,10 @@ void App::setup(void *first_unused_memory) {
     pointer = Network::instance().setup(pointer);
 
     pointer = WebServer::instance().setup(pointer);
+
+#ifndef BOOTLOADER
+    pointer = Control::instance().setup(pointer);
+#endif  // #ifndef BOOTLOADER
 
     printf(ESCAPE_FG_CYAN "Consumed %d bytes of RAM.\n" ESCAPE_RESET, (int)(pointer - (uint8_t *)first_unused_memory));
 }

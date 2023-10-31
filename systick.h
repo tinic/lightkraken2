@@ -38,7 +38,6 @@ class Systick {
 
 #ifndef BOOTLOADER
     void schedulePollReply(const NXD_ADDRESS *from, uint16_t universe);
-    void scheduleApply() { apply_scheduled = true; }
 #endif  // #ifndef BOOTLOADER
 
     void handler();
@@ -56,7 +55,6 @@ class Systick {
     bool started = false;
 
 #ifndef BOOTLOADER
-    bool apply_scheduled = false;
     struct {
         NXD_ADDRESS from;
         uint16_t universe;

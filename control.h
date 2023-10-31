@@ -27,10 +27,17 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "./model.h"
 #include "./strip.h"
+#include "tx_api.h"
+
+#ifndef BOOTLOADER
 
 class Control {
    public:
     static Control &instance();
+
+    uint8_t *setup(uint8_t *pointer);
+    bool start();
+    void thread();
 
     void setArtnetUniverseOutputData(uint16_t universe, const uint8_t *data, size_t len, bool nodriver = false);
     void setE131UniverseOutputData(uint16_t universe, const uint8_t *data, size_t len, bool nodriver = false);
@@ -57,7 +64,7 @@ class Control {
     void startupModePattern();
 
    private:
-    std::array<uint8_t, Strip::bytesMaxLen> color_buf {};
+    std::array<uint8_t, Strip::bytesMaxLen> color_buf[Model::stripN] {};
 
     bool in_startup = true;
     bool color_scheduled = false;
@@ -68,6 +75,10 @@ class Control {
     void setE131UniverseOutputDataForDriver(size_t channels, size_t components, uint16_t uni, const uint8_t *data, size_t len);
     bool initialized = false;
     void init();
+
+    TX_THREAD thread_control {};
 };
+
+#endif  // #ifndef BOOTLOADER
 
 #endif  // #ifndef CONTROL_H

@@ -49,6 +49,7 @@ class Strip {
     static Strip &get(size_t index);
 
     bool needsClock() const;
+    uint32_t transferMpbs() const;
 
     void setStripType(Model::StripConfig::StripOutputType type) { output_type = type; }
     void setStartupMode(Model::StripConfig::StripStartupMode type) { startup_mode = type; }

@@ -291,6 +291,7 @@ struct Model {
     bool importFromDB();
     void exportToDB();
     void exportStaticsToDB();
+    void applyToControl();
 
    private:
     Model(){};

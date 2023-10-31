@@ -119,24 +119,6 @@ void Systick::handler() {
         }
     }
 
-#if 0
-    if (apply_scheduled) {
-        if (StatusLED::instance().enetUp()) {
-            StatusLED::PowerClass powerClass = StatusLED::instance().powerClass();
-            if ( powerClass == StatusLED::PSE_TYPE_1_2_CLASS_0_3 ||
-                powerClass == StatusLED::PSE_TYPE_2_CLASS_4 ||
-                powerClass == StatusLED::PSE_TYPE_3_4_CLASS_0_3 ||
-                powerClass == StatusLED::PSE_TYPE_3_4_CLASS_0_3 ||
-                powerClass == StatusLED::PSE_TYPE_3_4_CLASS_4 ||
-                powerClass == StatusLED::PSE_TYPE_3_4_CLASS_5_6 ||
-                powerClass == StatusLED::PSE_TYPE_4_CLASS_7_8 ) {
-                Model::instance().apply();
-                apply_scheduled = false;
-            }
-        }
-    }
-#endif  // #if 0
-
 #endif  // #ifndef BOOTLOADER
 
 #if 0

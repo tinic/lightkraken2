@@ -31,6 +31,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "./control.h"
 #include "./network.h"
 
+#ifndef BOOTLOADER
+
 class DataPacket : public sACNPacket {
    public:
     DataPacket(){};
@@ -314,3 +316,5 @@ void sACNPacket::joinNetworks() {
 }
 
 uint16_t sACNPacket::syncuniverse = 0;
+
+#endif  // #ifndef BOOTLOADER

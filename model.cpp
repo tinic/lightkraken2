@@ -41,6 +41,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "./settingsdb.h"
 #include "./utils.h"
+#include "./strip.h"
+#include "./driver.h"
+#include "./control.h"
 
 #ifndef BOOTLOADER
 
@@ -695,6 +698,35 @@ bool Model::importFromDB() {
     }
 
     return true;
+}
+
+void Model::applyToControl() {
+
+    for (size_t c = 0; c < stripN; c++) {
+        strip_config[c].rgbSpace.setsRGB();
+        Strip::get(c).setStripType(strip_config[c].output_type);
+        Strip::get(c).setStartupMode(strip_config[c].startup_mode);
+        Strip::get(c).setPixelLen(strip_config[c].led_count);
+        Strip::get(c).setRGBColorSpace(strip_config[c].rgbSpace);
+        Strip::get(c).setCompLimit(strip_config[c].comp_limit);
+        Strip::get(c).setGlobIllum(strip_config[c].glob_illum);
+    }
+
+    for (size_t c = 0; c < analogN; c++) {
+        rgbww col;
+        col.r = analog_config[c].components[0].value;
+        col.g = analog_config[c].components[1].value;
+        col.b = analog_config[c].components[2].value;
+        col.w = analog_config[c].components[3].value;
+        col.ww = analog_config[c].components[4].value;
+        Driver::instance().setRGBWW(c, col);
+        Driver::instance().setRGBColorSpace(c, analog_config[c].rgbSpace);
+        Driver::instance().setPWMLimit(c, analog_config[c].pwm_limit);
+    }
+
+    Control::instance().setColor();
+
+    Control::instance().sync();
 }
 
 void Model::init() {

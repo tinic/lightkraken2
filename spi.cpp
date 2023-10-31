@@ -23,6 +23,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #include "./spi.h"
 
+#include <stdio.h>
+
 #include "./pwmtimer.h"
 #include "stm32h5xx_hal.h"
 
@@ -250,14 +252,31 @@ SPI &SPI_0::instance() {
     return spi;
 }
 
-void SPI_0::transfer(const uint8_t *buf, size_t len, bool wantsSCLK) {}
+static void SPI1_IT_Callback(DMA_HandleTypeDef *) { SPI_0::instance().setDMAActive(false); }
 
-void SPI_0::update() {}
-bool SPI_0::busy() const { return false; }
+void SPI_0::startDMATransfer() {
+    HAL_StatusTypeDef status = HAL_DMA_Start_IT(&handle_GPDMA1_Channel7, (uint32_t)cbuf, (uint32_t)&SPI1->TXDR, clen);
+    if (status != HAL_OK) {
+        printf("SPI_0::startDMATransfer fail!\n");
+    }
+}
+
+void SPI_0::setupDMATransfer() {}
+
+bool SPI_0::isDMAbusy() const {
+    HAL_StatusTypeDef status = HAL_DMA_PollForTransfer(&handle_GPDMA1_Channel7, HAL_DMA_FULL_TRANSFER, 0);
+    if (status == HAL_OK) {
+        if (handle_GPDMA1_Channel7.State == HAL_DMA_STATE_BUSY) {
+            return true;
+        }
+    }
+    return false;
+}
 
 void SPI_0::init() {
     MX_GPDMA1_Init();
     MX_SPI1_Init();
+    HAL_DMA_RegisterCallback(&handle_GPDMA1_Channel7, HAL_DMA_XFER_CPLT_CB_ID, &SPI1_IT_Callback);
 }
 
 SPI &SPI_1::instance() {
@@ -269,12 +288,29 @@ SPI &SPI_1::instance() {
     return spi;
 }
 
-void SPI_1::transfer(const uint8_t *buf, size_t len, bool wantsSCLK) {}
+static void SPI2_IT_Callback(DMA_HandleTypeDef *) { SPI_1::instance().setDMAActive(false); }
 
-void SPI_1::update() {}
-bool SPI_1::busy() const { return false; }
+void SPI_1::startDMATransfer() {
+    HAL_StatusTypeDef status = HAL_DMA_Start_IT(&handle_GPDMA2_Channel7, (uint32_t)cbuf, (uint32_t)&SPI2->TXDR, clen);
+    if (status != HAL_OK) {
+        printf("SPI_0::startDMATransfer fail!\n");
+    }
+}
+
+void SPI_1::setupDMATransfer() {}
+
+bool SPI_1::isDMAbusy() const {
+    HAL_StatusTypeDef status = HAL_DMA_PollForTransfer(&handle_GPDMA2_Channel7, HAL_DMA_FULL_TRANSFER, 0);
+    if (status == HAL_OK) {
+        if (handle_GPDMA2_Channel7.State == HAL_DMA_STATE_BUSY) {
+            return true;
+        }
+    }
+    return false;
+}
 
 void SPI_1::init() {
     MX_GPDMA2_Init();
     MX_SPI2_Init();
+    HAL_DMA_RegisterCallback(&handle_GPDMA2_Channel7, HAL_DMA_XFER_CPLT_CB_ID, &SPI2_IT_Callback);
 }

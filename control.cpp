@@ -26,12 +26,20 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <stdint.h>
 #include <string.h>
 
-#include "./driver.h"
-#include "./strip.h"
 #include "./color.h"
+#include "./driver.h"
+#include "./spi.h"
+#include "./strip.h"
 #include "./systick.h"
 #include "./utils.h"
-#include "./spi.h"
+
+#ifndef BOOTLOADER
+
+void thread_control_entry(ULONG thread_input) {
+    NX_PARAMETER_NOT_USED(thread_input);
+    Control::instance().thread();
+    tx_thread_relinquish();
+}
 
 Control &Control::instance() {
     static Control control;
@@ -40,6 +48,28 @@ Control &Control::instance() {
         control.init();
     }
     return control;
+}
+
+uint8_t *Control::setup(uint8_t *first_unused_memory) {
+    uint8_t *pointer = (uint8_t *)first_unused_memory;
+
+    const size_t control_stack_size = 8192;
+    tx_thread_create(&thread_control, (CHAR *)"control", thread_control_entry, 0, pointer, control_stack_size, 1, 1, TX_NO_TIME_SLICE, TX_DONT_START);
+    pointer = pointer + control_stack_size;
+
+    return pointer;
+}
+
+bool Control::start() {
+    setStartup();
+    tx_thread_resume(&thread_control);
+    return true;
+}
+
+void Control::thread() {
+    while(1) {
+        update();
+    }
 }
 
 void Control::sync() {
@@ -76,7 +106,7 @@ void Control::sync() {
             for (size_t c = 0; c < 1; c++) {
                 Driver::instance().sync(c);
             }
-        } break; 
+        } break;
         default: {
         } break;
     }
@@ -295,59 +325,59 @@ void Control::setArtnetUniverseOutputDataForDriver(size_t terminals, size_t comp
         rgb[c] = Driver::instance().srgbwwCIE(c);
     }
     for (size_t c = 0; c < terminals; c++) {
-        switch(components) {
-        case 5: {
-            size_t channel = size_t(std::clamp(Model::instance().analogConfig(c).components[4].artnet.channel - 1, 0, 511));
-            if (len > channel) {
-                if (Model::instance().analogConfig(c).components[4].artnet.universe == uni) {
-                    rgb[c].ww = data[channel];
+        switch (components) {
+            case 5: {
+                size_t channel = size_t(std::clamp(Model::instance().analogConfig(c).components[4].artnet.channel - 1, 0, 511));
+                if (len > channel) {
+                    if (Model::instance().analogConfig(c).components[4].artnet.universe == uni) {
+                        rgb[c].ww = data[channel];
+                    }
                 }
             }
-        } 
-        [[fallthrough]];
-        case 4: {
-            size_t channel = size_t(std::clamp(Model::instance().analogConfig(c).components[3].artnet.channel - 1, 0, 511));
-            if (len > channel) {
-                if (Model::instance().analogConfig(c).components[3].artnet.universe == uni) {
-                    rgb[c].w = data[channel];
+                [[fallthrough]];
+            case 4: {
+                size_t channel = size_t(std::clamp(Model::instance().analogConfig(c).components[3].artnet.channel - 1, 0, 511));
+                if (len > channel) {
+                    if (Model::instance().analogConfig(c).components[3].artnet.universe == uni) {
+                        rgb[c].w = data[channel];
+                    }
                 }
             }
-        } 
-        [[fallthrough]];
-        case 3: {
-            size_t channel = size_t(std::clamp(Model::instance().analogConfig(c).components[2].artnet.channel - 1, 0, 511));
-            if (len > channel) {
-                if (Model::instance().analogConfig(c).components[2].artnet.universe == uni) {
-                    rgb[c].b = data[channel];
+                [[fallthrough]];
+            case 3: {
+                size_t channel = size_t(std::clamp(Model::instance().analogConfig(c).components[2].artnet.channel - 1, 0, 511));
+                if (len > channel) {
+                    if (Model::instance().analogConfig(c).components[2].artnet.universe == uni) {
+                        rgb[c].b = data[channel];
+                    }
                 }
             }
-        } 
-        [[fallthrough]];
-        case 2: {
-            size_t channel = size_t(std::clamp(Model::instance().analogConfig(c).components[1].artnet.channel - 1, 0, 511));
-            if (len > channel) {
-                if (Model::instance().analogConfig(c).components[1].artnet.universe == uni) {
-                    rgb[c].g = data[channel];
+                [[fallthrough]];
+            case 2: {
+                size_t channel = size_t(std::clamp(Model::instance().analogConfig(c).components[1].artnet.channel - 1, 0, 511));
+                if (len > channel) {
+                    if (Model::instance().analogConfig(c).components[1].artnet.universe == uni) {
+                        rgb[c].g = data[channel];
+                    }
                 }
             }
-        } 
-        [[fallthrough]];
-        case 1: {
-            size_t channel = size_t(std::clamp(Model::instance().analogConfig(c).components[0].artnet.channel - 1, 0, 511));
-            if (len > channel) {
-                if (Model::instance().analogConfig(c).components[0].artnet.universe == uni) {
-                    rgb[c].r = data[channel];
+                [[fallthrough]];
+            case 1: {
+                size_t channel = size_t(std::clamp(Model::instance().analogConfig(c).components[0].artnet.channel - 1, 0, 511));
+                if (len > channel) {
+                    if (Model::instance().analogConfig(c).components[0].artnet.universe == uni) {
+                        rgb[c].r = data[channel];
+                    }
                 }
             }
-        } 
-        [[fallthrough]];
-        default:
-        case 0:
-        break;
+                [[fallthrough]];
+            default:
+            case 0:
+                break;
         }
     }
     for (size_t c = 0; c < terminals; c++) {
-        Driver::instance().setRGBWW(c,rgb[c]);
+        Driver::instance().setRGBWW(c, rgb[c]);
         if (!syncMode) {
             Driver::instance().sync(c);
         }
@@ -362,59 +392,59 @@ void Control::setE131UniverseOutputDataForDriver(size_t terminals, size_t compon
         rgb[c] = Driver::instance().srgbwwCIE(c);
     }
     for (size_t c = 0; c < terminals; c++) {
-        switch(components) {
-        case 5: {
-            size_t channel = size_t(std::clamp(Model::instance().analogConfig(c).components[4].e131.channel - 1, 0, 511));
-            if (len > channel) {
-                if (Model::instance().analogConfig(c).components[4].e131.universe == uni) {
-                    rgb[c].ww = data[channel];
+        switch (components) {
+            case 5: {
+                size_t channel = size_t(std::clamp(Model::instance().analogConfig(c).components[4].e131.channel - 1, 0, 511));
+                if (len > channel) {
+                    if (Model::instance().analogConfig(c).components[4].e131.universe == uni) {
+                        rgb[c].ww = data[channel];
+                    }
                 }
             }
-        } 
-        [[fallthrough]];
-        case 4: {
-            size_t channel = size_t(std::clamp(Model::instance().analogConfig(c).components[3].e131.channel - 1, 0, 511));
-            if (len > channel) {
-                if (Model::instance().analogConfig(c).components[3].e131.universe == uni) {
-                    rgb[c].w = data[channel];
+                [[fallthrough]];
+            case 4: {
+                size_t channel = size_t(std::clamp(Model::instance().analogConfig(c).components[3].e131.channel - 1, 0, 511));
+                if (len > channel) {
+                    if (Model::instance().analogConfig(c).components[3].e131.universe == uni) {
+                        rgb[c].w = data[channel];
+                    }
                 }
             }
-        } 
-        [[fallthrough]];
-        case 3: {
-            size_t channel = size_t(std::clamp(Model::instance().analogConfig(c).components[2].e131.channel - 1, 0, 511));
-            if (len > channel) {
-                if (Model::instance().analogConfig(c).components[2].e131.universe == uni) {
-                    rgb[c].b = data[channel];
+                [[fallthrough]];
+            case 3: {
+                size_t channel = size_t(std::clamp(Model::instance().analogConfig(c).components[2].e131.channel - 1, 0, 511));
+                if (len > channel) {
+                    if (Model::instance().analogConfig(c).components[2].e131.universe == uni) {
+                        rgb[c].b = data[channel];
+                    }
                 }
             }
-        } 
-        [[fallthrough]];
-        case 2: {
-            size_t channel = size_t(std::clamp(Model::instance().analogConfig(c).components[1].e131.channel - 1, 0, 511));
-            if (len > channel) {
-                if (Model::instance().analogConfig(c).components[1].e131.universe == uni) {
-                    rgb[c].g = data[channel];
+                [[fallthrough]];
+            case 2: {
+                size_t channel = size_t(std::clamp(Model::instance().analogConfig(c).components[1].e131.channel - 1, 0, 511));
+                if (len > channel) {
+                    if (Model::instance().analogConfig(c).components[1].e131.universe == uni) {
+                        rgb[c].g = data[channel];
+                    }
                 }
             }
-        } 
-        [[fallthrough]];
-        case 1: {
-            size_t channel = size_t(std::clamp(Model::instance().analogConfig(c).components[0].e131.channel - 1, 0, 511));
-            if (len > channel) {
-                if (Model::instance().analogConfig(c).components[0].e131.universe == uni) {
-                    rgb[c].r = data[channel];
+                [[fallthrough]];
+            case 1: {
+                size_t channel = size_t(std::clamp(Model::instance().analogConfig(c).components[0].e131.channel - 1, 0, 511));
+                if (len > channel) {
+                    if (Model::instance().analogConfig(c).components[0].e131.universe == uni) {
+                        rgb[c].r = data[channel];
+                    }
                 }
             }
-        } 
-        [[fallthrough]];
-        default:
-        case 0:
-        break;
+                [[fallthrough]];
+            default:
+            case 0:
+                break;
         }
     }
     for (size_t c = 0; c < terminals; c++) {
-        Driver::instance().setRGBWW(c,rgb[c]);
+        Driver::instance().setRGBWW(c, rgb[c]);
         if (!syncMode) {
             Driver::instance().sync(c);
         }
@@ -619,37 +649,34 @@ void Control::setColor() {
     for (size_t c = 0; c < Model::stripN; c++) {
         size_t cpp = Strip::get(c).getBytesPerPixel();
         size_t len = 0;
-        switch(cpp) {
+        switch (cpp) {
             case 3: {
-                for (size_t d = 0; d <= color_buf.size()-3; d += 3) {
-                    color_buf[d + 0] = (Model::instance().stripConfig(c).color.r) & 0xFF;
-                    color_buf[d + 1] = (Model::instance().stripConfig(c).color.g) & 0xFF;
-                    color_buf[d + 2] = (Model::instance().stripConfig(c).color.b) & 0xFF;
+                for (size_t d = 0; d <= color_buf[c].size() - 3; d += 3) {
+                    color_buf[c][d + 0] = (Model::instance().stripConfig(c).color.r) & 0xFF;
+                    color_buf[c][d + 1] = (Model::instance().stripConfig(c).color.g) & 0xFF;
+                    color_buf[c][d + 2] = (Model::instance().stripConfig(c).color.b) & 0xFF;
                     len += 3;
                 }
-				Strip::get(c).setData(color_buf.data(), len, Model::StripConfig::StripInputType::RGB8);
+                Strip::get(c).setData(color_buf[c].data(), len, Model::StripConfig::StripInputType::RGB8);
             } break;
             case 4: {
-                for (size_t d = 0; d <= color_buf.size()-4; d += 4) {
-                    color_buf[d + 0] = (Model::instance().stripConfig(c).color.r) & 0xFF;
-                    color_buf[d + 1] = (Model::instance().stripConfig(c).color.g) & 0xFF;
-                    color_buf[d + 2] = (Model::instance().stripConfig(c).color.b) & 0xFF;
-                    color_buf[d + 3] = (Model::instance().stripConfig(c).color.x) & 0xFF;
+                for (size_t d = 0; d <= color_buf[c].size() - 4; d += 4) {
+                    color_buf[c][d + 0] = (Model::instance().stripConfig(c).color.r) & 0xFF;
+                    color_buf[c][d + 1] = (Model::instance().stripConfig(c).color.g) & 0xFF;
+                    color_buf[c][d + 2] = (Model::instance().stripConfig(c).color.b) & 0xFF;
+                    color_buf[c][d + 3] = (Model::instance().stripConfig(c).color.x) & 0xFF;
                     len += 4;
                 }
-				Strip::get(c).setData(color_buf.data(), len, Model::StripConfig::StripInputType::RGBW8);
+                Strip::get(c).setData(color_buf[c].data(), len, Model::StripConfig::StripInputType::RGBW8);
             } break;
             case 6: {
-                for (size_t d = 0; d <= color_buf.size()-6; d += 6) {
-                    color_buf[d + 0] = 
-                    color_buf[d + 1] = (Model::instance().stripConfig(c).color.r) & 0xFF;
-                    color_buf[d + 2] = 
-                    color_buf[d + 3] = (Model::instance().stripConfig(c).color.g) & 0xFF;
-                    color_buf[d + 4] = 
-                    color_buf[d + 5] = (Model::instance().stripConfig(c).color.b) & 0xFF;
+                for (size_t d = 0; d <= color_buf[c].size() - 6; d += 6) {
+                    color_buf[c][d + 0] = color_buf[c][d + 1] = (Model::instance().stripConfig(c).color.r) & 0xFF;
+                    color_buf[c][d + 2] = color_buf[c][d + 3] = (Model::instance().stripConfig(c).color.g) & 0xFF;
+                    color_buf[c][d + 4] = color_buf[c][d + 5] = (Model::instance().stripConfig(c).color.b) & 0xFF;
                     len += 6;
                 }
-				Strip::get(c).setData(color_buf.data(), len, Model::StripConfig::StripInputType::RGB16_MSB);
+                Strip::get(c).setData(color_buf[c].data(), len, Model::StripConfig::StripInputType::RGB16_MSB);
             } break;
         }
     }
@@ -693,263 +720,272 @@ void Control::update() {
         }
     }
 
-    SPI_0::instance().setFast(Strip::get(0).needsClock() == false);
-    SPI_1::instance().setFast(Strip::get(1).needsClock() == false);
-    
-    switch(Model::instance().outputConfig()) {
-    case Model::DUAL_STRIP: {
-        SPI_0::instance().update();
-        SPI_1::instance().update();
-    } break;
-    case Model::RGB_DUAL_STRIP: {
-        SPI_0::instance().update();
-        SPI_1::instance().update();
-    } break;
-    case Model::RGB_STRIP: {
-        SPI_0::instance().update();
-    } break;
-    case Model::RGBW_STRIP: {
-        SPI_0::instance().update();
-    } break;
-    case Model::RGB_RGB: {
-    } break;
-    case Model::RGBWWW: {
-    } break;
-    default: {
-    } break;
+    switch (Model::instance().outputConfig()) {
+        case Model::DUAL_STRIP: {
+            SPI_0::instance().update();
+            SPI_1::instance().update();
+        } break;
+        case Model::RGB_DUAL_STRIP: {
+            SPI_0::instance().update();
+            SPI_1::instance().update();
+        } break;
+        case Model::RGB_STRIP: {
+            SPI_0::instance().update();
+        } break;
+        case Model::RGBW_STRIP: {
+            SPI_0::instance().update();
+        } break;
+        case Model::RGB_RGB: {
+        } break;
+        case Model::RGBWWW: {
+        } break;
+        default: {
+        } break;
     }
 }
 
 void Control::init() {
-    Strip::get(0).dmaTransferFunc = [](const uint8_t *data, size_t len) {
-        SPI_0::instance().transfer(data, len, Strip::get(0).needsClock());
-    };
-    Strip::get(0).dmaBusyFunc = []() {
-        return SPI_0::instance().busy();
-    };
+    Strip::get(0).dmaTransferFunc = [](const uint8_t *data, size_t len) { SPI_0::instance().transfer(data, len, Strip::get(0).transferMpbs(), Strip::get(0).needsClock()); };
+    Strip::get(0).dmaBusyFunc = []() { return SPI_0::instance().isDMAbusy(); };
 
-    Strip::get(1).dmaTransferFunc = [](const uint8_t *data, size_t len) {
-        SPI_1::instance().transfer(data, len, Strip::get(1).needsClock());
-    };
-    Strip::get(1).dmaBusyFunc = []() {
-        return SPI_1::instance().busy();
-    };
+    Strip::get(1).dmaTransferFunc = [](const uint8_t *data, size_t len) { SPI_1::instance().transfer(data, len, Strip::get(0).transferMpbs(), Strip::get(1).needsClock()); };
+    Strip::get(1).dmaBusyFunc = []() { return SPI_1::instance().isDMAbusy(); };
 
     printf(ESCAPE_FG_CYAN "Control up.\n");
 }
 
 void Control::startupModePattern() {
-	auto effect = [this] (size_t strip) {
-		switch (Model::instance().stripConfig(strip).startup_mode) {
-			case Model::StripConfig::COLOR: {	
-				size_t l = Strip::get(strip).getPixelLen();
+    auto effect = [this](size_t strip) {
+        switch (Model::instance().stripConfig(strip).startup_mode) {
+            case Model::StripConfig::COLOR: {
+                size_t l = Strip::get(strip).getPixelLen();
                 size_t cpp = Strip::get(strip).getBytesPerPixel();
-				for (size_t c = 0; c < l; c++) {
-                    switch(cpp) {
+                for (size_t c = 0; c < l; c++) {
+                    switch (cpp) {
                         case 3: {
-                            color_buf[c*3+0] = Model::instance().stripConfig(strip).color.r;
-                            color_buf[c*3+1] = Model::instance().stripConfig(strip).color.g;
-                            color_buf[c*3+2] = Model::instance().stripConfig(strip).color.b;
+                            color_buf[strip][c * 3 + 0] = Model::instance().stripConfig(strip).color.r;
+                            color_buf[strip][c * 3 + 1] = Model::instance().stripConfig(strip).color.g;
+                            color_buf[strip][c * 3 + 2] = Model::instance().stripConfig(strip).color.b;
                         } break;
                         case 4: {
-                            color_buf[c*4+0] = Model::instance().stripConfig(strip).color.r;
-                            color_buf[c*4+1] = Model::instance().stripConfig(strip).color.g;
-                            color_buf[c*4+2] = Model::instance().stripConfig(strip).color.b;
-                            color_buf[c*4+3] = Model::instance().stripConfig(strip).color.x;
+                            color_buf[strip][c * 4 + 0] = Model::instance().stripConfig(strip).color.r;
+                            color_buf[strip][c * 4 + 1] = Model::instance().stripConfig(strip).color.g;
+                            color_buf[strip][c * 4 + 2] = Model::instance().stripConfig(strip).color.b;
+                            color_buf[strip][c * 4 + 3] = Model::instance().stripConfig(strip).color.x;
                         } break;
                         case 6: {
-                            color_buf[c*6 + 0] = 
-                            color_buf[c*6 + 1] = (Model::instance().stripConfig(strip).color.r) & 0xFF;
-                            color_buf[c*6 + 2] = 
-                            color_buf[c*6 + 3] = (Model::instance().stripConfig(strip).color.g) & 0xFF;
-                            color_buf[c*6 + 4] = 
-                            color_buf[c*6 + 5] = (Model::instance().stripConfig(strip).color.b) & 0xFF;
+                            color_buf[strip][c * 6 + 0] = color_buf[strip][c * 6 + 1] = (Model::instance().stripConfig(strip).color.r) & 0xFF;
+                            color_buf[strip][c * 6 + 2] = color_buf[strip][c * 6 + 3] = (Model::instance().stripConfig(strip).color.g) & 0xFF;
+                            color_buf[strip][c * 6 + 4] = color_buf[strip][c * 6 + 5] = (Model::instance().stripConfig(strip).color.b) & 0xFF;
                         } break;
                     }
                 }
-                switch(cpp) {
+                switch (cpp) {
                     default:
-                    case 3: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGB8); break;
-                    case 4: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGBW8); break;
-                    case 6: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGB16_MSB); break;
+                    case 3:
+                        Strip::get(strip).setData(color_buf[strip].data(), l * cpp, Model::StripConfig::StripInputType::RGB8);
+                        break;
+                    case 4:
+                        Strip::get(strip).setData(color_buf[strip].data(), l * cpp, Model::StripConfig::StripInputType::RGBW8);
+                        break;
+                    case 6:
+                        Strip::get(strip).setData(color_buf[strip].data(), l * cpp, Model::StripConfig::StripInputType::RGB16_MSB);
+                        break;
                 }
-			} break;
-			case Model::StripConfig::RAINBOW: {	
-				float h = 1.0f - fmod(float(Systick::instance().systemTime()) / 10.0f, 1.0f);
-				size_t l = Strip::get(strip).getPixelLen();
+            } break;
+            case Model::StripConfig::RAINBOW: {
+                float h = 1.0f - fmod(float(Systick::instance().systemTime()) / 10.0f, 1.0f);
+                size_t l = Strip::get(strip).getPixelLen();
                 size_t cpp = Strip::get(strip).getBytesPerPixel();
-				for (size_t c = 0; c < l; c++) {
-					hsv col_hsv(fmod(h + float(c) * (1.0f / 255.0f), 1.0f), 1.0f, 1.0f);
-					rgb col_rgb(col_hsv);
-					rgb8 col_rgb8(col_rgb);
-                    switch(cpp) {
+                for (size_t c = 0; c < l; c++) {
+                    hsv col_hsv(fmod(h + float(c) * (1.0f / 255.0f), 1.0f), 1.0f, 1.0f);
+                    rgb col_rgb(col_hsv);
+                    rgb8 col_rgb8(col_rgb);
+                    switch (cpp) {
                         case 3: {
-                            color_buf[c*3+0] = col_rgb8.red();
-                            color_buf[c*3+1] = col_rgb8.green();
-                            color_buf[c*3+2] = col_rgb8.blue();
+                            color_buf[strip][c * 3 + 0] = col_rgb8.red();
+                            color_buf[strip][c * 3 + 1] = col_rgb8.green();
+                            color_buf[strip][c * 3 + 2] = col_rgb8.blue();
                         } break;
                         case 4: {
-                            color_buf[c*4+0] = col_rgb8.red();
-                            color_buf[c*4+1] = col_rgb8.green();
-                            color_buf[c*4+2] = col_rgb8.blue();
-                            color_buf[c*4+3] = 0;
+                            color_buf[strip][c * 4 + 0] = col_rgb8.red();
+                            color_buf[strip][c * 4 + 1] = col_rgb8.green();
+                            color_buf[strip][c * 4 + 2] = col_rgb8.blue();
+                            color_buf[strip][c * 4 + 3] = 0;
                         } break;
                         case 6: {
-                            color_buf[c*6 + 0] = 
-                            color_buf[c*6 + 1] = col_rgb8.red();
-                            color_buf[c*6 + 2] = 
-                            color_buf[c*6 + 3] = col_rgb8.green();
-                            color_buf[c*6 + 4] = 
-                            color_buf[c*6 + 5] = col_rgb8.blue();
+                            color_buf[strip][c * 6 + 0] = color_buf[strip][c * 6 + 1] = col_rgb8.red();
+                            color_buf[strip][c * 6 + 2] = color_buf[strip][c * 6 + 3] = col_rgb8.green();
+                            color_buf[strip][c * 6 + 4] = color_buf[strip][c * 6 + 5] = col_rgb8.blue();
                         } break;
                     }
-				}
-                switch(cpp) {
-                    default:
-                    case 3: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGB8); break;
-                    case 4: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGBW8); break;
-                    case 6: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGB16_MSB); break;
                 }
-			} break;
-			case Model::StripConfig::TRACER: {	
-				float h = 1.0f - fmod( float(Systick::instance().systemTime()) / 5.0f, 1.0f);
-				size_t l = Strip::get(strip).getPixelLen();
-                size_t cpp = Strip::get(strip).getBytesPerPixel();
-				for (size_t c = 0; c < l; c++) {
-					size_t i = std::clamp(size_t(float(l) * fmod(h + (float(c) / float(l)), 1.0f)), size_t(0), l);
-					if (i == 0) {
-                        switch(cpp) {
-                            case 3: {
-                                color_buf[c*3+0] = 0xFF;
-                                color_buf[c*3+1] = 0xFF;
-                                color_buf[c*3+2] = 0xFF;
-                            } break;
-                            case 4: {
-                                color_buf[c*4+0] = 0xFF;
-                                color_buf[c*4+1] = 0xFF;
-                                color_buf[c*4+2] = 0xFF;
-                                color_buf[c*4+3] = 0xFF;
-                            } break;
-                            case 6: {
-                                color_buf[c*6+0] = 0xFF;
-                                color_buf[c*6+1] = 0xFF;
-                                color_buf[c*6+2] = 0xFF;
-                                color_buf[c*6+4] = 0xFF;
-                                color_buf[c*6+5] = 0xFF;
-                                color_buf[c*6+6] = 0xFF;
-                            } break;
-                        }
-					} else {
-                        switch(cpp) {
-                            case 3: {
-                                color_buf[c*3+0] = 0x00;
-                                color_buf[c*3+1] = 0x00;
-                                color_buf[c*3+2] = 0x00;
-                            } break;
-                            case 4: {
-                                color_buf[c*4+0] = 0x00;
-                                color_buf[c*4+1] = 0x00;
-                                color_buf[c*4+2] = 0x00;
-                                color_buf[c*4+3] = 0x00;
-                            } break;
-                            case 6: {
-                                color_buf[c*6+0] = 0x00;
-                                color_buf[c*6+1] = 0x00;
-                                color_buf[c*6+2] = 0x00;
-                                color_buf[c*6+3] = 0x00;
-                                color_buf[c*6+4] = 0x00;
-                                color_buf[c*6+5] = 0x00;
-                            } break;
-                        }
-					}
-				}
-                switch(cpp) {
+                switch (cpp) {
                     default:
-                    case 3: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGB8); break;
-                    case 4: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGBW8); break;
-                    case 6: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGB16_MSB); break;
+                    case 3:
+                        Strip::get(strip).setData(color_buf[strip].data(), l * cpp, Model::StripConfig::StripInputType::RGB8);
+                        break;
+                    case 4:
+                        Strip::get(strip).setData(color_buf[strip].data(), l * cpp, Model::StripConfig::StripInputType::RGBW8);
+                        break;
+                    case 6:
+                        Strip::get(strip).setData(color_buf[strip].data(), l * cpp, Model::StripConfig::StripInputType::RGB16_MSB);
+                        break;
                 }
-			} break;
-			case Model::StripConfig::SOLID_TRACER: {	
-				float h = 1.0f - fmod( float(Systick::instance().systemTime()) / 5.0f, 1.0f);
-				size_t l = Strip::get(strip).getPixelLen() + 1;
-                size_t cpp = Strip::get(strip).getBytesPerPixel();
-				for (size_t c = 0; c < l; c++) {
-					size_t i = std::clamp(size_t(float(l) * fmod(h + (float(c) / float(l)), 1.0f)), size_t(0), l);
-					if (c < i) {
-                        switch(cpp) {
-                            case 3: {
-                                color_buf[c*3+0] = 0xFF;
-                                color_buf[c*3+1] = 0xFF;
-                                color_buf[c*3+2] = 0xFF;
-                            } break;
-                            case 4: {
-                                color_buf[c*4+0] = 0xFF;
-                                color_buf[c*4+1] = 0xFF;
-                                color_buf[c*4+2] = 0xFF;
-                                color_buf[c*4+3] = 0xFF;
-                            } break;
-                            case 6: {
-                                color_buf[c*6+0] = 0xFF;
-                                color_buf[c*6+1] = 0xFF;
-                                color_buf[c*6+2] = 0xFF;
-                                color_buf[c*6+4] = 0xFF;
-                                color_buf[c*6+5] = 0xFF;
-                                color_buf[c*6+6] = 0xFF;
-                            } break;
-                        }
-					} else {
-                        switch(cpp) {
-                            case 3: {
-                                color_buf[c*3+0] = 0x00;
-                                color_buf[c*3+1] = 0x00;
-                                color_buf[c*3+2] = 0x00;
-                            } break;
-                            case 4: {
-                                color_buf[c*4+0] = 0x00;
-                                color_buf[c*4+1] = 0x00;
-                                color_buf[c*4+2] = 0x00;
-                                color_buf[c*4+3] = 0x00;
-                            } break;
-                            case 6: {
-                                color_buf[c*6+0] = 0x00;
-                                color_buf[c*6+1] = 0x00;
-                                color_buf[c*6+2] = 0x00;
-                                color_buf[c*6+3] = 0x00;
-                                color_buf[c*6+4] = 0x00;
-                                color_buf[c*6+5] = 0x00;
-                            } break;
-                        }
-					}
-				}
-                switch(cpp) {
-                    default:
-                    case 3: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGB8); break;
-                    case 4: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGBW8); break;
-                    case 6: Strip::get(strip).setData(color_buf.data(), l * cpp, Model::StripConfig::StripInputType::RGB16_MSB); break;
-                }
-			} break;
-			case Model::StripConfig::NODATA: {	
             } break;
-			case Model::StripConfig::STARTUP_COUNT: {	
+            case Model::StripConfig::TRACER: {
+                float h = 1.0f - fmod(float(Systick::instance().systemTime()) / 5.0f, 1.0f);
+                size_t l = Strip::get(strip).getPixelLen();
+                size_t cpp = Strip::get(strip).getBytesPerPixel();
+                for (size_t c = 0; c < l; c++) {
+                    size_t i = std::clamp(size_t(float(l) * fmod(h + (float(c) / float(l)), 1.0f)), size_t(0), l);
+                    if (i == 0) {
+                        switch (cpp) {
+                            case 3: {
+                                color_buf[strip][c * 3 + 0] = 0xFF;
+                                color_buf[strip][c * 3 + 1] = 0xFF;
+                                color_buf[strip][c * 3 + 2] = 0xFF;
+                            } break;
+                            case 4: {
+                                color_buf[strip][c * 4 + 0] = 0xFF;
+                                color_buf[strip][c * 4 + 1] = 0xFF;
+                                color_buf[strip][c * 4 + 2] = 0xFF;
+                                color_buf[strip][c * 4 + 3] = 0xFF;
+                            } break;
+                            case 6: {
+                                color_buf[strip][c * 6 + 0] = 0xFF;
+                                color_buf[strip][c * 6 + 1] = 0xFF;
+                                color_buf[strip][c * 6 + 2] = 0xFF;
+                                color_buf[strip][c * 6 + 4] = 0xFF;
+                                color_buf[strip][c * 6 + 5] = 0xFF;
+                                color_buf[strip][c * 6 + 6] = 0xFF;
+                            } break;
+                        }
+                    } else {
+                        switch (cpp) {
+                            case 3: {
+                                color_buf[strip][c * 3 + 0] = 0x00;
+                                color_buf[strip][c * 3 + 1] = 0x00;
+                                color_buf[strip][c * 3 + 2] = 0x00;
+                            } break;
+                            case 4: {
+                                color_buf[strip][c * 4 + 0] = 0x00;
+                                color_buf[strip][c * 4 + 1] = 0x00;
+                                color_buf[strip][c * 4 + 2] = 0x00;
+                                color_buf[strip][c * 4 + 3] = 0x00;
+                            } break;
+                            case 6: {
+                                color_buf[strip][c * 6 + 0] = 0x00;
+                                color_buf[strip][c * 6 + 1] = 0x00;
+                                color_buf[strip][c * 6 + 2] = 0x00;
+                                color_buf[strip][c * 6 + 3] = 0x00;
+                                color_buf[strip][c * 6 + 4] = 0x00;
+                                color_buf[strip][c * 6 + 5] = 0x00;
+                            } break;
+                        }
+                    }
+                }
+                switch (cpp) {
+                    default:
+                    case 3:
+                        Strip::get(strip).setData(color_buf[strip].data(), l * cpp, Model::StripConfig::StripInputType::RGB8);
+                        break;
+                    case 4:
+                        Strip::get(strip).setData(color_buf[strip].data(), l * cpp, Model::StripConfig::StripInputType::RGBW8);
+                        break;
+                    case 6:
+                        Strip::get(strip).setData(color_buf[strip].data(), l * cpp, Model::StripConfig::StripInputType::RGB16_MSB);
+                        break;
+                }
             } break;
-		}
-	};
+            case Model::StripConfig::SOLID_TRACER: {
+                float h = 1.0f - fmod(float(Systick::instance().systemTime()) / 5.0f, 1.0f);
+                size_t l = Strip::get(strip).getPixelLen() + 1;
+                size_t cpp = Strip::get(strip).getBytesPerPixel();
+                for (size_t c = 0; c < l; c++) {
+                    size_t i = std::clamp(size_t(float(l) * fmod(h + (float(c) / float(l)), 1.0f)), size_t(0), l);
+                    if (c < i) {
+                        switch (cpp) {
+                            case 3: {
+                                color_buf[strip][c * 3 + 0] = 0xFF;
+                                color_buf[strip][c * 3 + 1] = 0xFF;
+                                color_buf[strip][c * 3 + 2] = 0xFF;
+                            } break;
+                            case 4: {
+                                color_buf[strip][c * 4 + 0] = 0xFF;
+                                color_buf[strip][c * 4 + 1] = 0xFF;
+                                color_buf[strip][c * 4 + 2] = 0xFF;
+                                color_buf[strip][c * 4 + 3] = 0xFF;
+                            } break;
+                            case 6: {
+                                color_buf[strip][c * 6 + 0] = 0xFF;
+                                color_buf[strip][c * 6 + 1] = 0xFF;
+                                color_buf[strip][c * 6 + 2] = 0xFF;
+                                color_buf[strip][c * 6 + 4] = 0xFF;
+                                color_buf[strip][c * 6 + 5] = 0xFF;
+                                color_buf[strip][c * 6 + 6] = 0xFF;
+                            } break;
+                        }
+                    } else {
+                        switch (cpp) {
+                            case 3: {
+                                color_buf[strip][c * 3 + 0] = 0x00;
+                                color_buf[strip][c * 3 + 1] = 0x00;
+                                color_buf[strip][c * 3 + 2] = 0x00;
+                            } break;
+                            case 4: {
+                                color_buf[strip][c * 4 + 0] = 0x00;
+                                color_buf[strip][c * 4 + 1] = 0x00;
+                                color_buf[strip][c * 4 + 2] = 0x00;
+                                color_buf[strip][c * 4 + 3] = 0x00;
+                            } break;
+                            case 6: {
+                                color_buf[strip][c * 6 + 0] = 0x00;
+                                color_buf[strip][c * 6 + 1] = 0x00;
+                                color_buf[strip][c * 6 + 2] = 0x00;
+                                color_buf[strip][c * 6 + 3] = 0x00;
+                                color_buf[strip][c * 6 + 4] = 0x00;
+                                color_buf[strip][c * 6 + 5] = 0x00;
+                            } break;
+                        }
+                    }
+                }
+                switch (cpp) {
+                    default:
+                    case 3:
+                        Strip::get(strip).setData(color_buf[strip].data(), l * cpp, Model::StripConfig::StripInputType::RGB8);
+                        break;
+                    case 4:
+                        Strip::get(strip).setData(color_buf[strip].data(), l * cpp, Model::StripConfig::StripInputType::RGBW8);
+                        break;
+                    case 6:
+                        Strip::get(strip).setData(color_buf[strip].data(), l * cpp, Model::StripConfig::StripInputType::RGB16_MSB);
+                        break;
+                }
+            } break;
+            case Model::StripConfig::NODATA: {
+            } break;
+            case Model::StripConfig::STARTUP_COUNT: {
+            } break;
+        }
+    };
 
-    switch(Model::instance().outputConfig()) {
-    case Model::RGB_DUAL_STRIP:
-    case Model::DUAL_STRIP: {
-        for (size_t c = 0; c < Model::stripN; c++) {
-        	effect(c);
-        }
-	} break;
-    case Model::RGB_STRIP:
-    case Model::RGBW_STRIP: {
-        for (size_t c = 1; c < Model::stripN; c++) {
-        	effect(c);
-        }
-	} break;
-	default: {
-	} break;
-	}
+    switch (Model::instance().outputConfig()) {
+        case Model::RGB_DUAL_STRIP:
+        case Model::DUAL_STRIP: {
+            for (size_t c = 0; c < Model::stripN; c++) {
+                effect(c);
+            }
+        } break;
+        case Model::RGB_STRIP:
+        case Model::RGBW_STRIP: {
+            for (size_t c = 1; c < Model::stripN; c++) {
+                effect(c);
+            }
+        } break;
+        default: {
+        } break;
+    }
 }
+
+#endif  // #ifndef BOOTLOADER

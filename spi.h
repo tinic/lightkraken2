@@ -28,23 +28,64 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 class SPI {
    public:
-    virtual void transfer(const uint8_t *buf, size_t len, bool wantsSCLK) = 0;
-    virtual void update() = 0;
-    virtual bool busy() const = 0;
-    void setFast(bool state) {};
+
+    void transfer(const uint8_t *buf, size_t len, uint32_t transferMbps, bool wantsSCLK) {
+        if (dmaActive) {
+            if (isDMAbusy()) {
+                scheduleDMA = true;
+                return;
+            }
+        }
+
+        dmaActive = false;
+        if (cbuf != buf || clen != len || mbps != transferMbps || wantsSCLK != sclk) {
+            cbuf = buf;
+            clen = len;
+            mbps = transferMbps;
+            sclk = wantsSCLK;
+            setupDMATransfer();
+        }
+        startDMATransfer();
+        dmaActive = true;
+
+    };
+
+    void update() {
+        if (scheduleDMA) {
+            scheduleDMA = false;
+            transfer(cbuf, clen, mbps, sclk);
+        }
+    }
+
+    void setDMAActive(bool state) {
+        dmaActive = false;
+    }
+
+    virtual bool isDMAbusy() const = 0;
 
    protected:
+    size_t clen = 0;
+    const uint8_t *cbuf = 0;
+
+    bool scheduleDMA = false;
+    bool dmaActive = false;
+    bool sclk = false;
+    bool fast = true;
+    uint32_t mbps = 40000000;
+
     virtual ~SPI(){};
     bool initialized = false;
+    virtual void startDMATransfer() = 0;
+    virtual void setupDMATransfer() = 0;
     virtual void init() = 0;
 };
 
 class SPI_0 : public SPI {
    public:
     static SPI &instance();
-    virtual void transfer(const uint8_t *buf, size_t len, bool wantsSCLK) override;
-    virtual void update() override;
-    virtual bool busy() const override;
+    virtual bool isDMAbusy() const override;
+    virtual void startDMATransfer() override;
+    virtual void setupDMATransfer() override;
 
    protected:
     virtual ~SPI_0(){};
@@ -54,9 +95,9 @@ class SPI_0 : public SPI {
 class SPI_1 : public SPI {
    public:
     static SPI &instance();
-    virtual void transfer(const uint8_t *buf, size_t len, bool wantsSCLK) override;
-    virtual void update() override;
-    virtual bool busy() const override;
+    virtual bool isDMAbusy() const override;
+    virtual void startDMATransfer() override;
+    virtual void setupDMATransfer() override;
 
    protected:
     virtual ~SPI_1(){};
