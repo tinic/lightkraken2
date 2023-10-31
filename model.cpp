@@ -593,7 +593,7 @@ bool Model::importFromDB() {
     if (SettingsDB::instance().getStringVector(SettingsDB::kAnalogInputType, svec)) {
         if (svec.size() >= stripN) {
             for (size_t c = 0; c < stripN; c++) {
-                auto value = magic_enum::enum_cast<AnalogConfig::AnalogInputType>(svec[c]), magic_enum::case_insensitive;
+                auto value = magic_enum::enum_cast<AnalogConfig::AnalogInputType>(svec[c], magic_enum::case_insensitive);
                 if (value.has_value()) {
                     analog_config[c].input_type = value.value();
                 } else{

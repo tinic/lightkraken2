@@ -21,8 +21,9 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-#include "./pwmtimer.h"
 #include "./spi.h"
+
+#include "./pwmtimer.h"
 #include "stm32h5xx_hal.h"
 
 DMA_HandleTypeDef handle_GPDMA1_Channel7;
@@ -31,11 +32,19 @@ DMA_HandleTypeDef handle_GPDMA2_Channel7;
 static void MX_GPDMA1_Init(void) {
     __HAL_RCC_GPDMA1_CLK_ENABLE();
     handle_GPDMA1_Channel7.Instance = GPDMA1_Channel7;
-    handle_GPDMA1_Channel7.InitLinkedList.Priority = DMA_LOW_PRIORITY_LOW_WEIGHT;
-    handle_GPDMA1_Channel7.InitLinkedList.LinkStepMode = DMA_LSM_FULL_EXECUTION;
-    handle_GPDMA1_Channel7.InitLinkedList.LinkAllocatedPort = DMA_LINK_ALLOCATED_PORT0;
-    handle_GPDMA1_Channel7.InitLinkedList.TransferEventMode = DMA_TCEM_LAST_LL_ITEM_TRANSFER;
-    handle_GPDMA1_Channel7.InitLinkedList.LinkedListMode = DMA_LINKEDLIST_NORMAL;
+    handle_GPDMA1_Channel7.Init.Request = DMA_REQUEST_SW;
+    handle_GPDMA1_Channel7.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
+    handle_GPDMA1_Channel7.Init.Direction = DMA_MEMORY_TO_PERIPH;
+    handle_GPDMA1_Channel7.Init.SrcInc = DMA_SINC_FIXED;
+    handle_GPDMA1_Channel7.Init.DestInc = DMA_DINC_FIXED;
+    handle_GPDMA1_Channel7.Init.SrcDataWidth = DMA_SRC_DATAWIDTH_BYTE;
+    handle_GPDMA1_Channel7.Init.DestDataWidth = DMA_DEST_DATAWIDTH_BYTE;
+    handle_GPDMA1_Channel7.Init.Priority = DMA_LOW_PRIORITY_LOW_WEIGHT;
+    handle_GPDMA1_Channel7.Init.SrcBurstLength = 1;
+    handle_GPDMA1_Channel7.Init.DestBurstLength = 1;
+    handle_GPDMA1_Channel7.Init.TransferAllocatedPort = DMA_SRC_ALLOCATED_PORT0 | DMA_DEST_ALLOCATED_PORT0;
+    handle_GPDMA1_Channel7.Init.TransferEventMode = DMA_TCEM_BLOCK_TRANSFER;
+    handle_GPDMA1_Channel7.Init.Mode = DMA_NORMAL;
     if (HAL_DMAEx_List_Init(&handle_GPDMA1_Channel7) != HAL_OK) {
         while (1) {
         }
@@ -54,11 +63,19 @@ static void MX_GPDMA1_Init(void) {
 static void MX_GPDMA2_Init(void) {
     __HAL_RCC_GPDMA2_CLK_ENABLE();
     handle_GPDMA2_Channel7.Instance = GPDMA2_Channel7;
-    handle_GPDMA2_Channel7.InitLinkedList.Priority = DMA_LOW_PRIORITY_LOW_WEIGHT;
-    handle_GPDMA2_Channel7.InitLinkedList.LinkStepMode = DMA_LSM_FULL_EXECUTION;
-    handle_GPDMA2_Channel7.InitLinkedList.LinkAllocatedPort = DMA_LINK_ALLOCATED_PORT0;
-    handle_GPDMA2_Channel7.InitLinkedList.TransferEventMode = DMA_TCEM_LAST_LL_ITEM_TRANSFER;
-    handle_GPDMA2_Channel7.InitLinkedList.LinkedListMode = DMA_LINKEDLIST_NORMAL;
+    handle_GPDMA2_Channel7.Init.Request = DMA_REQUEST_SW;
+    handle_GPDMA2_Channel7.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
+    handle_GPDMA2_Channel7.Init.Direction = DMA_MEMORY_TO_PERIPH;
+    handle_GPDMA2_Channel7.Init.SrcInc = DMA_SINC_FIXED;
+    handle_GPDMA2_Channel7.Init.DestInc = DMA_DINC_FIXED;
+    handle_GPDMA2_Channel7.Init.SrcDataWidth = DMA_SRC_DATAWIDTH_BYTE;
+    handle_GPDMA2_Channel7.Init.DestDataWidth = DMA_DEST_DATAWIDTH_BYTE;
+    handle_GPDMA2_Channel7.Init.Priority = DMA_LOW_PRIORITY_LOW_WEIGHT;
+    handle_GPDMA2_Channel7.Init.SrcBurstLength = 1;
+    handle_GPDMA2_Channel7.Init.DestBurstLength = 1;
+    handle_GPDMA2_Channel7.Init.TransferAllocatedPort = DMA_SRC_ALLOCATED_PORT0 | DMA_DEST_ALLOCATED_PORT0;
+    handle_GPDMA2_Channel7.Init.TransferEventMode = DMA_TCEM_BLOCK_TRANSFER;
+    handle_GPDMA2_Channel7.Init.Mode = DMA_NORMAL;
     if (HAL_DMAEx_List_Init(&handle_GPDMA2_Channel7) != HAL_OK) {
         while (1) {
         }
@@ -72,9 +89,13 @@ static void MX_GPDMA2_Init(void) {
 SPI_HandleTypeDef hspi1;
 SPI_HandleTypeDef hspi2;
 
-void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) { // cppcheck-suppress constParameterPointer
-    GPIO_InitTypeDef GPIO_InitStruct {};
-    RCC_PeriphCLKInitTypeDef PeriphClkInitStruct {};
+void SPI1_IRQHandler(void) { HAL_SPI_IRQHandler(&hspi1); }
+
+void SPI2_IRQHandler(void) { HAL_SPI_IRQHandler(&hspi2); }
+
+void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {  // cppcheck-suppress constParameterPointer
+    GPIO_InitTypeDef GPIO_InitStruct{};
+    RCC_PeriphCLKInitTypeDef PeriphClkInitStruct{};
     if (hspi->Instance == SPI1) {
         PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI1;
         PeriphClkInitStruct.PLL2.PLL2Source = RCC_PLL2_SOURCE_HSE;
@@ -113,6 +134,10 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) { // cppcheck-suppress constParame
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
         GPIO_InitStruct.Alternate = GPIO_AF5_SPI1;
         HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+        HAL_NVIC_SetPriority(SPI1_IRQn, 0, 0);
+        HAL_NVIC_EnableIRQ(SPI1_IRQn);
+
     } else if (hspi->Instance == SPI2) {
         PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI2;
         PeriphClkInitStruct.PLL3.PLL3Source = RCC_PLL3_SOURCE_HSE;
@@ -152,6 +177,9 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) { // cppcheck-suppress constParame
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
         GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
         HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+        HAL_NVIC_SetPriority(SPI2_IRQn, 0, 0);
+        HAL_NVIC_EnableIRQ(SPI2_IRQn);
     }
 }
 
@@ -159,7 +187,7 @@ static void MX_SPI1_Init(void) {
     hspi1.Instance = SPI1;
     hspi1.Init.Mode = SPI_MODE_MASTER;
     hspi1.Init.Direction = SPI_DIRECTION_2LINES_TXONLY;
-    hspi1.Init.DataSize = SPI_DATASIZE_4BIT;
+    hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
     hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
     hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
     hspi1.Init.NSS = SPI_NSS_SOFT;
@@ -188,7 +216,7 @@ static void MX_SPI2_Init(void) {
     hspi2.Instance = SPI2;
     hspi2.Init.Mode = SPI_MODE_MASTER;
     hspi2.Init.Direction = SPI_DIRECTION_2LINES_TXONLY;
-    hspi2.Init.DataSize = SPI_DATASIZE_4BIT;
+    hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
     hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
     hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
     hspi2.Init.NSS = SPI_NSS_SOFT;
