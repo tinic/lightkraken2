@@ -214,64 +214,15 @@ bool Strip::isUniverseActive(size_t uniN, Model::StripConfig::StripInputType inp
 }
 
 size_t Strip::getBytesPerInputPixel(Model::StripConfig::StripInputType input_type) const {
-    switch (input_type) {
-        default:
-        case Model::StripConfig::StripInputType::RGB8_SRGB:
-        case Model::StripConfig::StripInputType::RGB8: {
-            return 3;
-        } break;
-        case Model::StripConfig::StripInputType::RGBW_SRGB:
-        case Model::StripConfig::StripInputType::RGBW8: {
-            return 4;
-        } break;
-        case Model::StripConfig::StripInputType::RGB16_LSB:
-        case Model::StripConfig::StripInputType::RGB16_MSB: {
-            return 6;
-        } break;
-        case Model::StripConfig::StripInputType::RGBW16_LSB:
-        case Model::StripConfig::StripInputType::RGBW16_MSB: {
-            return 8;
-        }
-    }
-    return 0;
+    return Model::stripInputProperties[input_type].bytes_per_pixel;
 }
 
 size_t Strip::getComponentsPerInputPixel(Model::StripConfig::StripInputType input_type) const {
-    switch (input_type) {
-        default:
-        case Model::StripConfig::StripInputType::RGB16_LSB:
-        case Model::StripConfig::StripInputType::RGB16_MSB:
-        case Model::StripConfig::StripInputType::RGB8_SRGB:
-        case Model::StripConfig::StripInputType::RGB8: {
-            return 3;
-        } break;
-        case Model::StripConfig::StripInputType::RGBW16_LSB:
-        case Model::StripConfig::StripInputType::RGBW16_MSB:
-        case Model::StripConfig::StripInputType::RGBW_SRGB:
-        case Model::StripConfig::StripInputType::RGBW8: {
-            return 4;
-        } break;
-    }
-    return 0;
+    return Model::stripInputProperties[input_type].comp_per_pixel;
 }
 
 size_t Strip::getComponentBytes(Model::StripConfig::StripInputType input_type) const {
-    switch (input_type) {
-        default:
-        case Model::StripConfig::StripInputType::RGBW16_LSB:
-        case Model::StripConfig::StripInputType::RGBW16_MSB:
-        case Model::StripConfig::StripInputType::RGB16_LSB:
-        case Model::StripConfig::StripInputType::RGB16_MSB: {
-            return 2;
-        } break;
-        case Model::StripConfig::StripInputType::RGB8_SRGB:
-        case Model::StripConfig::StripInputType::RGB8:
-        case Model::StripConfig::StripInputType::RGBW_SRGB:
-        case Model::StripConfig::StripInputType::RGBW8: {
-            return 1;
-        } break;
-    }
-    return 0;
+    return Model::stripInputProperties[input_type].bytes_per_comp;
 }
 
 void Strip::setData(const uint8_t *data, const size_t len, const Model::StripConfig::StripInputType input_type) {

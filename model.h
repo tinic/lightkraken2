@@ -170,6 +170,24 @@ struct Model {
     };
 
     // clang-format off
+    static constexpr struct StripInputProperties {
+        StripConfig::StripInputType type;
+        uint8_t bytes_per_comp;
+        uint8_t bytes_per_pixel;
+        uint8_t comp_per_pixel;
+    } stripInputProperties[StripConfig::INPUT_COUNT] = {
+        { StripConfig::RGB8,       3, 1, 3 },
+        { StripConfig::RGBW8,      4, 1, 4 },
+        { StripConfig::RGB8_SRGB,  3, 1, 3 },
+        { StripConfig::RGBW_SRGB,  4, 1, 4 },
+        { StripConfig::RGB16_MSB,  6, 2, 3 },
+        { StripConfig::RGBW16_MSB, 8, 2, 4 },
+        { StripConfig::RGB16_LSB,  6, 2, 3 },
+        { StripConfig::RGBW16_LSB, 8, 2, 4 }
+    };
+    // clang-format on
+
+    // clang-format off
     static constexpr struct StripOutputProperties {
         StripConfig::StripOutputType type;
         StripConfig::StripNativeType native_type;
