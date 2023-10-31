@@ -167,21 +167,23 @@ struct Model {
         uint32_t min_mbps;
         uint32_t max_mbps;
     } stripOutputProperties[StripConfig::OUTPUT_COUNT] = {
-        {StripConfig::WS2812,  false, false,  8, 3, 4.0f, 600000, 900000},  
-        {StripConfig::SK6812,  false, false,  8, 3, 4.0f, 600000, 900000},  
-        {StripConfig::TM1804,  false, false,  8, 3, 4.0f, 600000, 900000}, 
-        {StripConfig::UCS1904, false, false,  8, 3, 4.0f, 600000, 900000},
-        {StripConfig::GS8202,  false, false,  8, 3, 4.0f, 600000, 900000},  
-        {StripConfig::APA102,  true,  true,   8, 3, 1.0f, 600000, 900000},   
-        {StripConfig::APA107,  true,  true,   8, 3, 1.0f, 600000, 900000},
-        {StripConfig::P9813,   true,  false,  8, 3, 1.0f, 600000, 900000},    
-        {StripConfig::SK9822,  true,  true,   8, 3, 1.0f, 600000, 900000},    
-        {StripConfig::HDS107S, true,  false,  8, 3, 1.0f, 600000, 900000}, 
-        {StripConfig::LPD8806, false, false,  8, 3, 4.0f, 600000, 900000},
-        {StripConfig::TLS3001, false, false,  8, 3, 4.0f, 600000, 900000}, 
-        {StripConfig::TM1829,  false, false, 16, 3, 4.0f, 600000, 900000}, 
-        {StripConfig::WS2801,  true,  false,  8, 3, 1.0f, 600000, 900000},  
-        {StripConfig::HD108,   true,  false, 16, 3, 1.0f, 600000, 900000}};
+        {StripConfig::WS2812,      false, false,   8, 3, 4.0f, 600000,   900000 },  
+        {StripConfig::SK6812,      false, false,   8, 3, 4.0f, 600000,   900000 },  
+        {StripConfig::TM1804,      false, false,   8, 3, 4.0f, 600000,   900000 }, 
+        {StripConfig::UCS1904,     false, false,   8, 3, 4.0f, 600000,   900000 },
+        {StripConfig::GS8202,      false, false,   8, 3, 4.0f, 600000,   900000 },  
+        {StripConfig::APA102,       true,  true,   8, 3, 1.0f,   1000, 20000000 },   
+        {StripConfig::APA107,       true,  true,   8, 3, 1.0f,   1000, 30000000 },
+        {StripConfig::P9813,        true, false,   8, 3, 1.0f, 600000,   900000 },    
+        {StripConfig::SK9822,       true,  true,   8, 3, 1.0f,   1000, 15000000 },    
+        {StripConfig::HDS107S,      true,  false,  8, 3, 1.0f,   1000, 40000000 }, 
+        {StripConfig::LPD8806,      true,  false,  8, 3, 4.0f, 600000, 20000000 },
+        {StripConfig::TLS3001,     false,  false,  8, 3, 4.0f, 600000,   900000 }, 
+        {StripConfig::TM1829,      false,  false, 16, 3, 4.0f, 600000,   900000 }, 
+        {StripConfig::WS2801,       true,  false,  8, 3, 1.0f, 600000,   900000 },  
+        {StripConfig::HD108,        true,  false, 16, 3, 1.0f, 600000,   900000 },
+        {StripConfig::WS2816,      false,  false, 16, 3, 4.0f, 600000,   900000 },
+        {StripConfig::SK6812_RGBW, false,  false,  8, 4, 4.0f, 600000,   900000 }};
     // clang-format on
 
     enum OutputConfig {
