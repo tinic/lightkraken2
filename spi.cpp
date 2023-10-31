@@ -28,8 +28,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "./pwmtimer.h"
 #include "stm32h5xx_hal.h"
 
-DMA_HandleTypeDef handle_GPDMA1_Channel7;
-DMA_HandleTypeDef handle_GPDMA2_Channel7;
+DMA_HandleTypeDef handle_GPDMA1_Channel7 {};
+DMA_HandleTypeDef handle_GPDMA2_Channel7 {};
 
 extern "C" __attribute__((used)) void GPDMA1_Channel7_IRQHandler(void) { HAL_DMA_IRQHandler(&handle_GPDMA1_Channel7); }
 
@@ -40,29 +40,6 @@ static void MX_GPDMA1_Init(void) {
 
     HAL_NVIC_SetPriority(GPDMA1_Channel7_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(GPDMA1_Channel7_IRQn);
-
-    handle_GPDMA1_Channel7.Instance = GPDMA1_Channel7;
-    handle_GPDMA1_Channel7.Init.Request = DMA_REQUEST_SW;
-    handle_GPDMA1_Channel7.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
-    handle_GPDMA1_Channel7.Init.Direction = DMA_MEMORY_TO_PERIPH;
-    handle_GPDMA1_Channel7.Init.SrcInc = DMA_SINC_FIXED;
-    handle_GPDMA1_Channel7.Init.DestInc = DMA_DINC_FIXED;
-    handle_GPDMA1_Channel7.Init.SrcDataWidth = DMA_SRC_DATAWIDTH_BYTE;
-    handle_GPDMA1_Channel7.Init.DestDataWidth = DMA_DEST_DATAWIDTH_BYTE;
-    handle_GPDMA1_Channel7.Init.Priority = DMA_LOW_PRIORITY_LOW_WEIGHT;
-    handle_GPDMA1_Channel7.Init.SrcBurstLength = 1;
-    handle_GPDMA1_Channel7.Init.DestBurstLength = 1;
-    handle_GPDMA1_Channel7.Init.TransferAllocatedPort = DMA_SRC_ALLOCATED_PORT0 | DMA_DEST_ALLOCATED_PORT0;
-    handle_GPDMA1_Channel7.Init.TransferEventMode = DMA_TCEM_BLOCK_TRANSFER;
-    handle_GPDMA1_Channel7.Init.Mode = DMA_NORMAL;
-    if (HAL_DMAEx_List_Init(&handle_GPDMA1_Channel7) != HAL_OK) {
-        while (1) {
-        }
-    }
-    if (HAL_DMA_ConfigChannelAttributes(&handle_GPDMA1_Channel7, DMA_CHANNEL_NPRIV) != HAL_OK) {
-        while (1) {
-        }
-    }
 }
 
 /**
@@ -75,33 +52,10 @@ static void MX_GPDMA2_Init(void) {
 
     HAL_NVIC_SetPriority(GPDMA2_Channel7_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(GPDMA2_Channel7_IRQn);
-
-    handle_GPDMA2_Channel7.Instance = GPDMA2_Channel7;
-    handle_GPDMA2_Channel7.Init.Request = DMA_REQUEST_SW;
-    handle_GPDMA2_Channel7.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
-    handle_GPDMA2_Channel7.Init.Direction = DMA_MEMORY_TO_PERIPH;
-    handle_GPDMA2_Channel7.Init.SrcInc = DMA_SINC_FIXED;
-    handle_GPDMA2_Channel7.Init.DestInc = DMA_DINC_FIXED;
-    handle_GPDMA2_Channel7.Init.SrcDataWidth = DMA_SRC_DATAWIDTH_BYTE;
-    handle_GPDMA2_Channel7.Init.DestDataWidth = DMA_DEST_DATAWIDTH_BYTE;
-    handle_GPDMA2_Channel7.Init.Priority = DMA_LOW_PRIORITY_LOW_WEIGHT;
-    handle_GPDMA2_Channel7.Init.SrcBurstLength = 1;
-    handle_GPDMA2_Channel7.Init.DestBurstLength = 1;
-    handle_GPDMA2_Channel7.Init.TransferAllocatedPort = DMA_SRC_ALLOCATED_PORT0 | DMA_DEST_ALLOCATED_PORT0;
-    handle_GPDMA2_Channel7.Init.TransferEventMode = DMA_TCEM_BLOCK_TRANSFER;
-    handle_GPDMA2_Channel7.Init.Mode = DMA_NORMAL;
-    if (HAL_DMAEx_List_Init(&handle_GPDMA2_Channel7) != HAL_OK) {
-        while (1) {
-        }
-    }
-    if (HAL_DMA_ConfigChannelAttributes(&handle_GPDMA2_Channel7, DMA_CHANNEL_NPRIV) != HAL_OK) {
-        while (1) {
-        }
-    }
 }
 
-SPI_HandleTypeDef hspi1;
-SPI_HandleTypeDef hspi2;
+SPI_HandleTypeDef hspi1 {};
+SPI_HandleTypeDef hspi2 {};
 
 extern "C" __attribute__((used)) void SPI1_IRQHandler(void) { HAL_SPI_IRQHandler(&hspi1); }
 
@@ -149,6 +103,32 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {  // cppcheck-suppress constParam
         GPIO_InitStruct.Alternate = GPIO_AF5_SPI1;
         HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+        handle_GPDMA1_Channel7.Instance = GPDMA1_Channel7;
+        handle_GPDMA1_Channel7.Init.Request = GPDMA1_REQUEST_SPI1_TX;
+        handle_GPDMA1_Channel7.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
+        handle_GPDMA1_Channel7.Init.Direction = DMA_MEMORY_TO_PERIPH;
+        handle_GPDMA1_Channel7.Init.SrcInc = DMA_SINC_INCREMENTED;
+        handle_GPDMA1_Channel7.Init.DestInc = DMA_DINC_FIXED;
+        handle_GPDMA1_Channel7.Init.SrcDataWidth = DMA_SRC_DATAWIDTH_BYTE;
+        handle_GPDMA1_Channel7.Init.DestDataWidth = DMA_DEST_DATAWIDTH_BYTE;
+        handle_GPDMA1_Channel7.Init.Priority = DMA_LOW_PRIORITY_LOW_WEIGHT;
+        handle_GPDMA1_Channel7.Init.SrcBurstLength = 1;
+        handle_GPDMA1_Channel7.Init.DestBurstLength = 1;
+        handle_GPDMA1_Channel7.Init.TransferAllocatedPort = DMA_SRC_ALLOCATED_PORT0 | DMA_DEST_ALLOCATED_PORT0;
+        handle_GPDMA1_Channel7.Init.TransferEventMode = DMA_TCEM_BLOCK_TRANSFER;
+        handle_GPDMA1_Channel7.Init.Mode = DMA_NORMAL;
+        if (HAL_DMAEx_List_Init(&handle_GPDMA1_Channel7) != HAL_OK) {
+            while (1) {
+            }
+        }
+
+        __HAL_LINKDMA(hspi, hdmatx, handle_GPDMA1_Channel7);
+
+        if (HAL_DMA_ConfigChannelAttributes(&handle_GPDMA1_Channel7, DMA_CHANNEL_NPRIV) != HAL_OK) {
+            while (1) {
+            }
+        }
+
         HAL_NVIC_SetPriority(SPI1_IRQn, 0, 0);
         HAL_NVIC_EnableIRQ(SPI1_IRQn);
 
@@ -191,6 +171,32 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {  // cppcheck-suppress constParam
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
         GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
         HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+        handle_GPDMA2_Channel7.Instance = GPDMA2_Channel7;
+        handle_GPDMA2_Channel7.Init.Request = GPDMA1_REQUEST_SPI2_TX;
+        handle_GPDMA2_Channel7.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
+        handle_GPDMA2_Channel7.Init.Direction = DMA_MEMORY_TO_PERIPH;
+        handle_GPDMA2_Channel7.Init.SrcInc = DMA_SINC_INCREMENTED;
+        handle_GPDMA2_Channel7.Init.DestInc = DMA_DINC_FIXED;
+        handle_GPDMA2_Channel7.Init.SrcDataWidth = DMA_SRC_DATAWIDTH_BYTE;
+        handle_GPDMA2_Channel7.Init.DestDataWidth = DMA_DEST_DATAWIDTH_BYTE;
+        handle_GPDMA2_Channel7.Init.Priority = DMA_LOW_PRIORITY_LOW_WEIGHT;
+        handle_GPDMA2_Channel7.Init.SrcBurstLength = 1;
+        handle_GPDMA2_Channel7.Init.DestBurstLength = 1;
+        handle_GPDMA2_Channel7.Init.TransferAllocatedPort = DMA_SRC_ALLOCATED_PORT0 | DMA_DEST_ALLOCATED_PORT0;
+        handle_GPDMA2_Channel7.Init.TransferEventMode = DMA_TCEM_BLOCK_TRANSFER;
+        handle_GPDMA2_Channel7.Init.Mode = DMA_NORMAL;
+        if (HAL_DMAEx_List_Init(&handle_GPDMA2_Channel7) != HAL_OK) {
+            while (1) {
+            }
+        }
+
+        __HAL_LINKDMA(hspi, hdmatx, handle_GPDMA2_Channel7);
+
+        if (HAL_DMA_ConfigChannelAttributes(&handle_GPDMA2_Channel7, DMA_CHANNEL_NPRIV) != HAL_OK) {
+            while (1) {
+            }
+        }
 
         HAL_NVIC_SetPriority(SPI2_IRQn, 0, 0);
         HAL_NVIC_EnableIRQ(SPI2_IRQn);
@@ -267,9 +273,9 @@ SPI &SPI_0::instance() {
 static void SPI1_IT_Callback(DMA_HandleTypeDef *) { SPI_0::instance().setDMAActive(false); }
 
 void SPI_0::startDMATransfer() {
-    HAL_StatusTypeDef status = HAL_DMA_Start_IT(&handle_GPDMA1_Channel7, (uint32_t)cbuf, (uint32_t)&SPI1->TXDR, clen);
-    if (status != HAL_OK) {
-//        printf("SPI_0::startDMATransfer fail!\n");
+    HAL_StatusTypeDef status = HAL_SPI_Transmit_DMA(&hspi1, cbuf, uint16_t(clen));
+    if (status == HAL_OK) {
+        printf("SPI_0::startDMATransfer OK!\n");
     }
 }
 
@@ -305,9 +311,9 @@ SPI &SPI_1::instance() {
 static void SPI2_IT_Callback(DMA_HandleTypeDef *) { SPI_1::instance().setDMAActive(false); }
 
 void SPI_1::startDMATransfer() {
-    HAL_StatusTypeDef status = HAL_DMA_Start_IT(&handle_GPDMA2_Channel7, (uint32_t)cbuf, (uint32_t)&SPI2->TXDR, clen);
-    if (status != HAL_OK) {
-//        printf("SPI_0::startDMATransfer fail!\n");
+    HAL_StatusTypeDef status = HAL_SPI_Transmit_DMA(&hspi2, cbuf, uint16_t(clen));
+    if (status == HAL_OK) {
+        printf("SPI_1::startDMATransfer OK!\n");
     }
 }
 
