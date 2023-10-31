@@ -749,7 +749,7 @@ different:
     for (const fixed_containers::FixedVector<float, max_array_size_2d> &row : vec) {
         raw.push_back(float(row.size()));
         for (const float value : row) {
-            raw.push_back(value);
+            raw.push_back(value); // cppcheck-suppress useStlAlgorithm
         }
     }
     struct fdb_blob blob {};

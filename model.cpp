@@ -73,7 +73,7 @@ void Model::exportStaticsToDB() {
                 emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.clock), prop.clock ? "true" : "false").value();
                 emio::format_to(buf, "\"{}\":{}", NAMEOF(prop.globalillum), prop.globalillum ? "true" : "false").value();
                 emio::format_to(buf, "}}").value();
-                comma = ",";
+                comma = ","; 
             }
             emio::format_to(buf, "]").value();
             return fixed_containers::FixedString<4096>(buf.view());
@@ -444,9 +444,9 @@ bool Model::importFromDB() {
 
     // ----------------------------
 
-    char outputConfig[SettingsDB::max_string_size]{};
-    if (SettingsDB::instance().getString(SettingsDB::kOutputConfig, outputConfig, SettingsDB::max_string_size)) {
-        auto value = magic_enum::enum_cast<OutputConfig>(outputConfig, magic_enum::case_insensitive);
+    char outputConfigStr[SettingsDB::max_string_size]{};
+    if (SettingsDB::instance().getString(SettingsDB::kOutputConfig, outputConfigStr, SettingsDB::max_string_size)) {
+        auto value = magic_enum::enum_cast<OutputConfig>(outputConfigStr, magic_enum::case_insensitive);
         if (value.has_value()) {
             output_config = value.value();
         } else {
