@@ -287,7 +287,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
 
     switch (input_type) {
         default:
-        case Model::StripConfig::StripInputType::RGB8: {
+        case Model::StripConfig::RGB8: {
             switch (nativeType()) {
                 default: {
                 } break;
@@ -313,7 +313,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     }
                 } break;
                 case Model::StripConfig::NATIVE_RGB16: {
-                    if (output_type == Model::StripConfig::StripOutputType::WS2816) {
+                    if (output_type == Model::StripConfig::WS2816) {
                         uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 3) {
                             auto read_buf = [=](const size_t i) {
@@ -331,7 +331,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                         }
                         return;
                     }
-                    if (output_type == Model::StripConfig::StripOutputType::HD108) {
+                    if (output_type == Model::StripConfig::HD108) {
                         uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 3) {
                             auto read_buf = [=](const size_t i) {
@@ -355,7 +355,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                 } break;
             }
         } break;
-        case Model::StripConfig::StripInputType::RGBW8: {
+        case Model::StripConfig::RGBW8: {
             switch (nativeType()) {
                 default: {
                 } break;
@@ -381,7 +381,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     }
                 } break;
                 case Model::StripConfig::NATIVE_RGB16: {
-                    if (output_type == Model::StripConfig::StripOutputType::WS2816) {
+                    if (output_type == Model::StripConfig::WS2816) {
                         uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 3) {
                             auto read_buf = [=](const size_t i) {
@@ -408,7 +408,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                         }
                         return;
                     }
-                    if (output_type == Model::StripConfig::StripOutputType::HD108) {
+                    if (output_type == Model::StripConfig::HD108) {
                         uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 3) {
                             auto read_buf = [=](const size_t i) {
@@ -441,7 +441,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                 } break;
             }
         } break;
-        case Model::StripConfig::StripInputType::RGB8_SRGB: {
+        case Model::StripConfig::RGB8_SRGB: {
             switch (nativeType()) {
                 default: {
                 } break;
@@ -494,7 +494,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     }
                 } break;
                 case Model::StripConfig::NATIVE_RGB16: {
-                    if (output_type == Model::StripConfig::StripOutputType::WS2816) {
+                    if (output_type == Model::StripConfig::WS2816) {
                         uint16_t *buf = reinterpret_cast<uint16_t *>(uintptr_t(&comp_buf[input_pad * uniN]));
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 3) {
                             auto write_buf = [=](const size_t i, const uint16_t p) {
@@ -521,7 +521,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                         }
                         return;
                     }
-                    if (output_type == Model::StripConfig::StripOutputType::HD108) {
+                    if (output_type == Model::StripConfig::HD108) {
                         uint16_t *buf = reinterpret_cast<uint16_t *>(uintptr_t(&comp_buf[input_pad * uniN]));
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 3) {
                             auto write_buf = [=](const size_t i, const uint16_t p) {
@@ -553,7 +553,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                 } break;
             }
         } break;
-        case Model::StripConfig::StripInputType::RGBW_SRGB: {
+        case Model::StripConfig::RGBW_SRGB: {
             switch (nativeType()) {
                 default: {
                 } break;
@@ -597,7 +597,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     }
                 } break;
                 case Model::StripConfig::NATIVE_RGB16: {
-                    if (output_type == Model::StripConfig::StripOutputType::WS2816) {
+                    if (output_type == Model::StripConfig::WS2816) {
                         uint16_t *buf = reinterpret_cast<uint16_t *>(uintptr_t(&comp_buf[input_pad * uniN]));
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 3) {
                             auto write_buf = [=](const size_t i, const uint16_t p) {
@@ -627,7 +627,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                         }
                         return;
                     }
-                    if (output_type == Model::StripConfig::StripOutputType::HD108) {
+                    if (output_type == Model::StripConfig::HD108) {
                         uint16_t *buf = reinterpret_cast<uint16_t *>(uintptr_t(&comp_buf[input_pad * uniN]));
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 3) {
                             auto write_buf = [=](const size_t i, const uint16_t p) {
@@ -662,7 +662,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                 } break;
             }
         } break;
-        case Model::StripConfig::StripInputType::RGB16_LSB: {
+        case Model::StripConfig::RGB16_LSB: {
             switch (nativeType()) {
                 default: {
                 } break;
@@ -693,7 +693,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     }
                 } break;
                 case Model::StripConfig::NATIVE_RGB16: {
-                    if (output_type == Model::StripConfig::StripOutputType::WS2816) {
+                    if (output_type == Model::StripConfig::WS2816) {
                         uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 3) {
                             auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))); };
@@ -707,7 +707,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                         }
                         return;
                     }
-                    if (output_type == Model::StripConfig::StripOutputType::HD108) {
+                    if (output_type == Model::StripConfig::HD108) {
                         uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 3) {
                             auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))); };
@@ -724,7 +724,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                 } break;
             }
         } break;
-        case Model::StripConfig::StripInputType::RGB16_MSB: {
+        case Model::StripConfig::RGB16_MSB: {
             switch (nativeType()) {
                 default: {
                 } break;
@@ -755,7 +755,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     }
                 } break;
                 case Model::StripConfig::NATIVE_RGB16: {
-                    if (output_type == Model::StripConfig::StripOutputType::WS2816) {
+                    if (output_type == Model::StripConfig::WS2816) {
                         uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 3) {
                             auto read_buf = [=](const size_t i) {
@@ -771,7 +771,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                         }
                         return;
                     }
-                    if (output_type == Model::StripConfig::StripOutputType::HD108) {
+                    if (output_type == Model::StripConfig::HD108) {
                         uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 3) {
                             auto read_buf = [=](const size_t i) {
@@ -790,7 +790,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                 } break;
             }
         } break;
-        case Model::StripConfig::StripInputType::RGBW16_LSB: {
+        case Model::StripConfig::RGBW16_LSB: {
             switch (nativeType()) {
                 default: {
                 } break;
@@ -819,7 +819,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     }
                 } break;
                 case Model::StripConfig::NATIVE_RGB16: {
-                    if (output_type == Model::StripConfig::StripOutputType::WS2816) {
+                    if (output_type == Model::StripConfig::WS2816) {
                         uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
                             auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))); };
@@ -838,7 +838,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                         }
                         return;
                     }
-                    if (output_type == Model::StripConfig::StripOutputType::HD108) {
+                    if (output_type == Model::StripConfig::HD108) {
                         uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
                             auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))); };
@@ -860,7 +860,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                 } break;
             }
         } break;
-        case Model::StripConfig::StripInputType::RGBW16_MSB: {
+        case Model::StripConfig::RGBW16_MSB: {
             switch (nativeType()) {
                 default: {
                 } break;
@@ -888,7 +888,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                     }
                 } break;
                 case Model::StripConfig::NATIVE_RGB16: {
-                    if (output_type == Model::StripConfig::StripOutputType::WS2816) {
+                    if (output_type == Model::StripConfig::WS2816) {
                         uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
                             auto read_buf = [=](const size_t i) {
@@ -913,7 +913,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                         }
                         return;
                     }
-                    if (output_type == Model::StripConfig::StripOutputType::HD108) {
+                    if (output_type == Model::StripConfig::HD108) {
                         uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
                         for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
                             auto read_buf = [=](const size_t i) {
@@ -946,7 +946,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
 
 void Strip::transfer() {
     size_t len = 0;
-    if (Model::instance().burstMode && output_type != Model::StripConfig::StripOutputType::TLS3001) {
+    if (Model::instance().burstMode && output_type != Model::StripConfig::TLS3001) {
         const uint8_t *buf = prepareHead(len);
         if (dmaTransferFunc) {
             dmaTransferFunc((uint8_t *)(buf), uint16_t(len));
@@ -962,38 +962,38 @@ void Strip::transfer() {
 
 const uint8_t *Strip::prepareHead(size_t &len) {
     switch (output_type) {
-        case Model::StripConfig::StripOutputType::TLS3001: {
+        case Model::StripConfig::TLS3001: {
             return 0;
         } break;
         default:
-        case Model::StripConfig::StripOutputType::SK6812:
-        case Model::StripConfig::StripOutputType::SK6812_RGBW:
-        case Model::StripConfig::StripOutputType::WS2812:
-        case Model::StripConfig::StripOutputType::WS2816:
-        case Model::StripConfig::StripOutputType::TM1804:
-        case Model::StripConfig::StripOutputType::UCS1904:
-        case Model::StripConfig::StripOutputType::TM1829:
-        case Model::StripConfig::StripOutputType::GS8202: {
+        case Model::StripConfig::SK6812:
+        case Model::StripConfig::SK6812_RGBW:
+        case Model::StripConfig::WS2812:
+        case Model::StripConfig::WS2816:
+        case Model::StripConfig::TM1804:
+        case Model::StripConfig::UCS1904:
+        case Model::StripConfig::TM1829:
+        case Model::StripConfig::GS8202: {
             len = std::min(spi_buf.size(), (bytes_len + bytesLatchLen) * 4);
             ws2812_alike_convert(0, std::min(bytes_len + bytesLatchLen, size_t(burstHeadLen)));
             return spi_buf.data();
         } break;
-        case Model::StripConfig::StripOutputType::LPD8806: {
+        case Model::StripConfig::LPD8806: {
             len = std::min(spi_buf.size(), (bytes_len + 1));
             lpd8806_alike_convert(0, std::min(bytes_len + 1, size_t(burstHeadLen)));
             return spi_buf.data();
         } break;
-        case Model::StripConfig::StripOutputType::WS2801: {
+        case Model::StripConfig::WS2801: {
             len = std::min(spi_buf.size(), bytes_len);
             ws2801_alike_convert(0, std::min(bytes_len, size_t(burstHeadLen)));
             return spi_buf.data();
         } break;
-        case Model::StripConfig::StripOutputType::HD108:
-        case Model::StripConfig::StripOutputType::SK9822:
-        case Model::StripConfig::StripOutputType::HDS107S:
-        case Model::StripConfig::StripOutputType::P9813:
-        case Model::StripConfig::StripOutputType::APA107:
-        case Model::StripConfig::StripOutputType::APA102: {
+        case Model::StripConfig::HD108:
+        case Model::StripConfig::SK9822:
+        case Model::StripConfig::HDS107S:
+        case Model::StripConfig::P9813:
+        case Model::StripConfig::APA107:
+        case Model::StripConfig::APA102: {
             size_t out_len = bytes_len + bytes_len / 3;
             size_t ext_len = 32 + ((bytes_len / 2) + 7) / 8;
             len = std::min(spi_buf.size(), (out_len + ext_len));
@@ -1005,31 +1005,31 @@ const uint8_t *Strip::prepareHead(size_t &len) {
 
 void Strip::prepareTail() {
     switch (output_type) {
-        case Model::StripConfig::StripOutputType::TLS3001: {
+        case Model::StripConfig::TLS3001: {
         } break;
         default:
-        case Model::StripConfig::StripOutputType::SK6812:
-        case Model::StripConfig::StripOutputType::SK6812_RGBW:
-        case Model::StripConfig::StripOutputType::WS2812:
-        case Model::StripConfig::StripOutputType::WS2816:
-        case Model::StripConfig::StripOutputType::TM1804:
-        case Model::StripConfig::StripOutputType::UCS1904:
-        case Model::StripConfig::StripOutputType::TM1829:
-        case Model::StripConfig::StripOutputType::GS8202: {
+        case Model::StripConfig::SK6812:
+        case Model::StripConfig::SK6812_RGBW:
+        case Model::StripConfig::WS2812:
+        case Model::StripConfig::WS2816:
+        case Model::StripConfig::TM1804:
+        case Model::StripConfig::UCS1904:
+        case Model::StripConfig::TM1829:
+        case Model::StripConfig::GS8202: {
             ws2812_alike_convert(std::min(bytes_len + bytesLatchLen, size_t(burstHeadLen)), bytes_len + bytesLatchLen);
         } break;
-        case Model::StripConfig::StripOutputType::LPD8806: {
+        case Model::StripConfig::LPD8806: {
             lpd8806_alike_convert(std::min(bytes_len + 1, size_t(burstHeadLen)), (bytes_len + 1) - 1);
         } break;
-        case Model::StripConfig::StripOutputType::WS2801: {
+        case Model::StripConfig::WS2801: {
             ws2801_alike_convert(std::min(bytes_len, size_t(burstHeadLen)), bytes_len - 1);
         } break;
-        case Model::StripConfig::StripOutputType::HD108:
-        case Model::StripConfig::StripOutputType::SK9822:
-        case Model::StripConfig::StripOutputType::HDS107S:
-        case Model::StripConfig::StripOutputType::P9813:
-        case Model::StripConfig::StripOutputType::APA107:
-        case Model::StripConfig::StripOutputType::APA102: {
+        case Model::StripConfig::HD108:
+        case Model::StripConfig::SK9822:
+        case Model::StripConfig::HDS107S:
+        case Model::StripConfig::P9813:
+        case Model::StripConfig::APA107:
+        case Model::StripConfig::APA102: {
             size_t out_len = bytes_len + bytes_len / 3;
             size_t ext_len = 32 + ((bytes_len / 2) + 7) / 8;
             apa102_alike_convert(std::min(out_len + ext_len, size_t(burstHeadLen)), (out_len + ext_len) - 1);
@@ -1039,39 +1039,39 @@ void Strip::prepareTail() {
 
 const uint8_t *Strip::prepare(size_t &len) {
     switch (output_type) {
-        case Model::StripConfig::StripOutputType::TLS3001: {
+        case Model::StripConfig::TLS3001: {
             tls3001_alike_convert(len);
             return spi_buf.data();
         } break;
         default:
-        case Model::StripConfig::StripOutputType::SK6812:
-        case Model::StripConfig::StripOutputType::SK6812_RGBW:
-        case Model::StripConfig::StripOutputType::WS2812:
-        case Model::StripConfig::StripOutputType::WS2816:
-        case Model::StripConfig::StripOutputType::TM1804:
-        case Model::StripConfig::StripOutputType::UCS1904:
-        case Model::StripConfig::StripOutputType::TM1829:
-        case Model::StripConfig::StripOutputType::GS8202: {
+        case Model::StripConfig::SK6812:
+        case Model::StripConfig::SK6812_RGBW:
+        case Model::StripConfig::WS2812:
+        case Model::StripConfig::WS2816:
+        case Model::StripConfig::TM1804:
+        case Model::StripConfig::UCS1904:
+        case Model::StripConfig::TM1829:
+        case Model::StripConfig::GS8202: {
             len = std::min(spi_buf.size(), (bytes_len + bytesLatchLen) * 4);
             ws2812_alike_convert(0, bytes_len + bytesLatchLen);
             return spi_buf.data();
         } break;
-        case Model::StripConfig::StripOutputType::LPD8806: {
+        case Model::StripConfig::LPD8806: {
             len = std::min(spi_buf.size(), (bytes_len + 3));
             lpd8806_alike_convert(0, (bytes_len + 3) - 1);
             return spi_buf.data();
         } break;
-        case Model::StripConfig::StripOutputType::WS2801: {
+        case Model::StripConfig::WS2801: {
             len = std::min(spi_buf.size(), (bytes_len + 3));
             ws2801_alike_convert(0, (bytes_len + 3));
             return spi_buf.data();
         } break;
-        case Model::StripConfig::StripOutputType::HD108:
-        case Model::StripConfig::StripOutputType::SK9822:
-        case Model::StripConfig::StripOutputType::HDS107S:
-        case Model::StripConfig::StripOutputType::P9813:
-        case Model::StripConfig::StripOutputType::APA107:
-        case Model::StripConfig::StripOutputType::APA102: {
+        case Model::StripConfig::HD108:
+        case Model::StripConfig::SK9822:
+        case Model::StripConfig::HDS107S:
+        case Model::StripConfig::P9813:
+        case Model::StripConfig::APA107:
+        case Model::StripConfig::APA102: {
             size_t out_len = bytes_len + bytes_len / 3;
             size_t ext_len = 32 + ((out_len / 2) + 7) / 8;
             len = std::min(spi_buf.size(), (out_len + ext_len));
