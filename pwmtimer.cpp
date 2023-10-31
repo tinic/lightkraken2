@@ -26,12 +26,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "stm32h5xx_hal.h"
 
-TIM_HandleTypeDef htim2 {};
-TIM_HandleTypeDef htim5 {};
-TIM_HandleTypeDef htim13 {};
-TIM_HandleTypeDef htim15 {};
-TIM_HandleTypeDef htim16 {};
-TIM_HandleTypeDef htim17 {};
+static TIM_HandleTypeDef htim2 {};
+static TIM_HandleTypeDef htim5 {};
+static TIM_HandleTypeDef htim13 {};
+static TIM_HandleTypeDef htim15 {};
+static TIM_HandleTypeDef htim16 {};
+static TIM_HandleTypeDef htim17 {};
 
 void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim_pwm) { // cppcheck-suppress constParameterPointer
     if (htim_pwm->Instance == TIM2) {
