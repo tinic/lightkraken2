@@ -117,7 +117,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {  // cppcheck-suppress constParam
         handle_GPDMA1_Channel7.Init.TransferAllocatedPort = DMA_SRC_ALLOCATED_PORT0 | DMA_DEST_ALLOCATED_PORT0;
         handle_GPDMA1_Channel7.Init.TransferEventMode = DMA_TCEM_BLOCK_TRANSFER;
         handle_GPDMA1_Channel7.Init.Mode = DMA_NORMAL;
-        if (HAL_DMAEx_List_Init(&handle_GPDMA1_Channel7) != HAL_OK) {
+        if (HAL_DMA_Init(&handle_GPDMA1_Channel7) != HAL_OK) {
             while (1) {
             }
         }
@@ -186,7 +186,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {  // cppcheck-suppress constParam
         handle_GPDMA2_Channel7.Init.TransferAllocatedPort = DMA_SRC_ALLOCATED_PORT0 | DMA_DEST_ALLOCATED_PORT0;
         handle_GPDMA2_Channel7.Init.TransferEventMode = DMA_TCEM_BLOCK_TRANSFER;
         handle_GPDMA2_Channel7.Init.Mode = DMA_NORMAL;
-        if (HAL_DMAEx_List_Init(&handle_GPDMA2_Channel7) != HAL_OK) {
+        if (HAL_DMA_Init(&handle_GPDMA2_Channel7) != HAL_OK) {
             while (1) {
             }
         }
@@ -273,23 +273,16 @@ SPI &SPI_0::instance() {
 static void SPI1_IT_Callback(DMA_HandleTypeDef *) { SPI_0::instance().setDMAActive(false); }
 
 void SPI_0::startDMATransfer() {
-    HAL_StatusTypeDef status = HAL_SPI_Transmit_DMA(&hspi1, cbuf, uint16_t(clen));
-    if (status == HAL_OK) {
-        printf("SPI_0::startDMATransfer OK!\n");
-    }
+    HAL_SPI_Transmit_DMA(&hspi1, cbuf, uint16_t(clen));
 }
 
 void SPI_0::setupDMATransfer() {}
 
 bool SPI_0::isDMAbusy() const {
-#if 0
-    HAL_StatusTypeDef status = HAL_DMA_PollForTransfer(&handle_GPDMA1_Channel7, HAL_DMA_FULL_TRANSFER, HAL_MAX_DELAY);
-    if (status == HAL_OK) {
-        if (handle_GPDMA1_Channel7.State == HAL_DMA_STATE_BUSY) {
-            return true;
-        }
+    HAL_DMA_PollForTransfer(&handle_GPDMA1_Channel7, HAL_DMA_FULL_TRANSFER, 0);
+    if (handle_GPDMA1_Channel7.State == HAL_DMA_STATE_BUSY) {
+        return true;
     }
-#endif  // #if 0
     return false;
 }
 
@@ -311,23 +304,16 @@ SPI &SPI_1::instance() {
 static void SPI2_IT_Callback(DMA_HandleTypeDef *) { SPI_1::instance().setDMAActive(false); }
 
 void SPI_1::startDMATransfer() {
-    HAL_StatusTypeDef status = HAL_SPI_Transmit_DMA(&hspi2, cbuf, uint16_t(clen));
-    if (status == HAL_OK) {
-        printf("SPI_1::startDMATransfer OK!\n");
-    }
+    HAL_SPI_Transmit_DMA(&hspi2, cbuf, uint16_t(clen));
 }
 
 void SPI_1::setupDMATransfer() {}
 
 bool SPI_1::isDMAbusy() const {
-#if 0
-    HAL_StatusTypeDef status = HAL_DMA_PollForTransfer(&handle_GPDMA2_Channel7, HAL_DMA_FULL_TRANSFER, HAL_MAX_DELAY);
-    if (status == HAL_OK) {
-        if (handle_GPDMA2_Channel7.State == HAL_DMA_STATE_BUSY) {
-            return true;
-        }
+    HAL_DMA_PollForTransfer(&handle_GPDMA2_Channel7, HAL_DMA_FULL_TRANSFER, 0);
+    if (handle_GPDMA2_Channel7.State == HAL_DMA_STATE_BUSY) {
+        return true;
     }
-#endif  // #if 0
     return false;
 }
 
