@@ -68,13 +68,15 @@ void Model::exportStaticsToDB() {
                 emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.type), int(prop.type)).value();
                 emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.components), prop.components).value();
                 emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.bitslen), prop.bitslen).value();
+                emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.min_mbps), prop.min_mbps).value();
+                emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.max_mbps), prop.max_mbps).value();
                 emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.clock), prop.clock ? "true" : "false").value();
                 emio::format_to(buf, "\"{}\":{}", NAMEOF(prop.globalillum), prop.globalillum ? "true" : "false").value();
                 emio::format_to(buf, "}}").value();
                 comma = ",";
             }
             emio::format_to(buf, "]").value();
-            return fixed_containers::FixedString<1024 + 512>(buf.view());
+            return fixed_containers::FixedString<4096>(buf.view());
         };
         static constexpr auto data = stripOutputStringVector();
         SettingsDB::instance().setObject(SettingsDB::kStripOutputProperties, data.c_str(), data.size() + 1);

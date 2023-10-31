@@ -29,15 +29,15 @@ SOFTWARE.
 #include <emio/format.hpp>
 #endif  // #ifndef BOOTLOADER
 
+#include "./control.h"
 #include "./model.h"
 #include "./network.h"
+#include "./pwmtimer.h"
 #include "./random.h"
 #include "./settingsdb.h"
 #include "./systick.h"
 #include "./utils.h"
 #include "./webserver.h"
-#include "./pwmtimer.h"
-#include "./control.h"
 #include "stm32h5xx_hal.h"
 #include "stm32h5xx_ll_utils.h"
 
@@ -144,18 +144,21 @@ void App::start() {
     Model::instance().applyToControl();
 
     if (!Control::instance().start()) {
-        return;        
+        return;
     }
 #endif  // #ifndef BOOTLOADER
 
     printf(ESCAPE_FG_CYAN "App up.\n");
+
+    tx_thread_relinquish();
 }
 
 void App::setup(void *first_unused_memory) {
     uint8_t *pointer = (uint8_t *)first_unused_memory;
 
     const size_t startup_stack_size = 8192;
-    tx_thread_create(&thread_startup, (CHAR *)"startup", thread_startup_entry, 0, pointer, startup_stack_size, 1, 1, TX_NO_TIME_SLICE, TX_AUTO_START);
+    tx_thread_create(&thread_startup, (CHAR *)"startup", thread_startup_entry, 0, pointer, startup_stack_size, NX_STARTUP_THREAD_PRIORITY,
+                     NX_STARTUP_THREAD_PRIORITY, TX_NO_TIME_SLICE, TX_AUTO_START);
     pointer = pointer + startup_stack_size;
 
     pointer = Network::instance().setup(pointer);

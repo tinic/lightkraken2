@@ -54,7 +54,8 @@ uint8_t *Control::setup(uint8_t *first_unused_memory) {
     uint8_t *pointer = (uint8_t *)first_unused_memory;
 
     const size_t control_stack_size = 8192;
-    tx_thread_create(&thread_control, (CHAR *)"control", thread_control_entry, 0, pointer, control_stack_size, 1, 1, TX_NO_TIME_SLICE, TX_DONT_START);
+    tx_thread_create(&thread_control, (CHAR *)"control", thread_control_entry, 0, pointer, control_stack_size, NX_CONTROL_THREAD_PRIORITY,
+                     NX_CONTROL_THREAD_PRIORITY, TX_NO_TIME_SLICE, TX_DONT_START);
     pointer = pointer + control_stack_size;
 
     return pointer;
@@ -67,8 +68,9 @@ bool Control::start() {
 }
 
 void Control::thread() {
-    while(1) {
+    while (1) {
         update();
+        tx_thread_relinquish();
     }
 }
 
@@ -745,10 +747,14 @@ void Control::update() {
 }
 
 void Control::init() {
-    Strip::get(0).dmaTransferFunc = [](const uint8_t *data, size_t len) { SPI_0::instance().transfer(data, len, Strip::get(0).transferMpbs(), Strip::get(0).needsClock()); };
+    Strip::get(0).dmaTransferFunc = [](const uint8_t *data, size_t len) {
+        SPI_0::instance().transfer(data, len, Strip::get(0).transferMpbs(), Strip::get(0).needsClock());
+    };
     Strip::get(0).dmaBusyFunc = []() { return SPI_0::instance().isDMAbusy(); };
 
-    Strip::get(1).dmaTransferFunc = [](const uint8_t *data, size_t len) { SPI_1::instance().transfer(data, len, Strip::get(0).transferMpbs(), Strip::get(1).needsClock()); };
+    Strip::get(1).dmaTransferFunc = [](const uint8_t *data, size_t len) {
+        SPI_1::instance().transfer(data, len, Strip::get(0).transferMpbs(), Strip::get(1).needsClock());
+    };
     Strip::get(1).dmaBusyFunc = []() { return SPI_1::instance().isDMAbusy(); };
 
     printf(ESCAPE_FG_CYAN "Control up.\n");

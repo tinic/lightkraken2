@@ -309,14 +309,15 @@ uint8_t *Network::setup(uint8_t *pointer) {
     pointer = pointer + NX_PACKET_POOL_SIZE;
     if (status) goto fail;
 
-    status = nx_ip_create(&client_ip, (CHAR *)hostname, IP_ADDRESS(0, 0, 0, 0), 0xFFFFFF00UL, &client_pool, nx_stm32_eth_driver, pointer, ip_stack_size, 1);
+    status = nx_ip_create(&client_ip, (CHAR *)hostname, IP_ADDRESS(0, 0, 0, 0), 0xFFFFFF00UL, &client_pool, nx_stm32_eth_driver, pointer, ip_stack_size,
+                          NX_IP_THREAD_PRIORITY);
     pointer = pointer + ip_stack_size;
     if (status) goto fail;
 
     status = nx_ip_interface_mtu_set(&client_ip, 0, ETH_MAX_PAYLOAD);
     if (status) goto fail;
 
-    status = nx_auto_ip_create(&auto_ip, (CHAR *)hostname, &client_ip, pointer, auto_ip_stack_size, 1);
+    status = nx_auto_ip_create(&auto_ip, (CHAR *)hostname, &client_ip, pointer, auto_ip_stack_size, NX_AUTOP_PRIORITY);
     pointer = pointer + auto_ip_stack_size;
     if (status) goto fail;
 

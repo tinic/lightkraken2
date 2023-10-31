@@ -152,8 +152,8 @@ struct Model {
         uint16_t artnet[universeN];
         uint16_t e131[universeN];
     } strip_config[stripN] = {
-        {StripConfig::WS2812, StripConfig::RGB8, StripConfig::COLOR, 1.0, 1.0, 255, 900000, rgb8(), RGBColorSpace(), {0, 0, 0, 0, 0, 0}, {1, 0, 0, 0, 0, 0}},
-        {StripConfig::WS2812, StripConfig::RGB8, StripConfig::COLOR, 1.0, 1.0, 255, 900000, rgb8(), RGBColorSpace(), {1, 0, 0, 0, 0, 0}, {2, 0, 0, 0, 0, 0}},
+        {StripConfig::WS2812, StripConfig::RGB8, StripConfig::RAINBOW, 1.0, 1.0, 255, 900000, rgb8(), RGBColorSpace(), {0, 0, 0, 0, 0, 0}, {1, 0, 0, 0, 0, 0}},
+        {StripConfig::WS2812, StripConfig::RGB8, StripConfig::RAINBOW, 1.0, 1.0, 255, 900000, rgb8(), RGBColorSpace(), {1, 0, 0, 0, 0, 0}, {2, 0, 0, 0, 0, 0}},
     };
 
     // clang-format off
