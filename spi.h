@@ -28,7 +28,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 class SPI {
    public:
-
     void transfer(const uint8_t *buf, size_t len, uint32_t transferMbps, bool wantsSCLK) {
         if (dmaActive) {
             if (isDMAbusy()) {
@@ -42,12 +41,12 @@ class SPI {
             cbuf = buf;
             clen = len;
             mbps = transferMbps;
+            PLLQCalcMulDiv();
             sclk = wantsSCLK;
             setupDMATransfer();
         }
         startDMATransfer();
         dmaActive = true;
-
     };
 
     void update() {
@@ -57,13 +56,31 @@ class SPI {
         }
     }
 
-    void setDMAActive(bool state) {
-        dmaActive = false;
-    }
+    void setDMAActive(bool state) { dmaActive = false; }
 
     virtual bool isDMAbusy() const = 0;
 
    protected:
+
+    void PLLQCalcMulDiv() {
+        uint32_t min_diff = 0x7FFFFFFF;
+        uint32_t base_freq = HSE_VALUE;
+        mul = 1;
+        div = 1;
+        for (uint32_t c = 4; c < 512; c++) {      // PLL2N
+            for (uint32_t d = 1; d < 128; d++) {  // PLL2P
+                uint32_t calc_mbps = ((base_freq * c) / d) / 2;
+                uint32_t diff = uint32_t(std::abs(int(calc_mbps - mbps)));
+                if (diff < min_diff) {
+                    min_diff = diff;
+                    mul = c;
+                    div = d;
+                }
+            }
+        }
+        actual_mbps = ( ( base_freq * mul ) / div ) / 2;
+    }
+
     size_t clen = 0;
     const uint8_t *cbuf = 0;
 
@@ -71,7 +88,11 @@ class SPI {
     bool dmaActive = false;
     bool sclk = false;
     bool fast = true;
+
+    uint32_t mul = 1;
+    uint32_t div = 1;
     uint32_t mbps = 40000000;
+    uint32_t actual_mbps = 40000000;
 
     virtual ~SPI(){};
     bool initialized = false;

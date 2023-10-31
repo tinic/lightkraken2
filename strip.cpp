@@ -1211,33 +1211,6 @@ void Strip::prepareTail() {
     }
 }
 
-uint32_t Strip::transferMpbs() const {
-    switch (output_type) {
-        default:
-        case Model::StripConfig::StripOutputType::TLS3001:
-        case Model::StripConfig::StripOutputType::SK6812:
-        case Model::StripConfig::StripOutputType::SK6812_RGBW:
-        case Model::StripConfig::StripOutputType::WS2812:
-        case Model::StripConfig::StripOutputType::WS2816:
-        case Model::StripConfig::StripOutputType::TM1804:
-        case Model::StripConfig::StripOutputType::UCS1904:
-        case Model::StripConfig::StripOutputType::TM1829:
-        case Model::StripConfig::StripOutputType::GS8202: {
-            return 4000000;
-        } break;
-        case Model::StripConfig::StripOutputType::HD108:
-        case Model::StripConfig::StripOutputType::LPD8806:
-        case Model::StripConfig::StripOutputType::WS2801:
-        case Model::StripConfig::StripOutputType::SK9822:
-        case Model::StripConfig::StripOutputType::HDS107S:
-        case Model::StripConfig::StripOutputType::P9813:
-        case Model::StripConfig::StripOutputType::APA107:
-        case Model::StripConfig::StripOutputType::APA102: {
-            return 8000000;
-        } break;
-    }
-}
-
 bool Strip::needsClock() const {
     switch (output_type) {
         default:

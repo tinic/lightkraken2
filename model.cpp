@@ -39,11 +39,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <magic_enum.hpp>
 #pragma GCC diagnostic pop
 
-#include "./settingsdb.h"
-#include "./utils.h"
-#include "./strip.h"
-#include "./driver.h"
 #include "./control.h"
+#include "./driver.h"
+#include "./settingsdb.h"
+#include "./strip.h"
+#include "./utils.h"
 
 #ifndef BOOTLOADER
 
@@ -442,7 +442,7 @@ bool Model::importFromDB() {
 
     // ----------------------------
 
-    char outputConfig[SettingsDB::max_string_size] {};
+    char outputConfig[SettingsDB::max_string_size]{};
     if (SettingsDB::instance().getString(SettingsDB::kOutputConfig, outputConfig, SettingsDB::max_string_size)) {
         auto value = magic_enum::enum_cast<OutputConfig>(outputConfig, magic_enum::case_insensitive);
         if (value.has_value()) {
@@ -562,7 +562,7 @@ bool Model::importFromDB() {
             for (size_t c = 0; c < stripN; c++) {
                 if (svec[c].size() >= universeN) {
                     for (size_t d = 0; c < universeN; c++) {
-                        if ((dvec[c][d] < 0.0f) || (dvec[c][d] > float(maxUniverseID+1))) {
+                        if ((dvec[c][d] < 0.0f) || (dvec[c][d] > float(maxUniverseID + 1))) {
                             return false;
                         }
                         strip_config[c].e131[d] = uint16_t(dvec[c][d]);
@@ -599,9 +599,9 @@ bool Model::importFromDB() {
                 auto value = magic_enum::enum_cast<AnalogConfig::AnalogInputType>(svec[c], magic_enum::case_insensitive);
                 if (value.has_value()) {
                     analog_config[c].input_type = value.value();
-                } else{
+                } else {
                     return false;
-                } 
+                }
             }
         } else {
             return false;
@@ -626,14 +626,14 @@ bool Model::importFromDB() {
             for (size_t c = 0; c < analogN; c++) {
                 if (svec[c].size() >= analogCompN) {
                     for (size_t d = 0; c < analogCompN; c++) {
-                        if ((dvec[c][d] < 0.0f) || (dvec[c][d] > float(maxUniverseID+1))) {
+                        if ((dvec[c][d] < 0.0f) || (dvec[c][d] > float(maxUniverseID + 1))) {
                             return false;
                         }
                         analog_config[c].components[d].artnet.universe = uint16_t(dvec[c][d]);
                     }
-                } else{
+                } else {
                     return false;
-                } 
+                }
             }
         } else {
             return false;
@@ -650,9 +650,9 @@ bool Model::importFromDB() {
                         }
                         analog_config[c].components[d].artnet.channel = uint16_t(dvec[c][d]);
                     }
-                } else{
+                } else {
                     return false;
-                } 
+                }
             }
         } else {
             return false;
@@ -664,14 +664,14 @@ bool Model::importFromDB() {
             for (size_t c = 0; c < analogN; c++) {
                 if (svec[c].size() >= analogCompN) {
                     for (size_t d = 0; c < analogCompN; c++) {
-                        if ((dvec[c][d] < 0.0f) || (dvec[c][d] > float(maxUniverseID+1))) {
+                        if ((dvec[c][d] < 0.0f) || (dvec[c][d] > float(maxUniverseID + 1))) {
                             return false;
                         }
                         analog_config[c].components[d].e131.universe = uint16_t(dvec[c][d]);
                     }
-                } else{
+                } else {
                     return false;
-                } 
+                }
             }
         } else {
             return false;
@@ -688,9 +688,9 @@ bool Model::importFromDB() {
                         }
                         analog_config[c].components[d].e131.channel = uint16_t(dvec[c][d]);
                     }
-                } else{
+                } else {
                     return false;
-                } 
+                }
             }
         } else {
             return false;
@@ -701,7 +701,6 @@ bool Model::importFromDB() {
 }
 
 void Model::applyToControl() {
-
     for (size_t c = 0; c < stripN; c++) {
         strip_config[c].rgbSpace.setsRGB();
         Strip::get(c).setStripType(strip_config[c].output_type);
@@ -710,6 +709,7 @@ void Model::applyToControl() {
         Strip::get(c).setRGBColorSpace(strip_config[c].rgbSpace);
         Strip::get(c).setCompLimit(strip_config[c].comp_limit);
         Strip::get(c).setGlobIllum(strip_config[c].glob_illum);
+        Strip::get(c).setTransferMbps(uint32_t(float(strip_config[c].mbps) * stripOutputProperties[strip_config[c].output_type].spi_mpbs_factor));
     }
 
     for (size_t c = 0; c < analogN; c++) {
@@ -729,8 +729,6 @@ void Model::applyToControl() {
     Control::instance().sync();
 }
 
-void Model::init() {
-    printf(ESCAPE_FG_CYAN "Model up.\n");
-}
+void Model::init() { printf(ESCAPE_FG_CYAN "Model up.\n"); }
 
 #endif  // #ifndef BOOTLOADER

@@ -49,18 +49,19 @@ class Strip {
     static Strip &get(size_t index);
 
     bool needsClock() const;
-    uint32_t transferMpbs() const;
 
     void setStripType(Model::StripConfig::StripOutputType type) { output_type = type; }
     void setStartupMode(Model::StripConfig::StripStartupMode type) { startup_mode = type; }
     void setRGBColorSpace(const RGBColorSpace &colorSpace);
     void setCompLimit(float value) { comp_limit = value; };
     void setGlobIllum(float value) { glob_illum = value; };
+    void setTransferMbps(uint32_t mbps) { transfer_mbps = mbps; };
 
     void setPixelLen(size_t len);
     size_t getPixelLen() const;
     size_t getMaxPixelLen() const;
     size_t getBytesPerPixel() const;
+    uint32_t transferMpbs() const { return transfer_mbps; };
 
     NativeType nativeType() const;
 
@@ -110,6 +111,7 @@ class Strip {
     bool strip_reset = false;
     float comp_limit = 1.0f;
     float glob_illum = 1.0f;
+    uint32_t transfer_mbps = 900000 * 4;
 
     static bool ws2812_lut_init;
     static std::array<uint32_t, 256> ws2812_lut;

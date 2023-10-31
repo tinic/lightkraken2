@@ -25,11 +25,13 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <stdio.h>
 
+#include <algorithm>
+
 #include "./pwmtimer.h"
 #include "stm32h5xx_hal.h"
 
-DMA_HandleTypeDef handle_GPDMA1_Channel7 {};
-DMA_HandleTypeDef handle_GPDMA2_Channel7 {};
+DMA_HandleTypeDef handle_GPDMA1_Channel7{};
+DMA_HandleTypeDef handle_GPDMA2_Channel7{};
 
 extern "C" __attribute__((used)) void GPDMA1_Channel7_IRQHandler(void) { HAL_DMA_IRQHandler(&handle_GPDMA1_Channel7); }
 
@@ -54,8 +56,8 @@ static void MX_GPDMA2_Init(void) {
     HAL_NVIC_EnableIRQ(GPDMA2_Channel7_IRQn);
 }
 
-SPI_HandleTypeDef hspi1 {};
-SPI_HandleTypeDef hspi2 {};
+SPI_HandleTypeDef hspi1{};
+SPI_HandleTypeDef hspi2{};
 
 extern "C" __attribute__((used)) void SPI1_IRQHandler(void) { HAL_SPI_IRQHandler(&hspi1); }
 
@@ -272,17 +274,33 @@ SPI &SPI_0::instance() {
 
 static void SPI1_IT_Callback(DMA_HandleTypeDef *) { SPI_0::instance().setDMAActive(false); }
 
-void SPI_0::startDMATransfer() {
-    HAL_SPI_Transmit_DMA(&hspi1, cbuf, uint16_t(clen));
+void SPI_0::startDMATransfer() { HAL_SPI_Transmit_DMA(&hspi1, cbuf, uint16_t(clen)); }
+
+void SPI_0::setupDMATransfer() {
+    RCC_PeriphCLKInitTypeDef PeriphClkInitStruct{};
+    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI1;
+    PeriphClkInitStruct.PLL2.PLL2Source = RCC_PLL2_SOURCE_HSE;
+    PeriphClkInitStruct.PLL2.PLL2M = 1;
+    PeriphClkInitStruct.PLL2.PLL2N = mul;
+    PeriphClkInitStruct.PLL2.PLL2P = div;
+    PeriphClkInitStruct.PLL2.PLL2Q = 2;
+    PeriphClkInitStruct.PLL2.PLL2R = 2;
+    PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2_VCIRANGE_3;
+    PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2_VCORANGE_WIDE;
+    PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
+    PeriphClkInitStruct.PLL2.PLL2ClockOut = RCC_PLL2_DIVP;
+    PeriphClkInitStruct.Spi1ClockSelection = RCC_SPI1CLKSOURCE_PLL2P;
+    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
+        while (1) {
+        }
+    }
 }
 
-void SPI_0::setupDMATransfer() {}
-
 bool SPI_0::isDMAbusy() const {
-    HAL_DMA_PollForTransfer(&handle_GPDMA1_Channel7, HAL_DMA_FULL_TRANSFER, 0);
-    if (handle_GPDMA1_Channel7.State == HAL_DMA_STATE_BUSY) {
-        return true;
-    }
+    //    HAL_DMA_PollForTransfer(&handle_GPDMA1_Channel7, HAL_DMA_FULL_TRANSFER, 0);
+    //    if (handle_GPDMA1_Channel7.State == HAL_DMA_STATE_BUSY) {
+    //        return true;
+    //    }
     return false;
 }
 
@@ -303,17 +321,33 @@ SPI &SPI_1::instance() {
 
 static void SPI2_IT_Callback(DMA_HandleTypeDef *) { SPI_1::instance().setDMAActive(false); }
 
-void SPI_1::startDMATransfer() {
-    HAL_SPI_Transmit_DMA(&hspi2, cbuf, uint16_t(clen));
+void SPI_1::startDMATransfer() { HAL_SPI_Transmit_DMA(&hspi2, cbuf, uint16_t(clen)); }
+
+void SPI_1::setupDMATransfer() {
+    RCC_PeriphCLKInitTypeDef PeriphClkInitStruct{};
+    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI2;
+    PeriphClkInitStruct.PLL3.PLL3Source = RCC_PLL3_SOURCE_HSE;
+    PeriphClkInitStruct.PLL3.PLL3M = 1;
+    PeriphClkInitStruct.PLL3.PLL3N = mul;
+    PeriphClkInitStruct.PLL3.PLL3P = div;
+    PeriphClkInitStruct.PLL3.PLL3Q = 2;
+    PeriphClkInitStruct.PLL3.PLL3R = 2;
+    PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3_VCIRANGE_1;
+    PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3_VCORANGE_WIDE;
+    PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
+    PeriphClkInitStruct.PLL3.PLL3ClockOut = RCC_PLL3_DIVP;
+    PeriphClkInitStruct.Spi2ClockSelection = RCC_SPI2CLKSOURCE_PLL3P;
+    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
+        while (1) {
+        }
+    }
 }
 
-void SPI_1::setupDMATransfer() {}
-
 bool SPI_1::isDMAbusy() const {
-    HAL_DMA_PollForTransfer(&handle_GPDMA2_Channel7, HAL_DMA_FULL_TRANSFER, 0);
-    if (handle_GPDMA2_Channel7.State == HAL_DMA_STATE_BUSY) {
-        return true;
-    }
+    //    HAL_DMA_PollForTransfer(&handle_GPDMA2_Channel7, HAL_DMA_FULL_TRANSFER, 0);
+    //    if (handle_GPDMA2_Channel7.State == HAL_DMA_STATE_BUSY) {
+    //        return true;
+    //    }
     return false;
 }
 
