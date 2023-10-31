@@ -141,11 +141,11 @@ void App::start() {
     }
 
 #ifndef BOOTLOADER
+    Model::instance().applyToControl();
+
     if (!Control::instance().start()) {
         return;        
     }
-
-    Model::instance().applyToControl();
 #endif  // #ifndef BOOTLOADER
 
     printf(ESCAPE_FG_CYAN "App up.\n");

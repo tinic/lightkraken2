@@ -174,6 +174,13 @@ static void MX_GPIO_Init(void) {
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(LED3_RED_GPIO_Port, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = GPIO_PIN_8;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF0_MCO;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 
 static void SystemClock_Config(void) {
@@ -217,9 +224,9 @@ static void SystemClock_Config(void) {
         }
     }
 
-    // MCO1/PA8 => 25Mhz
-    LL_RCC_PLL1Q_Enable();
     HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_PLL1Q, RCC_MCODIV_10);
+
+    LL_RCC_PLL1Q_Enable();
 }
 
 int __io_putchar(int ch) {
@@ -227,9 +234,7 @@ int __io_putchar(int ch) {
     return 1;
 };
 
-int __io_getchar(void) {
-    return 0;
-};
+int __io_getchar(void) { return 0; };
 
 static ETH_DMADescTypeDef DMARxDscrTab[ETH_RX_DESC_CNT]; /* Ethernet Rx DMA Descriptors */
 static ETH_DMADescTypeDef DMATxDscrTab[ETH_TX_DESC_CNT]; /* Ethernet Tx DMA Descriptors */
@@ -337,6 +342,8 @@ static void MX_ETH_Init(void) {
 void SYS_Init() {
     HAL_Init();
 
+    MX_GPIO_Init();
+
     SystemClock_Config();
     SystemCoreClockUpdate();
 
@@ -344,6 +351,5 @@ void SYS_Init() {
     printf(ESCAPE_FG_GREEN "Lightkraken2 is starting up.\n" ESCAPE_RESET);
 
     MX_ICACHE_Init();
-    MX_GPIO_Init();
     MX_ETH_Init();
 }
