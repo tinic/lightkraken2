@@ -31,8 +31,16 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 DMA_HandleTypeDef handle_GPDMA1_Channel7;
 DMA_HandleTypeDef handle_GPDMA2_Channel7;
 
+extern "C" __attribute__((used)) void GPDMA1_Channel7_IRQHandler(void) { HAL_DMA_IRQHandler(&handle_GPDMA1_Channel7); }
+
+extern "C" __attribute__((used)) void GPDMA2_Channel7_IRQHandler(void) { HAL_DMA_IRQHandler(&handle_GPDMA2_Channel7); }
+
 static void MX_GPDMA1_Init(void) {
     __HAL_RCC_GPDMA1_CLK_ENABLE();
+
+    HAL_NVIC_SetPriority(GPDMA1_Channel7_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(GPDMA1_Channel7_IRQn);
+
     handle_GPDMA1_Channel7.Instance = GPDMA1_Channel7;
     handle_GPDMA1_Channel7.Init.Request = DMA_REQUEST_SW;
     handle_GPDMA1_Channel7.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
@@ -64,6 +72,10 @@ static void MX_GPDMA1_Init(void) {
  */
 static void MX_GPDMA2_Init(void) {
     __HAL_RCC_GPDMA2_CLK_ENABLE();
+
+    HAL_NVIC_SetPriority(GPDMA2_Channel7_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(GPDMA2_Channel7_IRQn);
+
     handle_GPDMA2_Channel7.Instance = GPDMA2_Channel7;
     handle_GPDMA2_Channel7.Init.Request = DMA_REQUEST_SW;
     handle_GPDMA2_Channel7.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
@@ -91,9 +103,9 @@ static void MX_GPDMA2_Init(void) {
 SPI_HandleTypeDef hspi1;
 SPI_HandleTypeDef hspi2;
 
-void SPI1_IRQHandler(void) { HAL_SPI_IRQHandler(&hspi1); }
+extern "C" __attribute__((used)) void SPI1_IRQHandler(void) { HAL_SPI_IRQHandler(&hspi1); }
 
-void SPI2_IRQHandler(void) { HAL_SPI_IRQHandler(&hspi2); }
+extern "C" __attribute__((used)) void SPI2_IRQHandler(void) { HAL_SPI_IRQHandler(&hspi2); }
 
 void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {  // cppcheck-suppress constParameterPointer
     GPIO_InitTypeDef GPIO_InitStruct{};
@@ -257,19 +269,21 @@ static void SPI1_IT_Callback(DMA_HandleTypeDef *) { SPI_0::instance().setDMAActi
 void SPI_0::startDMATransfer() {
     HAL_StatusTypeDef status = HAL_DMA_Start_IT(&handle_GPDMA1_Channel7, (uint32_t)cbuf, (uint32_t)&SPI1->TXDR, clen);
     if (status != HAL_OK) {
-        printf("SPI_0::startDMATransfer fail!\n");
+//        printf("SPI_0::startDMATransfer fail!\n");
     }
 }
 
 void SPI_0::setupDMATransfer() {}
 
 bool SPI_0::isDMAbusy() const {
-    HAL_StatusTypeDef status = HAL_DMA_PollForTransfer(&handle_GPDMA1_Channel7, HAL_DMA_FULL_TRANSFER, 0);
+#if 0
+    HAL_StatusTypeDef status = HAL_DMA_PollForTransfer(&handle_GPDMA1_Channel7, HAL_DMA_FULL_TRANSFER, HAL_MAX_DELAY);
     if (status == HAL_OK) {
         if (handle_GPDMA1_Channel7.State == HAL_DMA_STATE_BUSY) {
             return true;
         }
     }
+#endif  // #if 0
     return false;
 }
 
@@ -293,19 +307,21 @@ static void SPI2_IT_Callback(DMA_HandleTypeDef *) { SPI_1::instance().setDMAActi
 void SPI_1::startDMATransfer() {
     HAL_StatusTypeDef status = HAL_DMA_Start_IT(&handle_GPDMA2_Channel7, (uint32_t)cbuf, (uint32_t)&SPI2->TXDR, clen);
     if (status != HAL_OK) {
-        printf("SPI_0::startDMATransfer fail!\n");
+//        printf("SPI_0::startDMATransfer fail!\n");
     }
 }
 
 void SPI_1::setupDMATransfer() {}
 
 bool SPI_1::isDMAbusy() const {
-    HAL_StatusTypeDef status = HAL_DMA_PollForTransfer(&handle_GPDMA2_Channel7, HAL_DMA_FULL_TRANSFER, 0);
+#if 0
+    HAL_StatusTypeDef status = HAL_DMA_PollForTransfer(&handle_GPDMA2_Channel7, HAL_DMA_FULL_TRANSFER, HAL_MAX_DELAY);
     if (status == HAL_OK) {
         if (handle_GPDMA2_Channel7.State == HAL_DMA_STATE_BUSY) {
             return true;
         }
     }
+#endif  // #if 0
     return false;
 }
 
