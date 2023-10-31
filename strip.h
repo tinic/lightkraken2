@@ -38,8 +38,6 @@ class Strip {
         int8_t error;
     } __attribute__((packed));
 
-    enum NativeType { NATIVE_RGB8, NATIVE_RGBW8, NATIVE_RGB16, NATIVE_TYPE_COUNT };
-
     static constexpr size_t dmxMaxLen = 512;
     static constexpr size_t bytesMaxLen = (dmxMaxLen * Model::universeN);
     static constexpr size_t bytesLatchLen = 64;
@@ -63,7 +61,7 @@ class Strip {
     size_t getBytesPerPixel() const;
     uint32_t transferMpbs() const { return transfer_mbps; };
 
-    NativeType nativeType() const;
+    Model::StripConfig::StripNativeType nativeType() const;
 
     void setUniverseData(const size_t N, const uint8_t *data, const size_t len, const Model::StripConfig::StripInputType input_type);
     void setData(const uint8_t *data, const size_t len, const Model::StripConfig::StripInputType input_type);

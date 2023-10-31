@@ -60,11 +60,11 @@ void Model::exportStaticsToDB() {
                 emio::format_to(buf, "{}{{", comma).value();
                 emio::format_to(buf, "\"{}\":\"{}\",", "label", NAMEOF_ENUM(prop.type)).value();
                 emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.type), int(prop.type)).value();
-                emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.components), prop.components).value();
-                emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.bitslen), prop.bitslen).value();
+                emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.comp_per_pixel), prop.comp_per_pixel).value();
+                emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.bits_per_comp), prop.bits_per_comp).value();
                 emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.min_mbps), prop.min_mbps).value();
                 emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.max_mbps), prop.max_mbps).value();
-                emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.clock), prop.clock ? "true" : "false").value();
+                emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.has_clock), prop.has_clock ? "true" : "false").value();
                 emio::format_to(buf, "\"{}\":{}", NAMEOF(prop.globalillum), prop.globalillum ? "true" : "false").value();
                 emio::format_to(buf, "}}").value();
                 comma = ","; 
@@ -209,7 +209,7 @@ void Model::exportStaticsToDB() {
     }
 
     {
-        auto stripOutptTypes = []() consteval {
+        auto stripOutputTypes = []() consteval {
             emio::static_buffer<SettingsDB::max_object_size> buf{};
             emio::format_to(buf, "[").value();
             const char *comma_outer = "";
@@ -220,7 +220,7 @@ void Model::exportStaticsToDB() {
             emio::format_to(buf, "]").value();
             return fixed_containers::FixedString<192>(buf.view());
         };
-        static constexpr auto data = stripOutptTypes();
+        static constexpr auto data = stripOutputTypes();
         SettingsDB::instance().setObject(SettingsDB::kStripOutputTypes, data.c_str(), data.size() + 1);
     }
 

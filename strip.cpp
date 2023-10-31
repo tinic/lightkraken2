@@ -165,60 +165,15 @@ void Strip::init() {
 void Strip::setRGBColorSpace(const RGBColorSpace &colorSpace) { converter.setRGBColorSpace(colorSpace); }
 
 size_t Strip::getBytesPerPixel() const {
-    switch (output_type) {
-        case Model::StripConfig::StripOutputType::SK6812_RGBW: {
-            return 4;
-        } break;
-        default:
-        case Model::StripConfig::StripOutputType::WS2812:
-        case Model::StripConfig::StripOutputType::SK6812:
-        case Model::StripConfig::StripOutputType::GS8202:
-        case Model::StripConfig::StripOutputType::TM1804:
-        case Model::StripConfig::StripOutputType::UCS1904:
-        case Model::StripConfig::StripOutputType::TLS3001:
-        case Model::StripConfig::StripOutputType::LPD8806:
-        case Model::StripConfig::StripOutputType::SK9822:
-        case Model::StripConfig::StripOutputType::HDS107S:
-        case Model::StripConfig::StripOutputType::P9813:
-        case Model::StripConfig::StripOutputType::TM1829:
-        case Model::StripConfig::StripOutputType::APA102:
-        case Model::StripConfig::StripOutputType::WS2801: {
-            return 3;
-        } break;
-        case Model::StripConfig::StripOutputType::HD108:
-        case Model::StripConfig::StripOutputType::WS2816: {
-            return 6;
-        } break;
-    }
-    return 0;
+    return Model::stripOutputProperties[output_type].bytes_per_pixel;
 }
 
-Strip::NativeType Strip::nativeType() const {
-    switch (output_type) {
-        case Model::StripConfig::StripOutputType::SK6812_RGBW: {
-            return NATIVE_RGBW8;
-        } break;
-        default:
-        case Model::StripConfig::StripOutputType::WS2812:
-        case Model::StripConfig::StripOutputType::SK6812:
-        case Model::StripConfig::StripOutputType::GS8202:
-        case Model::StripConfig::StripOutputType::TM1804:
-        case Model::StripConfig::StripOutputType::TM1829:
-        case Model::StripConfig::StripOutputType::UCS1904:
-        case Model::StripConfig::StripOutputType::LPD8806:
-        case Model::StripConfig::StripOutputType::SK9822:
-        case Model::StripConfig::StripOutputType::HDS107S:
-        case Model::StripConfig::StripOutputType::P9813:
-        case Model::StripConfig::StripOutputType::APA102:
-        case Model::StripConfig::StripOutputType::WS2801: {
-            return NATIVE_RGB8;
-        } break;
-        case Model::StripConfig::StripOutputType::HD108:
-        case Model::StripConfig::StripOutputType::WS2816: {
-            return NATIVE_RGB16;
-        } break;
-    }
-    return NATIVE_RGB8;
+Model::StripConfig::StripNativeType Strip::nativeType() const {
+    return Model::stripOutputProperties[output_type].native_type;
+}
+
+bool Strip::needsClock() const {
+    return Model::stripOutputProperties[output_type].has_clock;
 }
 
 size_t Strip::getPixelLen() const {
@@ -320,59 +275,19 @@ size_t Strip::getComponentBytes(Model::StripConfig::StripInputType input_type) c
 }
 
 void Strip::setData(const uint8_t *data, const size_t len, const Model::StripConfig::StripInputType input_type) {
-    auto trans = [=, this](const std::vector<int> &order) {
-        if (len == 0) {
-            return;
-        }
-        const size_t input_size = getBytesPerInputPixel(input_type);
-        const size_t input_pad = size_t(dmxMaxLen / input_size) * order.size() * getComponentBytes(input_type);
-        size_t left = len;
-        const uint8_t *ptr = data;
-        for (size_t c = 0; c <= ((len - 1) / input_pad); c++) {
-            size_t block = std::min(left, input_pad);
-            setUniverseData(c, ptr, block, input_type);
-            left -= block;
-            ptr += block;
-        }
-    };
-
-    switch (output_type) {
-        default:
-        case Model::StripConfig::StripOutputType::SK9822:
-        case Model::StripConfig::StripOutputType::HDS107S:
-        case Model::StripConfig::StripOutputType::P9813:
-        case Model::StripConfig::StripOutputType::WS2812:
-        case Model::StripConfig::StripOutputType::WS2816:
-        case Model::StripConfig::StripOutputType::SK6812:
-        case Model::StripConfig::StripOutputType::TM1804:
-        case Model::StripConfig::StripOutputType::GS8202:
-        case Model::StripConfig::StripOutputType::UCS1904: {
-            const std::vector<int> order = {1, 0, 2};
-            trans(order);
-        } break;
-        case Model::StripConfig::StripOutputType::APA107:
-        case Model::StripConfig::StripOutputType::APA102:
-        case Model::StripConfig::StripOutputType::TM1829: {
-            const std::vector<int> order = {2, 1, 0};
-            trans(order);
-        } break;
-        case Model::StripConfig::StripOutputType::HD108:
-        case Model::StripConfig::StripOutputType::TLS3001: {
-            const std::vector<int> order = {0, 1, 2};
-            trans(order);
-        } break;
-        case Model::StripConfig::StripOutputType::SK6812_RGBW: {
-            const std::vector<int> order = {1, 0, 2, 3};
-            trans(order);
-        } break;
-        case Model::StripConfig::StripOutputType::LPD8806: {
-            const std::vector<int> order = {2, 0, 1};
-            trans(order);
-        } break;
-        case Model::StripConfig::StripOutputType::WS2801: {
-            const std::vector<int> order = {1, 0, 2};
-            trans(order);
-        } break;
+    if (len == 0) {
+        return;
+    }
+    auto order = Model::stripOutputProperties[output_type].rgbw_order;
+    const size_t input_size = getBytesPerInputPixel(input_type);
+    const size_t input_pad = size_t(dmxMaxLen / input_size) * order.size() * getComponentBytes(input_type);
+    size_t left = len;
+    const uint8_t *ptr = data;
+    for (size_t c = 0; c <= ((len - 1) / input_pad); c++) {
+        size_t block = std::min(left, input_pad);
+        setUniverseData(c, ptr, block, input_type);
+        left -= block;
+        ptr += block;
     }
 }
 
@@ -390,730 +305,690 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
         return;
     }
 
-    auto trans = [=, this](const std::vector<size_t> &order) {
-        const uint32_t limit_8bit = uint32_t(std::clamp(comp_limit, 0.0f, 1.0f) * 255.f);
-        const uint32_t limit_16bit = uint32_t(std::clamp(comp_limit, 0.0f, 1.0f) * 65535.f);
-        const size_t input_size = getBytesPerInputPixel(input_type);
-        const size_t pixel_pad = std::min(getComponentsPerInputPixel(input_type), order.size());
-        const size_t input_pad = size_t(dmxMaxLen / input_size) * order.size() * getComponentBytes(input_type);
-        const size_t pixel_loop_n = std::min(len, input_pad);
-        const size_t order_size = order.size();
-
-        __assume(pixel_loop_n > 0);
-
-        __assume(limit_8bit <= 255);
-        __assume(limit_16bit <= 65535);
-
-        __assume(input_size > 0);
-        __assume(pixel_pad > 0);
-        __assume(input_size <= 8);
-        __assume(pixel_pad <= 4);
-        __assume(input_pad > 0);
-        __assume(input_pad < dmxMaxLen);
-
-        auto fix_for_ws2816b = [=](const uint16_t v) {
-            static constexpr auto lut = make_ws2816b_error_lut();
-            if (v < lut.size()) {
-                return lut[v];
-            }
-            return v;
-        };
-
-        switch (input_type) {
-            default:
-            case Model::StripConfig::StripInputType::RGB8: {
-                switch (nativeType()) {
-                    default: {
-                    } break;
-                    case NATIVE_RGB8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += order_size) {
-                            for (size_t d = 0; d < pixel_pad; d++) {
-                                buf[n + order[d]] = uint8_t(std::min(limit_8bit, uint32_t(data[c + d])));
-                            }
-                        }
-                    } break;
-                    case NATIVE_RGBW8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 4) {
-                            uint32_t r = std::min(limit_8bit, uint32_t(data[c + 0]));
-                            uint32_t g = std::min(limit_8bit, uint32_t(data[c + 1]));
-                            uint32_t b = std::min(limit_8bit, uint32_t(data[c + 2]));
-                            uint32_t m = std::min(r, std::min(g, b));
-                            buf[n + order[0]] = uint8_t(r - m);
-                            buf[n + order[1]] = uint8_t(g - m);
-                            buf[n + order[2]] = uint8_t(b - m);
-                            buf[n + order[3]] = uint8_t(m);
-                        }
-                    } break;
-                    case NATIVE_RGB16: {
-                        if (output_type == Model::StripConfig::StripOutputType::WS2816) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                            for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 3) {
-                                auto read_buf = [=](const size_t i) {
-                                    uint32_t v = uint32_t(data[c + i]);
-                                    v = (v << 8) | v;
-                                    return v;
-                                };
-                                auto write_buf = [=](const size_t i, const uint16_t p) {
-                                    *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
-                                };
-
-                                write_buf(0, fix_for_ws2816b(uint16_t(std::min(limit_16bit, read_buf(1)))));
-                                write_buf(1, fix_for_ws2816b(uint16_t(std::min(limit_16bit, read_buf(0)))));
-                                write_buf(2, fix_for_ws2816b(uint16_t(std::min(limit_16bit, read_buf(2)))));
-                            }
-                            return;
-                        }
-                        if (output_type == Model::StripConfig::StripOutputType::HD108) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                            for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 3) {
-                                auto read_buf = [=](const size_t i) {
-                                    uint32_t v = uint32_t(data[c + i]);
-                                    return v;
-                                };
-                                auto write_buf = [=](const size_t i, const uint16_t p) {
-                                    *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
-                                };
-
-                                uint32_t r = hd108_lut[0][read_buf(0)];
-                                uint32_t g = hd108_lut[1][read_buf(1)];
-                                uint32_t b = hd108_lut[2][read_buf(2)];
-
-                                write_buf(0, uint16_t(std::min(limit_16bit, r)));
-                                write_buf(1, uint16_t(std::min(limit_16bit, g)));
-                                write_buf(2, uint16_t(std::min(limit_16bit, b)));
-                            }
-                            return;
-                        }
-                    } break;
-                }
-            } break;
-            case Model::StripConfig::StripInputType::RGBW8: {
-                switch (nativeType()) {
-                    default: {
-                    } break;
-                    case NATIVE_RGB8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 3) {
-                            uint32_t r = uint32_t(data[c + 0]);
-                            uint32_t g = uint32_t(data[c + 1]);
-                            uint32_t b = uint32_t(data[c + 2]);
-                            uint32_t w = uint32_t(data[c + 3]);
-
-                            buf[n + order[0]] = uint8_t(std::min(r + w, limit_8bit));
-                            buf[n + order[1]] = uint8_t(std::min(g + w, limit_8bit));
-                            buf[n + order[2]] = uint8_t(std::min(b + w, limit_8bit));
-                        }
-                    } break;
-                    case NATIVE_RGBW8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += order_size) {
-                            for (size_t d = 0; d < pixel_pad; d++) {
-                                buf[n + order[d]] = uint8_t(std::min(limit_8bit, uint32_t(data[c + d])));
-                            }
-                        }
-                    } break;
-                    case NATIVE_RGB16: {
-                        if (output_type == Model::StripConfig::StripOutputType::WS2816) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                            for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 3) {
-                                auto read_buf = [=](const size_t i) {
-                                    uint32_t v = uint32_t(data[c + i]);
-                                    v = (v << 8) | v;
-                                    return v;
-                                };
-                                auto write_buf = [=](const size_t i, const uint16_t p) {
-                                    *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
-                                };
-
-                                uint32_t r = read_buf(0);
-                                uint32_t g = read_buf(1);
-                                uint32_t b = read_buf(2);
-                                uint32_t w = read_buf(3);
-
-                                r = fix_for_ws2816b(uint16_t(std::min(limit_16bit, r + w)));
-                                g = fix_for_ws2816b(uint16_t(std::min(limit_16bit, g + w)));
-                                b = fix_for_ws2816b(uint16_t(std::min(limit_16bit, b + w)));
-
-                                write_buf(0, uint16_t(g));
-                                write_buf(1, uint16_t(r));
-                                write_buf(2, uint16_t(b));
-                            }
-                            return;
-                        }
-                        if (output_type == Model::StripConfig::StripOutputType::HD108) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                            for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 3) {
-                                auto read_buf = [=](const size_t i) {
-                                    uint32_t v = uint32_t(data[c + i]);
-                                    return v;
-                                };
-                                auto write_buf = [=](const size_t i, const uint16_t p) {
-                                    *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
-                                };
-
-                                uint32_t r = read_buf(0);
-                                uint32_t g = read_buf(1);
-                                uint32_t b = read_buf(2);
-                                uint32_t w = read_buf(3);
-
-                                r = uint8_t(std::min(limit_8bit, r + w));
-                                g = uint8_t(std::min(limit_8bit, g + w));
-                                b = uint8_t(std::min(limit_8bit, b + w));
-
-                                r = hd108_lut[0][r];
-                                g = hd108_lut[1][g];
-                                b = hd108_lut[2][b];
-
-                                write_buf(0, uint16_t(r));
-                                write_buf(1, uint16_t(g));
-                                write_buf(2, uint16_t(b));
-                            }
-                            return;
-                        }
-                    } break;
-                }
-            } break;
-            case Model::StripConfig::StripInputType::RGB8_SRGB: {
-                switch (nativeType()) {
-                    default: {
-                    } break;
-                    case NATIVE_RGB8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 3) {
-                            uint8_t sr = data[c + 0];
-                            uint8_t sg = data[c + 1];
-                            uint8_t sb = data[c + 2];
-
-                            uint16_t lr = 0;
-                            uint16_t lg = 0;
-                            uint16_t lb = 0;
-
-                            converter.sRGB8toLEDPWM(sr, sg, sb, 255, lr, lg, lb);
-
-                            lr = std::min(uint16_t(limit_8bit), lr);
-                            lg = std::min(uint16_t(limit_8bit), lg);
-                            lb = std::min(uint16_t(limit_8bit), lb);
-
-                            buf[n + order[0]] = uint8_t(lr);
-                            buf[n + order[1]] = uint8_t(lg);
-                            buf[n + order[2]] = uint8_t(lb);
-                        }
-                    } break;
-                    case NATIVE_RGBW8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 3) {
-                            uint8_t sr = data[c + 0];
-                            uint8_t sg = data[c + 1];
-                            uint8_t sb = data[c + 2];
-
-                            uint16_t lr = 0;
-                            uint16_t lg = 0;
-                            uint16_t lb = 0;
-
-                            converter.sRGB8toLEDPWM(sr, sg, sb, 255, lr, lg, lb);
-
-                            uint16_t lm = std::min(lr, std::min(lg, lb));
-
-                            lr = std::min(uint16_t(limit_8bit), lr);
-                            lg = std::min(uint16_t(limit_8bit), lg);
-                            lb = std::min(uint16_t(limit_8bit), lb);
-                            lm = std::min(uint16_t(limit_8bit), lm);
-
-                            buf[n + order[0]] = uint8_t(lr - lm);
-                            buf[n + order[1]] = uint8_t(lg - lm);
-                            buf[n + order[2]] = uint8_t(lb - lm);
-                            buf[n + order[3]] = uint8_t(lm);
-                        }
-                    } break;
-                    case NATIVE_RGB16: {
-                        if (output_type == Model::StripConfig::StripOutputType::WS2816) {
-                            uint16_t *buf = reinterpret_cast<uint16_t *>(uintptr_t(&comp_buf[input_pad * uniN]));
-                            for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 3) {
-                                auto write_buf = [=](const size_t i, const uint16_t p) {
-                                    *reinterpret_cast<uint16_t *>(&buf[(n + i) * 2]) = __builtin_bswap16(uint16_t(p));
-                                };
-
-                                uint8_t sr = data[c + 0];
-                                uint8_t sg = data[c + 1];
-                                uint8_t sb = data[c + 2];
-
-                                uint16_t lr = 0;
-                                uint16_t lg = 0;
-                                uint16_t lb = 0;
-
-                                converter.sRGB8toLEDPWM(sr, sg, sb, 65535, lr, lg, lb);
-
-                                lr = fix_for_ws2816b(std::min(uint16_t(limit_16bit), lr));
-                                lg = fix_for_ws2816b(std::min(uint16_t(limit_16bit), lg));
-                                lb = fix_for_ws2816b(std::min(uint16_t(limit_16bit), lb));
-
-                                write_buf(0, lg);
-                                write_buf(1, lr);
-                                write_buf(2, lb);
-                            }
-                            return;
-                        }
-                        if (output_type == Model::StripConfig::StripOutputType::HD108) {
-                            uint16_t *buf = reinterpret_cast<uint16_t *>(uintptr_t(&comp_buf[input_pad * uniN]));
-                            for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 3) {
-                                auto write_buf = [=](const size_t i, const uint16_t p) {
-                                    *reinterpret_cast<uint16_t *>(&buf[(n + i) * 2]) = __builtin_bswap16(uint16_t(p));
-                                };
-
-                                uint8_t sr = data[c + 0];
-                                uint8_t sg = data[c + 1];
-                                uint8_t sb = data[c + 2];
-
-                                uint16_t lr = 0;
-                                uint16_t lg = 0;
-                                uint16_t lb = 0;
-
-                                converter.sRGB8toLEDPWM(sr, sg, sb, 65535, lr, lg, lb);
-
-                                // TODO: HD108 lut
-
-                                lr = std::min(uint16_t(limit_16bit), lr);
-                                lg = std::min(uint16_t(limit_16bit), lg);
-                                lb = std::min(uint16_t(limit_16bit), lb);
-
-                                write_buf(0, lr);
-                                write_buf(1, lg);
-                                write_buf(2, lb);
-                            }
-                            return;
-                        }
-                    } break;
-                }
-            } break;
-            case Model::StripConfig::StripInputType::RGBW_SRGB: {
-                switch (nativeType()) {
-                    default: {
-                    } break;
-                    case NATIVE_RGB8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 3) {
-                            uint8_t sr = uint8_t(data[c + 0]);
-                            uint8_t sg = uint8_t(data[c + 1]);
-                            uint8_t sb = uint8_t(data[c + 2]);
-                            uint8_t lw = uint8_t(data[c + 3]);
-
-                            uint16_t lr = 0;
-                            uint16_t lg = 0;
-                            uint16_t lb = 0;
-
-                            converter.sRGB8toLEDPWM(sr, sg, sb, 255, lr, lg, lb);
-
-                            buf[n + order[0]] = uint8_t(std::min(uint32_t(lr + uint16_t(lw)), limit_8bit));
-                            buf[n + order[1]] = uint8_t(std::min(uint32_t(lg + uint16_t(lw)), limit_8bit));
-                            buf[n + order[2]] = uint8_t(std::min(uint32_t(lb + uint16_t(lw)), limit_8bit));
-                        }
-                    } break;
-                    case NATIVE_RGBW8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 4) {
-                            uint8_t sr = uint8_t(data[c + 0]);
-                            uint8_t sg = uint8_t(data[c + 1]);
-                            uint8_t sb = uint8_t(data[c + 2]);
-                            uint8_t lw = uint8_t(data[c + 3]);
-
-                            uint16_t lr = 0;
-                            uint16_t lg = 0;
-                            uint16_t lb = 0;
-
-                            converter.sRGB8toLEDPWM(sr, sg, sb, 255, lr, lg, lb);
-
-                            buf[n + order[0]] = uint8_t(std::min(uint32_t(lr), limit_8bit));
-                            buf[n + order[1]] = uint8_t(std::min(uint32_t(lg), limit_8bit));
-                            buf[n + order[2]] = uint8_t(std::min(uint32_t(lb), limit_8bit));
-                            buf[n + order[3]] = uint8_t(std::min(uint32_t(lw), limit_8bit));
-                        }
-                    } break;
-                    case NATIVE_RGB16: {
-                        if (output_type == Model::StripConfig::StripOutputType::WS2816) {
-                            uint16_t *buf = reinterpret_cast<uint16_t *>(uintptr_t(&comp_buf[input_pad * uniN]));
-                            for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 3) {
-                                auto write_buf = [=](const size_t i, const uint16_t p) {
-                                    *reinterpret_cast<uint16_t *>(&buf[(n + i) * 2]) = __builtin_bswap16(uint16_t(p));
-                                };
-
-                                uint8_t sr = uint8_t(data[c + 0]);
-                                uint8_t sg = uint8_t(data[c + 1]);
-                                uint8_t sb = uint8_t(data[c + 2]);
-
-                                uint16_t lr = 0;
-                                uint16_t lg = 0;
-                                uint16_t lb = 0;
-                                uint16_t lw = uint16_t(data[c + 3]);
-
-                                converter.sRGB8toLEDPWM(sr, sg, sb, 65535, lr, lg, lb);
-
-                                lw = (lw << 8) | lw;
-
-                                lr = fix_for_ws2816b(uint16_t(std::min(limit_8bit, uint32_t(lr) + uint32_t(lw))));
-                                lg = fix_for_ws2816b(uint16_t(std::min(limit_8bit, uint32_t(lg) + uint32_t(lw))));
-                                lb = fix_for_ws2816b(uint16_t(std::min(limit_8bit, uint32_t(lb) + uint32_t(lw))));
-
-                                write_buf(0, lg);
-                                write_buf(1, lr);
-                                write_buf(2, lb);
-                            }
-                            return;
-                        }
-                        if (output_type == Model::StripConfig::StripOutputType::HD108) {
-                            uint16_t *buf = reinterpret_cast<uint16_t *>(uintptr_t(&comp_buf[input_pad * uniN]));
-                            for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 3) {
-                                auto write_buf = [=](const size_t i, const uint16_t p) {
-                                    *reinterpret_cast<uint16_t *>(&buf[(n + i) * 2]) = __builtin_bswap16(uint16_t(p));
-                                };
-
-                                uint8_t sr = uint8_t(data[c + 0]);
-                                uint8_t sg = uint8_t(data[c + 1]);
-                                uint8_t sb = uint8_t(data[c + 2]);
-
-                                uint16_t lr = 0;
-                                uint16_t lg = 0;
-                                uint16_t lb = 0;
-                                uint16_t lw = uint8_t(data[c + 3]);
-
-                                converter.sRGB8toLEDPWM(sr, sg, sb, 65535, lr, lg, lb);
-
-                                lw = (lw << 8) | lw;
-
-                                // TODO: HD108 lut
-
-                                lr = uint16_t(std::min(limit_8bit, uint32_t(lr) + uint32_t(lw)));
-                                lg = uint16_t(std::min(limit_8bit, uint32_t(lg) + uint32_t(lw)));
-                                lb = uint16_t(std::min(limit_8bit, uint32_t(lb) + uint32_t(lw)));
-
-                                write_buf(0, lr);
-                                write_buf(1, lg);
-                                write_buf(2, lb);
-                            }
-                            return;
-                        }
-                    } break;
-                }
-            } break;
-            case Model::StripConfig::StripInputType::RGB16_LSB: {
-                switch (nativeType()) {
-                    default: {
-                    } break;
-                    case NATIVE_RGB8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += order_size) {
-                            for (size_t d = 0; d < pixel_pad; d++) {
-                                buf[n + order[d]] = uint8_t(std::min(limit_8bit, uint32_t(data[c + d * 2 + 1])));
-                            }
-                        }
-                    } break;
-                    case NATIVE_RGBW8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 4) {
-                            auto read_buf = [=](const size_t i) { return uint32_t(data[c + i * 2 + 1]); };
-                            auto write_buf = [=](const size_t i, const uint8_t p) { buf[n + order[i]] = p; };
-
-                            uint32_t r = std::min(limit_8bit, read_buf(0));
-                            uint32_t g = std::min(limit_8bit, read_buf(1));
-                            uint32_t b = std::min(limit_8bit, read_buf(2));
-
-                            uint32_t m = std::min(r, std::min(g, b));
-
-                            write_buf(0, uint8_t(r - m));
-                            write_buf(1, uint8_t(g - m));
-                            write_buf(2, uint8_t(b - m));
-                            write_buf(3, uint8_t(m));
-                        }
-                    } break;
-                    case NATIVE_RGB16: {
-                        if (output_type == Model::StripConfig::StripOutputType::WS2816) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                            for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 3) {
-                                auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))); };
-                                auto write_buf = [=](const size_t i, const uint16_t p) {
-                                    *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
-                                };
-
-                                write_buf(0, uint16_t(fix_for_ws2816b(uint16_t(std::min(limit_16bit, read_buf(1))))));
-                                write_buf(1, uint16_t(fix_for_ws2816b(uint16_t(std::min(limit_16bit, read_buf(0))))));
-                                write_buf(2, uint16_t(fix_for_ws2816b(uint16_t(std::min(limit_16bit, read_buf(2))))));
-                            }
-                            return;
-                        }
-                        if (output_type == Model::StripConfig::StripOutputType::HD108) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                            for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 3) {
-                                auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))); };
-                                auto write_buf = [=](const size_t i, const uint16_t p) {
-                                    *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
-                                };
-
-                                write_buf(0, uint16_t(std::min(limit_16bit, read_buf(0))));
-                                write_buf(1, uint16_t(std::min(limit_16bit, read_buf(1))));
-                                write_buf(2, uint16_t(std::min(limit_16bit, read_buf(2))));
-                            }
-                            return;
-                        }
-                    } break;
-                }
-            } break;
-            case Model::StripConfig::StripInputType::RGB16_MSB: {
-                switch (nativeType()) {
-                    default: {
-                    } break;
-                    case NATIVE_RGB8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += order_size) {
-                            for (size_t d = 0; d < pixel_pad; d++) {
-                                buf[n + order[d]] = uint8_t(std::min(limit_8bit, uint32_t(data[c + d * 2 + 0])));
-                            }
-                        }
-                    } break;
-                    case NATIVE_RGBW8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 4) {
-                            auto read_buf = [=](const size_t i) { return uint32_t(data[c + i * 2]); };
-                            auto write_buf = [=](const size_t i, const uint8_t p) { buf[n + order[i]] = p; };
-
-                            uint32_t r = std::min(limit_8bit, read_buf(0));
-                            uint32_t g = std::min(limit_8bit, read_buf(1));
-                            uint32_t b = std::min(limit_8bit, read_buf(2));
-
-                            uint32_t m = std::min(r, std::min(g, b));
-
-                            write_buf(0, uint8_t(r - m));
-                            write_buf(1, uint8_t(g - m));
-                            write_buf(2, uint8_t(b - m));
-                            write_buf(3, uint8_t(m));
-                        }
-                    } break;
-                    case NATIVE_RGB16: {
-                        if (output_type == Model::StripConfig::StripOutputType::WS2816) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                            for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 3) {
-                                auto read_buf = [=](const size_t i) {
-                                    return uint32_t(__builtin_bswap16(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))));
-                                };
-                                auto write_buf = [=](const size_t i, const uint16_t p) {
-                                    *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
-                                };
-
-                                write_buf(0, fix_for_ws2816b(uint16_t(std::min(limit_16bit, read_buf(1)))));
-                                write_buf(1, fix_for_ws2816b(uint16_t(std::min(limit_16bit, read_buf(0)))));
-                                write_buf(2, fix_for_ws2816b(uint16_t(std::min(limit_16bit, read_buf(2)))));
-                            }
-                            return;
-                        }
-                        if (output_type == Model::StripConfig::StripOutputType::HD108) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                            for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 3) {
-                                auto read_buf = [=](const size_t i) {
-                                    return uint32_t(__builtin_bswap16(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))));
-                                };
-                                auto write_buf = [=](const size_t i, const uint16_t p) {
-                                    *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
-                                };
-
-                                write_buf(0, uint16_t(std::min(limit_16bit, read_buf(0))));
-                                write_buf(1, uint16_t(std::min(limit_16bit, read_buf(1))));
-                                write_buf(2, uint16_t(std::min(limit_16bit, read_buf(2))));
-                            }
-                            return;
-                        }
-                    } break;
-                }
-            } break;
-            case Model::StripConfig::StripInputType::RGBW16_LSB: {
-                switch (nativeType()) {
-                    default: {
-                    } break;
-                    case NATIVE_RGB8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
-                            auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2 + 1]))); };
-                            auto write_buf = [=](const size_t i, const uint8_t p) { buf[n + order[i]] = p; };
-
-                            uint32_t r = read_buf(0);
-                            uint32_t g = read_buf(1);
-                            uint32_t b = read_buf(2);
-                            uint32_t w = read_buf(3);
-
-                            write_buf(0, uint8_t(std::min(limit_8bit, r + w)));
-                            write_buf(1, uint8_t(std::min(limit_8bit, g + w)));
-                            write_buf(2, uint8_t(std::min(limit_8bit, b + w)));
-                        }
-                    } break;
-                    case NATIVE_RGBW8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += order_size) {
-                            for (size_t d = 0; d < pixel_pad; d++) {
-                                buf[n + order[d]] = uint8_t(std::min(limit_8bit, uint32_t(data[c + d * 2 + 1])));
-                            }
-                        }
-                    } break;
-                    case NATIVE_RGB16: {
-                        if (output_type == Model::StripConfig::StripOutputType::WS2816) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                            for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
-                                auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))); };
-                                auto write_buf = [=](const size_t i, const uint16_t p) {
-                                    *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
-                                };
-
-                                uint32_t r = read_buf(0);
-                                uint32_t g = read_buf(1);
-                                uint32_t b = read_buf(2);
-                                uint32_t w = read_buf(3);
-
-                                write_buf(0, fix_for_ws2816b(uint16_t(std::min(limit_16bit, g + w))));
-                                write_buf(1, fix_for_ws2816b(uint16_t(std::min(limit_16bit, r + w))));
-                                write_buf(2, fix_for_ws2816b(uint16_t(std::min(limit_16bit, b + w))));
-                            }
-                            return;
-                        }
-                        if (output_type == Model::StripConfig::StripOutputType::HD108) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                            for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
-                                auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))); };
-                                auto write_buf = [=](const size_t i, const uint16_t p) {
-                                    *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
-                                };
-
-                                uint32_t r = read_buf(0);
-                                uint32_t g = read_buf(1);
-                                uint32_t b = read_buf(2);
-                                uint32_t w = read_buf(3);
-
-                                write_buf(0, uint16_t(std::min(limit_16bit, r + w)));
-                                write_buf(1, uint16_t(std::min(limit_16bit, g + w)));
-                                write_buf(2, uint16_t(std::min(limit_16bit, b + w)));
-                            }
-                            return;
-                        }
-                    } break;
-                }
-            } break;
-            case Model::StripConfig::StripInputType::RGBW16_MSB: {
-                switch (nativeType()) {
-                    default: {
-                    } break;
-                    case NATIVE_RGB8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
-                            auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2 + 0]))); };
-
-                            uint32_t r = read_buf(0);
-                            uint32_t g = read_buf(1);
-                            uint32_t b = read_buf(2);
-                            uint32_t w = read_buf(3);
-
-                            buf[n + order[0]] = uint8_t(std::min(limit_8bit, r + w));
-                            buf[n + order[1]] = uint8_t(std::min(limit_8bit, g + w));
-                            buf[n + order[2]] = uint8_t(std::min(limit_8bit, b + w));
-                        }
-                    } break;
-                    case NATIVE_RGBW8: {
-                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += order_size) {
-                            for (size_t d = 0; d < pixel_pad; d++) {
-                                buf[n + order[d]] = uint8_t(std::min(limit_8bit, uint32_t(data[c + d * 2 + 0])));
-                            }
-                        }
-                    } break;
-                    case NATIVE_RGB16: {
-                        if (output_type == Model::StripConfig::StripOutputType::WS2816) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                            for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
-                                auto read_buf = [=](const size_t i) {
-                                    return uint32_t(__builtin_bswap16(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))));
-                                };
-                                auto write_buf = [=](const size_t i, const uint16_t p) {
-                                    *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
-                                };
-
-                                uint32_t r = read_buf(0);
-                                uint32_t g = read_buf(1);
-                                uint32_t b = read_buf(2);
-                                uint32_t w = read_buf(3);
-
-                                r = fix_for_ws2816b(uint16_t(std::min(limit_16bit, r + w)));
-                                g = fix_for_ws2816b(uint16_t(std::min(limit_16bit, g + w)));
-                                b = fix_for_ws2816b(uint16_t(std::min(limit_16bit, b + w)));
-
-                                write_buf(0, uint16_t(g));
-                                write_buf(1, uint16_t(r));
-                                write_buf(2, uint16_t(b));
-                            }
-                            return;
-                        }
-                        if (output_type == Model::StripConfig::StripOutputType::HD108) {
-                            uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
-                            for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
-                                auto read_buf = [=](const size_t i) {
-                                    return uint32_t(__builtin_bswap16(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))));
-                                };
-                                auto write_buf = [=](const size_t i, const uint16_t p) {
-                                    *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
-                                };
-
-                                uint32_t r = read_buf(0);
-                                uint32_t g = read_buf(1);
-                                uint32_t b = read_buf(2);
-                                uint32_t w = read_buf(3);
-
-                                r = uint16_t(std::min(limit_16bit, r + w));
-                                g = uint16_t(std::min(limit_16bit, g + w));
-                                b = uint16_t(std::min(limit_16bit, b + w));
-
-                                write_buf(0, uint16_t(g));
-                                write_buf(1, uint16_t(r));
-                                write_buf(2, uint16_t(b));
-                            }
-                            return;
-                        }
-                    } break;
-                }
-            } break;
+    auto order = Model::stripOutputProperties[output_type].rgbw_order;
+    const uint32_t limit_8bit = uint32_t(std::clamp(comp_limit, 0.0f, 1.0f) * 255.f);
+    const uint32_t limit_16bit = uint32_t(std::clamp(comp_limit, 0.0f, 1.0f) * 65535.f);
+    const size_t input_size = getBytesPerInputPixel(input_type);
+    const size_t pixel_pad = std::min(getComponentsPerInputPixel(input_type), order.size());
+    const size_t input_pad = size_t(dmxMaxLen / input_size) * order.size() * getComponentBytes(input_type);
+    const size_t pixel_loop_n = std::min(len, input_pad);
+    const size_t order_size = order.size();
+
+    __assume(pixel_loop_n > 0);
+
+    __assume(limit_8bit <= 255);
+    __assume(limit_16bit <= 65535);
+
+    __assume(input_size > 0);
+    __assume(pixel_pad > 0);
+    __assume(input_size <= 8);
+    __assume(pixel_pad <= 4);
+    __assume(input_pad > 0);
+    __assume(input_pad < dmxMaxLen);
+
+    auto fix_for_ws2816b = [=](const uint16_t v) {
+        static constexpr auto lut = make_ws2816b_error_lut();
+        if (v < lut.size()) {
+            return lut[v];
         }
+        return v;
     };
 
-    switch (output_type) {
+    switch (input_type) {
         default:
-        case Model::StripConfig::StripOutputType::SK9822:
-        case Model::StripConfig::StripOutputType::HDS107S:
-        case Model::StripConfig::StripOutputType::P9813:
-        case Model::StripConfig::StripOutputType::WS2812:
-        case Model::StripConfig::StripOutputType::WS2816:
-        case Model::StripConfig::StripOutputType::SK6812:
-        case Model::StripConfig::StripOutputType::TM1804:
-        case Model::StripConfig::StripOutputType::GS8202:
-        case Model::StripConfig::StripOutputType::UCS1904: {
-            const std::vector<size_t> order = {1, 0, 2};
-            trans(order);
+        case Model::StripConfig::StripInputType::RGB8: {
+            switch (nativeType()) {
+                default: {
+                } break;
+                case Model::StripConfig::NATIVE_RGB8: {
+                    uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                    for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += order_size) {
+                        for (size_t d = 0; d < pixel_pad; d++) {
+                            buf[n + order[d]] = uint8_t(std::min(limit_8bit, uint32_t(data[c + d])));
+                        }
+                    }
+                } break;
+                case Model::StripConfig::NATIVE_RGBW8: {
+                    uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                    for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 4) {
+                        uint32_t r = std::min(limit_8bit, uint32_t(data[c + 0]));
+                        uint32_t g = std::min(limit_8bit, uint32_t(data[c + 1]));
+                        uint32_t b = std::min(limit_8bit, uint32_t(data[c + 2]));
+                        uint32_t m = std::min(r, std::min(g, b));
+                        buf[n + order[0]] = uint8_t(r - m);
+                        buf[n + order[1]] = uint8_t(g - m);
+                        buf[n + order[2]] = uint8_t(b - m);
+                        buf[n + order[3]] = uint8_t(m);
+                    }
+                } break;
+                case Model::StripConfig::NATIVE_RGB16: {
+                    if (output_type == Model::StripConfig::StripOutputType::WS2816) {
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 3) {
+                            auto read_buf = [=](const size_t i) {
+                                uint32_t v = uint32_t(data[c + i]);
+                                v = (v << 8) | v;
+                                return v;
+                            };
+                            auto write_buf = [=](const size_t i, const uint16_t p) {
+                                *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
+                            };
+
+                            write_buf(0, fix_for_ws2816b(uint16_t(std::min(limit_16bit, read_buf(1)))));
+                            write_buf(1, fix_for_ws2816b(uint16_t(std::min(limit_16bit, read_buf(0)))));
+                            write_buf(2, fix_for_ws2816b(uint16_t(std::min(limit_16bit, read_buf(2)))));
+                        }
+                        return;
+                    }
+                    if (output_type == Model::StripConfig::StripOutputType::HD108) {
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 3) {
+                            auto read_buf = [=](const size_t i) {
+                                uint32_t v = uint32_t(data[c + i]);
+                                return v;
+                            };
+                            auto write_buf = [=](const size_t i, const uint16_t p) {
+                                *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
+                            };
+
+                            uint32_t r = hd108_lut[0][read_buf(0)];
+                            uint32_t g = hd108_lut[1][read_buf(1)];
+                            uint32_t b = hd108_lut[2][read_buf(2)];
+
+                            write_buf(0, uint16_t(std::min(limit_16bit, r)));
+                            write_buf(1, uint16_t(std::min(limit_16bit, g)));
+                            write_buf(2, uint16_t(std::min(limit_16bit, b)));
+                        }
+                        return;
+                    }
+                } break;
+            }
         } break;
-        case Model::StripConfig::StripOutputType::APA107:
-        case Model::StripConfig::StripOutputType::APA102:
-        case Model::StripConfig::StripOutputType::TM1829: {
-            const std::vector<size_t> order = {2, 1, 0};
-            trans(order);
+        case Model::StripConfig::StripInputType::RGBW8: {
+            switch (nativeType()) {
+                default: {
+                } break;
+                case Model::StripConfig::NATIVE_RGB8: {
+                    uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                    for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 3) {
+                        uint32_t r = uint32_t(data[c + 0]);
+                        uint32_t g = uint32_t(data[c + 1]);
+                        uint32_t b = uint32_t(data[c + 2]);
+                        uint32_t w = uint32_t(data[c + 3]);
+
+                        buf[n + order[0]] = uint8_t(std::min(r + w, limit_8bit));
+                        buf[n + order[1]] = uint8_t(std::min(g + w, limit_8bit));
+                        buf[n + order[2]] = uint8_t(std::min(b + w, limit_8bit));
+                    }
+                } break;
+                case Model::StripConfig::NATIVE_RGBW8: {
+                    uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                    for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += order_size) {
+                        for (size_t d = 0; d < pixel_pad; d++) {
+                            buf[n + order[d]] = uint8_t(std::min(limit_8bit, uint32_t(data[c + d])));
+                        }
+                    }
+                } break;
+                case Model::StripConfig::NATIVE_RGB16: {
+                    if (output_type == Model::StripConfig::StripOutputType::WS2816) {
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 3) {
+                            auto read_buf = [=](const size_t i) {
+                                uint32_t v = uint32_t(data[c + i]);
+                                v = (v << 8) | v;
+                                return v;
+                            };
+                            auto write_buf = [=](const size_t i, const uint16_t p) {
+                                *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
+                            };
+
+                            uint32_t r = read_buf(0);
+                            uint32_t g = read_buf(1);
+                            uint32_t b = read_buf(2);
+                            uint32_t w = read_buf(3);
+
+                            r = fix_for_ws2816b(uint16_t(std::min(limit_16bit, r + w)));
+                            g = fix_for_ws2816b(uint16_t(std::min(limit_16bit, g + w)));
+                            b = fix_for_ws2816b(uint16_t(std::min(limit_16bit, b + w)));
+
+                            write_buf(0, uint16_t(g));
+                            write_buf(1, uint16_t(r));
+                            write_buf(2, uint16_t(b));
+                        }
+                        return;
+                    }
+                    if (output_type == Model::StripConfig::StripOutputType::HD108) {
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 3) {
+                            auto read_buf = [=](const size_t i) {
+                                uint32_t v = uint32_t(data[c + i]);
+                                return v;
+                            };
+                            auto write_buf = [=](const size_t i, const uint16_t p) {
+                                *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
+                            };
+
+                            uint32_t r = read_buf(0);
+                            uint32_t g = read_buf(1);
+                            uint32_t b = read_buf(2);
+                            uint32_t w = read_buf(3);
+
+                            r = uint8_t(std::min(limit_8bit, r + w));
+                            g = uint8_t(std::min(limit_8bit, g + w));
+                            b = uint8_t(std::min(limit_8bit, b + w));
+
+                            r = hd108_lut[0][r];
+                            g = hd108_lut[1][g];
+                            b = hd108_lut[2][b];
+
+                            write_buf(0, uint16_t(r));
+                            write_buf(1, uint16_t(g));
+                            write_buf(2, uint16_t(b));
+                        }
+                        return;
+                    }
+                } break;
+            }
         } break;
-        case Model::StripConfig::StripOutputType::HD108:
-        case Model::StripConfig::StripOutputType::TLS3001: {
-            const std::vector<size_t> order = {0, 1, 2};
-            trans(order);
+        case Model::StripConfig::StripInputType::RGB8_SRGB: {
+            switch (nativeType()) {
+                default: {
+                } break;
+                case Model::StripConfig::NATIVE_RGB8: {
+                    uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                    for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 3) {
+                        uint8_t sr = data[c + 0];
+                        uint8_t sg = data[c + 1];
+                        uint8_t sb = data[c + 2];
+
+                        uint16_t lr = 0;
+                        uint16_t lg = 0;
+                        uint16_t lb = 0;
+
+                        converter.sRGB8toLEDPWM(sr, sg, sb, 255, lr, lg, lb);
+
+                        lr = std::min(uint16_t(limit_8bit), lr);
+                        lg = std::min(uint16_t(limit_8bit), lg);
+                        lb = std::min(uint16_t(limit_8bit), lb);
+
+                        buf[n + order[0]] = uint8_t(lr);
+                        buf[n + order[1]] = uint8_t(lg);
+                        buf[n + order[2]] = uint8_t(lb);
+                    }
+                } break;
+                case Model::StripConfig::NATIVE_RGBW8: {
+                    uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                    for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 3) {
+                        uint8_t sr = data[c + 0];
+                        uint8_t sg = data[c + 1];
+                        uint8_t sb = data[c + 2];
+
+                        uint16_t lr = 0;
+                        uint16_t lg = 0;
+                        uint16_t lb = 0;
+
+                        converter.sRGB8toLEDPWM(sr, sg, sb, 255, lr, lg, lb);
+
+                        uint16_t lm = std::min(lr, std::min(lg, lb));
+
+                        lr = std::min(uint16_t(limit_8bit), lr);
+                        lg = std::min(uint16_t(limit_8bit), lg);
+                        lb = std::min(uint16_t(limit_8bit), lb);
+                        lm = std::min(uint16_t(limit_8bit), lm);
+
+                        buf[n + order[0]] = uint8_t(lr - lm);
+                        buf[n + order[1]] = uint8_t(lg - lm);
+                        buf[n + order[2]] = uint8_t(lb - lm);
+                        buf[n + order[3]] = uint8_t(lm);
+                    }
+                } break;
+                case Model::StripConfig::NATIVE_RGB16: {
+                    if (output_type == Model::StripConfig::StripOutputType::WS2816) {
+                        uint16_t *buf = reinterpret_cast<uint16_t *>(uintptr_t(&comp_buf[input_pad * uniN]));
+                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 3) {
+                            auto write_buf = [=](const size_t i, const uint16_t p) {
+                                *reinterpret_cast<uint16_t *>(&buf[(n + i) * 2]) = __builtin_bswap16(uint16_t(p));
+                            };
+
+                            uint8_t sr = data[c + 0];
+                            uint8_t sg = data[c + 1];
+                            uint8_t sb = data[c + 2];
+
+                            uint16_t lr = 0;
+                            uint16_t lg = 0;
+                            uint16_t lb = 0;
+
+                            converter.sRGB8toLEDPWM(sr, sg, sb, 65535, lr, lg, lb);
+
+                            lr = fix_for_ws2816b(std::min(uint16_t(limit_16bit), lr));
+                            lg = fix_for_ws2816b(std::min(uint16_t(limit_16bit), lg));
+                            lb = fix_for_ws2816b(std::min(uint16_t(limit_16bit), lb));
+
+                            write_buf(0, lg);
+                            write_buf(1, lr);
+                            write_buf(2, lb);
+                        }
+                        return;
+                    }
+                    if (output_type == Model::StripConfig::StripOutputType::HD108) {
+                        uint16_t *buf = reinterpret_cast<uint16_t *>(uintptr_t(&comp_buf[input_pad * uniN]));
+                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 3, n += 3) {
+                            auto write_buf = [=](const size_t i, const uint16_t p) {
+                                *reinterpret_cast<uint16_t *>(&buf[(n + i) * 2]) = __builtin_bswap16(uint16_t(p));
+                            };
+
+                            uint8_t sr = data[c + 0];
+                            uint8_t sg = data[c + 1];
+                            uint8_t sb = data[c + 2];
+
+                            uint16_t lr = 0;
+                            uint16_t lg = 0;
+                            uint16_t lb = 0;
+
+                            converter.sRGB8toLEDPWM(sr, sg, sb, 65535, lr, lg, lb);
+
+                            // TODO: HD108 lut
+
+                            lr = std::min(uint16_t(limit_16bit), lr);
+                            lg = std::min(uint16_t(limit_16bit), lg);
+                            lb = std::min(uint16_t(limit_16bit), lb);
+
+                            write_buf(0, lr);
+                            write_buf(1, lg);
+                            write_buf(2, lb);
+                        }
+                        return;
+                    }
+                } break;
+            }
         } break;
-        case Model::StripConfig::StripOutputType::SK6812_RGBW: {
-            const std::vector<size_t> order = {1, 0, 2, 3};
-            trans(order);
+        case Model::StripConfig::StripInputType::RGBW_SRGB: {
+            switch (nativeType()) {
+                default: {
+                } break;
+                case Model::StripConfig::NATIVE_RGB8: {
+                    uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                    for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 3) {
+                        uint8_t sr = uint8_t(data[c + 0]);
+                        uint8_t sg = uint8_t(data[c + 1]);
+                        uint8_t sb = uint8_t(data[c + 2]);
+                        uint8_t lw = uint8_t(data[c + 3]);
+
+                        uint16_t lr = 0;
+                        uint16_t lg = 0;
+                        uint16_t lb = 0;
+
+                        converter.sRGB8toLEDPWM(sr, sg, sb, 255, lr, lg, lb);
+
+                        buf[n + order[0]] = uint8_t(std::min(uint32_t(lr + uint16_t(lw)), limit_8bit));
+                        buf[n + order[1]] = uint8_t(std::min(uint32_t(lg + uint16_t(lw)), limit_8bit));
+                        buf[n + order[2]] = uint8_t(std::min(uint32_t(lb + uint16_t(lw)), limit_8bit));
+                    }
+                } break;
+                case Model::StripConfig::NATIVE_RGBW8: {
+                    uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                    for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 4) {
+                        uint8_t sr = uint8_t(data[c + 0]);
+                        uint8_t sg = uint8_t(data[c + 1]);
+                        uint8_t sb = uint8_t(data[c + 2]);
+                        uint8_t lw = uint8_t(data[c + 3]);
+
+                        uint16_t lr = 0;
+                        uint16_t lg = 0;
+                        uint16_t lb = 0;
+
+                        converter.sRGB8toLEDPWM(sr, sg, sb, 255, lr, lg, lb);
+
+                        buf[n + order[0]] = uint8_t(std::min(uint32_t(lr), limit_8bit));
+                        buf[n + order[1]] = uint8_t(std::min(uint32_t(lg), limit_8bit));
+                        buf[n + order[2]] = uint8_t(std::min(uint32_t(lb), limit_8bit));
+                        buf[n + order[3]] = uint8_t(std::min(uint32_t(lw), limit_8bit));
+                    }
+                } break;
+                case Model::StripConfig::NATIVE_RGB16: {
+                    if (output_type == Model::StripConfig::StripOutputType::WS2816) {
+                        uint16_t *buf = reinterpret_cast<uint16_t *>(uintptr_t(&comp_buf[input_pad * uniN]));
+                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 3) {
+                            auto write_buf = [=](const size_t i, const uint16_t p) {
+                                *reinterpret_cast<uint16_t *>(&buf[(n + i) * 2]) = __builtin_bswap16(uint16_t(p));
+                            };
+
+                            uint8_t sr = uint8_t(data[c + 0]);
+                            uint8_t sg = uint8_t(data[c + 1]);
+                            uint8_t sb = uint8_t(data[c + 2]);
+
+                            uint16_t lr = 0;
+                            uint16_t lg = 0;
+                            uint16_t lb = 0;
+                            uint16_t lw = uint16_t(data[c + 3]);
+
+                            converter.sRGB8toLEDPWM(sr, sg, sb, 65535, lr, lg, lb);
+
+                            lw = (lw << 8) | lw;
+
+                            lr = fix_for_ws2816b(uint16_t(std::min(limit_8bit, uint32_t(lr) + uint32_t(lw))));
+                            lg = fix_for_ws2816b(uint16_t(std::min(limit_8bit, uint32_t(lg) + uint32_t(lw))));
+                            lb = fix_for_ws2816b(uint16_t(std::min(limit_8bit, uint32_t(lb) + uint32_t(lw))));
+
+                            write_buf(0, lg);
+                            write_buf(1, lr);
+                            write_buf(2, lb);
+                        }
+                        return;
+                    }
+                    if (output_type == Model::StripConfig::StripOutputType::HD108) {
+                        uint16_t *buf = reinterpret_cast<uint16_t *>(uintptr_t(&comp_buf[input_pad * uniN]));
+                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 4, n += 3) {
+                            auto write_buf = [=](const size_t i, const uint16_t p) {
+                                *reinterpret_cast<uint16_t *>(&buf[(n + i) * 2]) = __builtin_bswap16(uint16_t(p));
+                            };
+
+                            uint8_t sr = uint8_t(data[c + 0]);
+                            uint8_t sg = uint8_t(data[c + 1]);
+                            uint8_t sb = uint8_t(data[c + 2]);
+
+                            uint16_t lr = 0;
+                            uint16_t lg = 0;
+                            uint16_t lb = 0;
+                            uint16_t lw = uint8_t(data[c + 3]);
+
+                            converter.sRGB8toLEDPWM(sr, sg, sb, 65535, lr, lg, lb);
+
+                            lw = (lw << 8) | lw;
+
+                            // TODO: HD108 lut
+
+                            lr = uint16_t(std::min(limit_8bit, uint32_t(lr) + uint32_t(lw)));
+                            lg = uint16_t(std::min(limit_8bit, uint32_t(lg) + uint32_t(lw)));
+                            lb = uint16_t(std::min(limit_8bit, uint32_t(lb) + uint32_t(lw)));
+
+                            write_buf(0, lr);
+                            write_buf(1, lg);
+                            write_buf(2, lb);
+                        }
+                        return;
+                    }
+                } break;
+            }
         } break;
-        case Model::StripConfig::StripOutputType::LPD8806: {
-            const std::vector<size_t> order = {2, 0, 1};
-            trans(order);
+        case Model::StripConfig::StripInputType::RGB16_LSB: {
+            switch (nativeType()) {
+                default: {
+                } break;
+                case Model::StripConfig::NATIVE_RGB8: {
+                    uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                    for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += order_size) {
+                        for (size_t d = 0; d < pixel_pad; d++) {
+                            buf[n + order[d]] = uint8_t(std::min(limit_8bit, uint32_t(data[c + d * 2 + 1])));
+                        }
+                    }
+                } break;
+                case Model::StripConfig::NATIVE_RGBW8: {
+                    uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                    for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 4) {
+                        auto read_buf = [=](const size_t i) { return uint32_t(data[c + i * 2 + 1]); };
+                        auto write_buf = [=](const size_t i, const uint8_t p) { buf[n + order[i]] = p; };
+
+                        uint32_t r = std::min(limit_8bit, read_buf(0));
+                        uint32_t g = std::min(limit_8bit, read_buf(1));
+                        uint32_t b = std::min(limit_8bit, read_buf(2));
+
+                        uint32_t m = std::min(r, std::min(g, b));
+
+                        write_buf(0, uint8_t(r - m));
+                        write_buf(1, uint8_t(g - m));
+                        write_buf(2, uint8_t(b - m));
+                        write_buf(3, uint8_t(m));
+                    }
+                } break;
+                case Model::StripConfig::NATIVE_RGB16: {
+                    if (output_type == Model::StripConfig::StripOutputType::WS2816) {
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 3) {
+                            auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))); };
+                            auto write_buf = [=](const size_t i, const uint16_t p) {
+                                *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
+                            };
+
+                            write_buf(0, uint16_t(fix_for_ws2816b(uint16_t(std::min(limit_16bit, read_buf(1))))));
+                            write_buf(1, uint16_t(fix_for_ws2816b(uint16_t(std::min(limit_16bit, read_buf(0))))));
+                            write_buf(2, uint16_t(fix_for_ws2816b(uint16_t(std::min(limit_16bit, read_buf(2))))));
+                        }
+                        return;
+                    }
+                    if (output_type == Model::StripConfig::StripOutputType::HD108) {
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 3) {
+                            auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))); };
+                            auto write_buf = [=](const size_t i, const uint16_t p) {
+                                *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
+                            };
+
+                            write_buf(0, uint16_t(std::min(limit_16bit, read_buf(0))));
+                            write_buf(1, uint16_t(std::min(limit_16bit, read_buf(1))));
+                            write_buf(2, uint16_t(std::min(limit_16bit, read_buf(2))));
+                        }
+                        return;
+                    }
+                } break;
+            }
         } break;
-        case Model::StripConfig::StripOutputType::WS2801: {
-            const std::vector<size_t> order = {1, 0, 2};
-            trans(order);
+        case Model::StripConfig::StripInputType::RGB16_MSB: {
+            switch (nativeType()) {
+                default: {
+                } break;
+                case Model::StripConfig::NATIVE_RGB8: {
+                    uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                    for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += order_size) {
+                        for (size_t d = 0; d < pixel_pad; d++) {
+                            buf[n + order[d]] = uint8_t(std::min(limit_8bit, uint32_t(data[c + d * 2 + 0])));
+                        }
+                    }
+                } break;
+                case Model::StripConfig::NATIVE_RGBW8: {
+                    uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                    for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 4) {
+                        auto read_buf = [=](const size_t i) { return uint32_t(data[c + i * 2]); };
+                        auto write_buf = [=](const size_t i, const uint8_t p) { buf[n + order[i]] = p; };
+
+                        uint32_t r = std::min(limit_8bit, read_buf(0));
+                        uint32_t g = std::min(limit_8bit, read_buf(1));
+                        uint32_t b = std::min(limit_8bit, read_buf(2));
+
+                        uint32_t m = std::min(r, std::min(g, b));
+
+                        write_buf(0, uint8_t(r - m));
+                        write_buf(1, uint8_t(g - m));
+                        write_buf(2, uint8_t(b - m));
+                        write_buf(3, uint8_t(m));
+                    }
+                } break;
+                case Model::StripConfig::NATIVE_RGB16: {
+                    if (output_type == Model::StripConfig::StripOutputType::WS2816) {
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 3) {
+                            auto read_buf = [=](const size_t i) {
+                                return uint32_t(__builtin_bswap16(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))));
+                            };
+                            auto write_buf = [=](const size_t i, const uint16_t p) {
+                                *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
+                            };
+
+                            write_buf(0, fix_for_ws2816b(uint16_t(std::min(limit_16bit, read_buf(1)))));
+                            write_buf(1, fix_for_ws2816b(uint16_t(std::min(limit_16bit, read_buf(0)))));
+                            write_buf(2, fix_for_ws2816b(uint16_t(std::min(limit_16bit, read_buf(2)))));
+                        }
+                        return;
+                    }
+                    if (output_type == Model::StripConfig::StripOutputType::HD108) {
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 6, n += 3) {
+                            auto read_buf = [=](const size_t i) {
+                                return uint32_t(__builtin_bswap16(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))));
+                            };
+                            auto write_buf = [=](const size_t i, const uint16_t p) {
+                                *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
+                            };
+
+                            write_buf(0, uint16_t(std::min(limit_16bit, read_buf(0))));
+                            write_buf(1, uint16_t(std::min(limit_16bit, read_buf(1))));
+                            write_buf(2, uint16_t(std::min(limit_16bit, read_buf(2))));
+                        }
+                        return;
+                    }
+                } break;
+            }
+        } break;
+        case Model::StripConfig::StripInputType::RGBW16_LSB: {
+            switch (nativeType()) {
+                default: {
+                } break;
+                case Model::StripConfig::NATIVE_RGB8: {
+                    uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                    for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
+                        auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2 + 1]))); };
+                        auto write_buf = [=](const size_t i, const uint8_t p) { buf[n + order[i]] = p; };
+
+                        uint32_t r = read_buf(0);
+                        uint32_t g = read_buf(1);
+                        uint32_t b = read_buf(2);
+                        uint32_t w = read_buf(3);
+
+                        write_buf(0, uint8_t(std::min(limit_8bit, r + w)));
+                        write_buf(1, uint8_t(std::min(limit_8bit, g + w)));
+                        write_buf(2, uint8_t(std::min(limit_8bit, b + w)));
+                    }
+                } break;
+                case Model::StripConfig::NATIVE_RGBW8: {
+                    uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                    for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += order_size) {
+                        for (size_t d = 0; d < pixel_pad; d++) {
+                            buf[n + order[d]] = uint8_t(std::min(limit_8bit, uint32_t(data[c + d * 2 + 1])));
+                        }
+                    }
+                } break;
+                case Model::StripConfig::NATIVE_RGB16: {
+                    if (output_type == Model::StripConfig::StripOutputType::WS2816) {
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
+                            auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))); };
+                            auto write_buf = [=](const size_t i, const uint16_t p) {
+                                *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
+                            };
+
+                            uint32_t r = read_buf(0);
+                            uint32_t g = read_buf(1);
+                            uint32_t b = read_buf(2);
+                            uint32_t w = read_buf(3);
+
+                            write_buf(0, fix_for_ws2816b(uint16_t(std::min(limit_16bit, g + w))));
+                            write_buf(1, fix_for_ws2816b(uint16_t(std::min(limit_16bit, r + w))));
+                            write_buf(2, fix_for_ws2816b(uint16_t(std::min(limit_16bit, b + w))));
+                        }
+                        return;
+                    }
+                    if (output_type == Model::StripConfig::StripOutputType::HD108) {
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
+                            auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))); };
+                            auto write_buf = [=](const size_t i, const uint16_t p) {
+                                *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
+                            };
+
+                            uint32_t r = read_buf(0);
+                            uint32_t g = read_buf(1);
+                            uint32_t b = read_buf(2);
+                            uint32_t w = read_buf(3);
+
+                            write_buf(0, uint16_t(std::min(limit_16bit, r + w)));
+                            write_buf(1, uint16_t(std::min(limit_16bit, g + w)));
+                            write_buf(2, uint16_t(std::min(limit_16bit, b + w)));
+                        }
+                        return;
+                    }
+                } break;
+            }
+        } break;
+        case Model::StripConfig::StripInputType::RGBW16_MSB: {
+            switch (nativeType()) {
+                default: {
+                } break;
+                case Model::StripConfig::NATIVE_RGB8: {
+                    uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                    for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
+                        auto read_buf = [=](const size_t i) { return uint32_t(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2 + 0]))); };
+
+                        uint32_t r = read_buf(0);
+                        uint32_t g = read_buf(1);
+                        uint32_t b = read_buf(2);
+                        uint32_t w = read_buf(3);
+
+                        buf[n + order[0]] = uint8_t(std::min(limit_8bit, r + w));
+                        buf[n + order[1]] = uint8_t(std::min(limit_8bit, g + w));
+                        buf[n + order[2]] = uint8_t(std::min(limit_8bit, b + w));
+                    }
+                } break;
+                case Model::StripConfig::NATIVE_RGBW8: {
+                    uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                    for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += order_size) {
+                        for (size_t d = 0; d < pixel_pad; d++) {
+                            buf[n + order[d]] = uint8_t(std::min(limit_8bit, uint32_t(data[c + d * 2 + 0])));
+                        }
+                    }
+                } break;
+                case Model::StripConfig::NATIVE_RGB16: {
+                    if (output_type == Model::StripConfig::StripOutputType::WS2816) {
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
+                            auto read_buf = [=](const size_t i) {
+                                return uint32_t(__builtin_bswap16(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))));
+                            };
+                            auto write_buf = [=](const size_t i, const uint16_t p) {
+                                *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
+                            };
+
+                            uint32_t r = read_buf(0);
+                            uint32_t g = read_buf(1);
+                            uint32_t b = read_buf(2);
+                            uint32_t w = read_buf(3);
+
+                            r = fix_for_ws2816b(uint16_t(std::min(limit_16bit, r + w)));
+                            g = fix_for_ws2816b(uint16_t(std::min(limit_16bit, g + w)));
+                            b = fix_for_ws2816b(uint16_t(std::min(limit_16bit, b + w)));
+
+                            write_buf(0, uint16_t(g));
+                            write_buf(1, uint16_t(r));
+                            write_buf(2, uint16_t(b));
+                        }
+                        return;
+                    }
+                    if (output_type == Model::StripConfig::StripOutputType::HD108) {
+                        uint8_t *buf = reinterpret_cast<uint8_t *>(&comp_buf[input_pad * uniN]);  // cppcheck-suppress constVariablePointer
+                        for (size_t c = 0, n = 0; c < pixel_loop_n; c += 8, n += 3) {
+                            auto read_buf = [=](const size_t i) {
+                                return uint32_t(__builtin_bswap16(*reinterpret_cast<const uint16_t *>(uintptr_t(&data[c + i * 2]))));
+                            };
+                            auto write_buf = [=](const size_t i, const uint16_t p) {
+                                *reinterpret_cast<uint16_t *>(uintptr_t(&buf[(n + i) * 2])) = __builtin_bswap16(uint16_t(p));
+                            };
+
+                            uint32_t r = read_buf(0);
+                            uint32_t g = read_buf(1);
+                            uint32_t b = read_buf(2);
+                            uint32_t w = read_buf(3);
+
+                            r = uint16_t(std::min(limit_16bit, r + w));
+                            g = uint16_t(std::min(limit_16bit, g + w));
+                            b = uint16_t(std::min(limit_16bit, b + w));
+
+                            write_buf(0, uint16_t(g));
+                            write_buf(1, uint16_t(r));
+                            write_buf(2, uint16_t(b));
+                        }
+                        return;
+                    }
+                } break;
+            }
         } break;
     }
 }
@@ -1211,33 +1086,6 @@ void Strip::prepareTail() {
     }
 }
 
-bool Strip::needsClock() const {
-    switch (output_type) {
-        default:
-        case Model::StripConfig::StripOutputType::TLS3001:
-        case Model::StripConfig::StripOutputType::SK6812:
-        case Model::StripConfig::StripOutputType::SK6812_RGBW:
-        case Model::StripConfig::StripOutputType::WS2812:
-        case Model::StripConfig::StripOutputType::WS2816:
-        case Model::StripConfig::StripOutputType::TM1804:
-        case Model::StripConfig::StripOutputType::UCS1904:
-        case Model::StripConfig::StripOutputType::TM1829:
-        case Model::StripConfig::StripOutputType::GS8202: {
-            return false;
-        } break;
-        case Model::StripConfig::StripOutputType::HD108:
-        case Model::StripConfig::StripOutputType::LPD8806:
-        case Model::StripConfig::StripOutputType::WS2801:
-        case Model::StripConfig::StripOutputType::SK9822:
-        case Model::StripConfig::StripOutputType::HDS107S:
-        case Model::StripConfig::StripOutputType::P9813:
-        case Model::StripConfig::StripOutputType::APA107:
-        case Model::StripConfig::StripOutputType::APA102: {
-            return true;
-        } break;
-    }
-}
-
 const uint8_t *Strip::prepare(size_t &len) {
     switch (output_type) {
         case Model::StripConfig::StripOutputType::TLS3001: {
@@ -1288,8 +1136,8 @@ __attribute__((hot, flatten, optimize("O3"))) void Strip::lpd8806_alike_convert(
     switch (nativeType()) {
         default: {
         } break;
-        case NATIVE_RGBW8:
-        case NATIVE_RGB8: {
+        case Model::StripConfig::NATIVE_RGBW8:
+        case Model::StripConfig::NATIVE_RGB8: {
             for (size_t c = std::max(start, size_t(1)); c <= std::min(end, 1 + bytes_len - 1); c++) {
                 *dst++ = 0x80 | (comp_buf[c - 1] >> 1);
             }
@@ -1302,8 +1150,8 @@ __attribute__((hot, flatten, optimize("O3"))) void Strip::ws2801_alike_convert(s
     switch (nativeType()) {
         default: {
         } break;
-        case NATIVE_RGBW8:
-        case NATIVE_RGB8: {
+        case Model::StripConfig::NATIVE_RGBW8:
+        case Model::StripConfig::NATIVE_RGB8: {
             for (size_t c = start; c <= std::min(end, bytes_len - 1); c++) {
                 *dst++ = comp_buf[c];
             }
@@ -1335,7 +1183,7 @@ __attribute__((hot, flatten, optimize("O3"), optimize("unroll-loops"))) void Str
     switch (nativeType()) {
         default: {
         } break;
-        case NATIVE_RGB16: {
+        case Model::StripConfig::NATIVE_RGB16: {
             uint8_t illum5 = uint8_t(float(0x1f) * std::clamp(glob_illum, 0.0f, 1.0f));
             uint16_t illum16 = 0b1000'0000'0000'0000 | (illum5 << 10) | (illum5 << 5) | illum5;
             for (size_t c = loop_start; c <= loop_end; c += 4, offset += 6) {
@@ -1349,7 +1197,7 @@ __attribute__((hot, flatten, optimize("O3"), optimize("unroll-loops"))) void Str
                 *dst++ = comp_buf[offset + 5];
             }
         } break;
-        case NATIVE_RGB8: {
+        case Model::StripConfig::NATIVE_RGB8: {
             uint8_t illum = 0b11100000 | uint8_t(float(0x1f) * std::clamp(glob_illum, 0.0f, 1.0f));
             for (size_t c = loop_start; c <= loop_end; c += 4, offset += 3) {
                 *dst++ = illum;
@@ -1378,9 +1226,9 @@ __attribute__((hot, flatten, optimize("O3"), optimize("unroll-loops"))) void Str
     switch (nativeType()) {
         default: {
         } break;
-        case NATIVE_RGB16:
-        case NATIVE_RGBW8:
-        case NATIVE_RGB8: {
+        case Model::StripConfig::NATIVE_RGB16:
+        case Model::StripConfig::NATIVE_RGBW8:
+        case Model::StripConfig::NATIVE_RGB8: {
             const uint8_t *src = &comp_buf[std::max(start, size_t(head_len)) - head_len];
             const int32_t len = int32_t(std::min(end, head_len + bytes_len)) - int32_t(std::max(start, size_t(head_len)));
             for (int32_t c = 0; c <= len; c++) {
@@ -1411,8 +1259,8 @@ __attribute__((hot, flatten, optimize("O3"), optimize("unroll-loops"))) void Str
         switch (nativeType()) {
             default: {
             } break;
-            case NATIVE_RGBW8:
-            case NATIVE_RGB8: {
+            case Model::StripConfig::NATIVE_RGBW8:
+            case Model::StripConfig::NATIVE_RGB8: {
                 for (size_t c = 0; c < bytes_len; c++) {
                     uint32_t p = uint32_t(comp_buf[c]);
                     buf.push((p << 19) | (p << 11), 13);
