@@ -63,7 +63,6 @@ App &App::instance() {
 
 void App::start() {
 #ifndef BOOTLOADER
-
     PwmTimer0::instance().start();
     PwmTimer1::instance().start();
     PwmTimer2::instance().start();

@@ -61,7 +61,6 @@ class SPI {
     virtual bool isDMAbusy() const = 0;
 
    protected:
-
     void PLLQCalcMulDiv() {
         uint32_t min_diff = 0x7FFFFFFF;
         uint32_t base_freq = HSE_VALUE;
@@ -78,7 +77,7 @@ class SPI {
                 }
             }
         }
-        actual_mbps = ( ( base_freq * mul ) / div ) / 2;
+        actual_mbps = ((base_freq * mul) / div) / 2;
     }
 
     size_t clen = 0;

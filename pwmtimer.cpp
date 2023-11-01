@@ -26,27 +26,27 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "stm32h5xx_hal.h"
 
-static TIM_HandleTypeDef htim2 {};
-static TIM_HandleTypeDef htim5 {};
-static TIM_HandleTypeDef htim13 {};
-static TIM_HandleTypeDef htim15 {};
-static TIM_HandleTypeDef htim16 {};
-static TIM_HandleTypeDef htim17 {};
+static TIM_HandleTypeDef htim2{};
+static TIM_HandleTypeDef htim3{};
+static TIM_HandleTypeDef htim4{};
+static TIM_HandleTypeDef htim15{};
+static TIM_HandleTypeDef htim16{};
+static TIM_HandleTypeDef htim17{};
 
-void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim_pwm) { // cppcheck-suppress constParameterPointer
+void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim_pwm) {  // cppcheck-suppress constParameterPointer
     if (htim_pwm->Instance == TIM2) {
         __HAL_RCC_TIM2_CLK_ENABLE();
-    } else if (htim_pwm->Instance == TIM5) {
-        __HAL_RCC_TIM5_CLK_ENABLE();
+    } else if (htim_pwm->Instance == TIM3) {
+        __HAL_RCC_TIM3_CLK_ENABLE();
+    } else if (htim_pwm->Instance == TIM4) {
+        __HAL_RCC_TIM4_CLK_ENABLE();
     } else if (htim_pwm->Instance == TIM15) {
         __HAL_RCC_TIM15_CLK_ENABLE();
     }
 }
 
-void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim_base) { // cppcheck-suppress constParameterPointer
-    if (htim_base->Instance == TIM13) {
-        __HAL_RCC_TIM13_CLK_ENABLE();
-    } else if (htim_base->Instance == TIM16) {
+void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim_base) {  // cppcheck-suppress constParameterPointer
+    if (htim_base->Instance == TIM16) {
         __HAL_RCC_TIM16_CLK_ENABLE();
     } else if (htim_base->Instance == TIM17) {
         __HAL_RCC_TIM17_CLK_ENABLE();
@@ -54,7 +54,7 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim_base) { // cppcheck-suppress c
 }
 
 static void HAL_TIM_MspPostInit(const TIM_HandleTypeDef *htim) {
-    GPIO_InitTypeDef GPIO_InitStruct {};
+    GPIO_InitTypeDef GPIO_InitStruct{};
     if (htim->Instance == TIM2) {
         __HAL_RCC_GPIOA_CLK_ENABLE();
         /**TIM2 GPIO Configuration
@@ -66,28 +66,36 @@ static void HAL_TIM_MspPostInit(const TIM_HandleTypeDef *htim) {
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
         GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
         HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-    } else if (htim->Instance == TIM5) {
-        __HAL_RCC_GPIOA_CLK_ENABLE();
-        /**TIM5 GPIO Configuration
-        PA0     ------> TIM5_CH1
+    } else if (htim->Instance == TIM3) {
+        __HAL_RCC_GPIOB_CLK_ENABLE();
+        /**TIM3 GPIO Configuration
+        PB4(NJTRST)     ------> TIM3_CH1
         */
-        GPIO_InitStruct.Pin = GPIO_PIN_0;
+        GPIO_InitStruct.Pin = GPIO_PIN_4;
         GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
         GPIO_InitStruct.Pull = GPIO_NOPULL;
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-        GPIO_InitStruct.Alternate = GPIO_AF2_TIM5;
-        HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-    } else if (htim->Instance == TIM13) {
-        __HAL_RCC_GPIOA_CLK_ENABLE();
-        /**TIM13 GPIO Configuration
-        PA6     ------> TIM13_CH1
+        GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
+        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+        /* USER CODE BEGIN TIM3_MspPostInit 1 */
+
+        /* USER CODE END TIM3_MspPostInit 1 */
+    } else if (htim->Instance == TIM4) {
+        __HAL_RCC_GPIOB_CLK_ENABLE();
+        /**TIM4 GPIO Configuration
+        PB6     ------> TIM4_CH1
         */
         GPIO_InitStruct.Pin = GPIO_PIN_6;
         GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
         GPIO_InitStruct.Pull = GPIO_NOPULL;
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-        GPIO_InitStruct.Alternate = GPIO_AF9_TIM13;
-        HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+        GPIO_InitStruct.Alternate = GPIO_AF2_TIM4;
+        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+        /* USER CODE BEGIN TIM4_MspPostInit 1 */
+
+        /* USER CODE END TIM4_MspPostInit 1 */
     } else if (htim->Instance == TIM15) {
         __HAL_RCC_GPIOC_CLK_ENABLE();
         /**TIM15 GPIO Configuration
@@ -111,16 +119,16 @@ static void HAL_TIM_MspPostInit(const TIM_HandleTypeDef *htim) {
         GPIO_InitStruct.Alternate = GPIO_AF1_TIM16;
         HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
     } else if (htim->Instance == TIM17) {
-        __HAL_RCC_GPIOC_CLK_ENABLE();
+        __HAL_RCC_GPIOB_CLK_ENABLE();
         /**TIM17 GPIO Configuration
-        PC2     ------> TIM17_CH1
+        PB9     ------> TIM17_CH1
         */
-        GPIO_InitStruct.Pin = GPIO_PIN_2;
+        GPIO_InitStruct.Pin = GPIO_PIN_9;
         GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
         GPIO_InitStruct.Pull = GPIO_NOPULL;
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
         GPIO_InitStruct.Alternate = GPIO_AF1_TIM17;
-        HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
     }
 }
 
@@ -155,23 +163,23 @@ static void MX_TIM2_Init(void) {
     HAL_TIM_MspPostInit(&htim2);
 }
 
-static void MX_TIM5_Init(void) {
-    TIM_MasterConfigTypeDef sMasterConfig{};
+static void MX_TIM3_Init(void) {
+    TIM_MasterConfigTypeDef sMasterConfig = {};
     TIM_OC_InitTypeDef sConfigOC{};
 
-    htim5.Instance = TIM5;
-    htim5.Init.Prescaler = 0;
-    htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim5.Init.Period = PwmTimer::pwmPeriod;
-    htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-    if (HAL_TIM_PWM_Init(&htim5) != HAL_OK) {
+    htim3.Instance = TIM3;
+    htim3.Init.Prescaler = 0;
+    htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim3.Init.Period = PwmTimer::pwmPeriod;
+    htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    if (HAL_TIM_PWM_Init(&htim3) != HAL_OK) {
         while (1) {
         }
     }
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-    if (HAL_TIMEx_MasterConfigSynchronization(&htim5, &sMasterConfig) != HAL_OK) {
+    if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK) {
         while (1) {
         }
     }
@@ -179,27 +187,30 @@ static void MX_TIM5_Init(void) {
     sConfigOC.Pulse = PwmTimer::initPulse;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-    if (HAL_TIM_PWM_ConfigChannel(&htim5, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) {
+    if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) {
         while (1) {
         }
     }
-    HAL_TIM_MspPostInit(&htim5);
+    HAL_TIM_MspPostInit(&htim3);
 }
 
-static void MX_TIM13_Init(void) {
+static void MX_TIM4_Init(void) {
+    TIM_MasterConfigTypeDef sMasterConfig{};
     TIM_OC_InitTypeDef sConfigOC{};
 
-    htim13.Instance = TIM13;
-    htim13.Init.Prescaler = 0;
-    htim13.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim13.Init.Period = PwmTimer::pwmPeriod;
-    htim13.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    htim13.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-    if (HAL_TIM_Base_Init(&htim13) != HAL_OK) {
+    htim4.Instance = TIM4;
+    htim4.Init.Prescaler = 0;
+    htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim4.Init.Period = PwmTimer::pwmPeriod;
+    htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    if (HAL_TIM_PWM_Init(&htim4) != HAL_OK) {
         while (1) {
         }
     }
-    if (HAL_TIM_PWM_Init(&htim13) != HAL_OK) {
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK) {
         while (1) {
         }
     }
@@ -207,11 +218,11 @@ static void MX_TIM13_Init(void) {
     sConfigOC.Pulse = PwmTimer::initPulse;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-    if (HAL_TIM_PWM_ConfigChannel(&htim13, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) {
+    if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) {
         while (1) {
         }
     }
-    HAL_TIM_MspPostInit(&htim13);
+    HAL_TIM_MspPostInit(&htim4);
 }
 
 static void MX_TIM15_Init(void) {
@@ -361,13 +372,11 @@ PwmTimer &PwmTimer0::instance() {
     return timer;
 }
 
-void PwmTimer0::init() { MX_TIM13_Init(); }
-void PwmTimer0::start() { HAL_TIM_PWM_Start(&htim13, TIM_CHANNEL_1); }
-void PwmTimer0::stop() { HAL_TIM_PWM_Stop(&htim13, TIM_CHANNEL_1); }
+void PwmTimer0::init() { MX_TIM2_Init(); }
+void PwmTimer0::start() { HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); }
+void PwmTimer0::stop() { HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1); }
 
-void PwmTimer0::setPulse(uint16_t pulse) {
-    TIM13->CCR1 = pulse;
-}
+void PwmTimer0::setPulse(uint16_t pulse) { TIM2->CCR1 = pulse; }
 
 PwmTimer &PwmTimer1::instance() {
     static PwmTimer1 timer;
@@ -382,9 +391,7 @@ void PwmTimer1::init() { MX_TIM15_Init(); }
 void PwmTimer1::start() { HAL_TIM_PWM_Start(&htim15, TIM_CHANNEL_1); }
 void PwmTimer1::stop() { HAL_TIM_PWM_Stop(&htim15, TIM_CHANNEL_1); }
 
-void PwmTimer1::setPulse(uint16_t pulse) {
-    TIM15->CCR1 = pulse;
-}
+void PwmTimer1::setPulse(uint16_t pulse) { TIM15->CCR1 = pulse; }
 
 PwmTimer &PwmTimer2::instance() {
     static PwmTimer2 timer;
@@ -395,13 +402,11 @@ PwmTimer &PwmTimer2::instance() {
     return timer;
 }
 
-void PwmTimer2::init() { MX_TIM16_Init(); }
-void PwmTimer2::start() { HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1); }
-void PwmTimer2::stop() { HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1); }
+void PwmTimer2::init() { MX_TIM3_Init(); }
+void PwmTimer2::start() { HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); }
+void PwmTimer2::stop() { HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1); }
 
-void PwmTimer2::setPulse(uint16_t pulse) {
-    TIM16->CCR1 = pulse;
-}
+void PwmTimer2::setPulse(uint16_t pulse) { TIM3->CCR1 = pulse; }
 
 PwmTimer &PwmTimer3::instance() {
     static PwmTimer3 timer;
@@ -412,13 +417,11 @@ PwmTimer &PwmTimer3::instance() {
     return timer;
 }
 
-void PwmTimer3::init() { MX_TIM17_Init(); }
-void PwmTimer3::start() { HAL_TIM_PWM_Start(&htim17, TIM_CHANNEL_1); }
-void PwmTimer3::stop() { HAL_TIM_PWM_Stop(&htim17, TIM_CHANNEL_1); }
+void PwmTimer3::init() { MX_TIM4_Init(); }
+void PwmTimer3::start() { HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1); }
+void PwmTimer3::stop() { HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1); }
 
-void PwmTimer3::setPulse(uint16_t pulse) {
-    TIM17->CCR1 = pulse;
-}
+void PwmTimer3::setPulse(uint16_t pulse) { TIM4->CCR1 = pulse; }
 
 PwmTimer &PwmTimer4::instance() {
     static PwmTimer4 timer;
@@ -429,13 +432,11 @@ PwmTimer &PwmTimer4::instance() {
     return timer;
 }
 
-void PwmTimer4::init() { MX_TIM2_Init(); }
-void PwmTimer4::start() { HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); }
-void PwmTimer4::stop() { HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1); }
+void PwmTimer4::init() { MX_TIM16_Init(); }
+void PwmTimer4::start() { HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1); }
+void PwmTimer4::stop() { HAL_TIM_PWM_Stop(&htim16, TIM_CHANNEL_1); }
 
-void PwmTimer4::setPulse(uint16_t pulse) {
-    TIM2->CCR1 = pulse;
-}
+void PwmTimer4::setPulse(uint16_t pulse) { TIM16->CCR1 = pulse; }
 
 PwmTimer &PwmTimer5::instance() {
     static PwmTimer5 timer;
@@ -446,10 +447,8 @@ PwmTimer &PwmTimer5::instance() {
     return timer;
 }
 
-void PwmTimer5::init() { MX_TIM5_Init(); }
-void PwmTimer5::start() { HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_1); }
-void PwmTimer5::stop() { HAL_TIM_PWM_Stop(&htim5, TIM_CHANNEL_1); }
+void PwmTimer5::init() { MX_TIM17_Init(); }
+void PwmTimer5::start() { HAL_TIM_PWM_Start(&htim17, TIM_CHANNEL_1); }
+void PwmTimer5::stop() { HAL_TIM_PWM_Stop(&htim17, TIM_CHANNEL_1); }
 
-void PwmTimer5::setPulse(uint16_t pulse) {
-    TIM5->CCR1 = pulse;
-}
+void PwmTimer5::setPulse(uint16_t pulse) { TIM17->CCR1 = pulse; }

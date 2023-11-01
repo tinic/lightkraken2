@@ -124,6 +124,7 @@ struct Model {
             HD108,
             WS2816,
             SK6812_RGBW,
+            WS2811,
             OUTPUT_COUNT};
 
         enum StripInputType { 
@@ -165,8 +166,8 @@ struct Model {
         uint16_t artnet[universeN];
         uint16_t e131[universeN];
     } strip_config[stripN] = {
-        {StripConfig::WS2812, StripConfig::RGB8, StripConfig::RAINBOW, 1.0, 1.0, 255, 900000, rgb8(), RGBColorSpace(), {0, 0, 0, 0, 0, 0}, {1, 0, 0, 0, 0, 0}},
-        {StripConfig::WS2812, StripConfig::RGB8, StripConfig::RAINBOW, 1.0, 1.0, 255, 900000, rgb8(), RGBColorSpace(), {1, 0, 0, 0, 0, 0}, {2, 0, 0, 0, 0, 0}},
+        {StripConfig::HD108, StripConfig::RGB8, StripConfig::RAINBOW, 1.0, 1.0, 255, 20000000, rgb8(), RGBColorSpace(), {0, 0, 0, 0, 0, 0}, {1, 0, 0, 0, 0, 0}},
+        {StripConfig::HD108, StripConfig::RGB8, StripConfig::RAINBOW, 1.0, 1.0, 255, 20000000, rgb8(), RGBColorSpace(), {1, 0, 0, 0, 0, 0}, {2, 0, 0, 0, 0, 0}},
     };
 
     // clang-format off
@@ -200,24 +201,26 @@ struct Model {
         float spi_mpbs_factor;
         uint32_t min_mbps;
         uint32_t max_mbps;
+        uint32_t default_mpbs;
     } stripOutputProperties[StripConfig::OUTPUT_COUNT] = {
-        {StripConfig::WS2812,      StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    }, false, false, 4.0f, 600000,   900000 },  
-        {StripConfig::SK6812,      StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    }, false, false, 4.0f, 600000,   900000 },  
-        {StripConfig::TM1804,      StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    }, false, false, 4.0f, 600000,   900000 }, 
-        {StripConfig::UCS1904,     StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    }, false, false, 4.0f, 600000,   900000 },
-        {StripConfig::GS8202,      StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    }, false, false, 4.0f, 600000,   900000 },  
-        {StripConfig::APA102,      StripConfig::NATIVE_RGB8,   8, 4, 3, { 2, 1, 0    },  true,  true, 1.0f,   1000, 20000000 },   
-        {StripConfig::APA107,      StripConfig::NATIVE_RGB8,   8, 4, 3, { 2, 1, 0    },  true,  true, 1.0f,   1000, 30000000 },
-        {StripConfig::P9813,       StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    },  true, false, 1.0f, 600000,   900000 },    
-        {StripConfig::SK9822,      StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    },  true,  true, 1.0f,   1000, 15000000 },    
-        {StripConfig::HDS107S,     StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    },  true, false, 1.0f,   1000, 40000000 }, 
-        {StripConfig::LPD8806,     StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    },  true, false, 4.0f, 600000, 20000000 },
-        {StripConfig::TLS3001,     StripConfig::NATIVE_RGB8,   8, 4, 3, { 0, 1, 2    }, false, false, 4.0f, 600000,   900000 }, 
-        {StripConfig::TM1829,      StripConfig::NATIVE_RGB8,  16, 4, 3, { 2, 1, 0    }, false, false, 4.0f, 600000,   900000 }, 
-        {StripConfig::WS2801,      StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    },  true, false, 1.0f, 600000,   900000 },  
-        {StripConfig::HD108,       StripConfig::NATIVE_RGB16, 16, 6, 3, { 0, 1, 2    },  true, false, 1.0f, 600000,   900000 },
-        {StripConfig::WS2816,      StripConfig::NATIVE_RGB16, 16, 6, 3, { 1, 0, 2    }, false, false, 4.0f, 600000,   900000 },
-        {StripConfig::SK6812_RGBW, StripConfig::NATIVE_RGBW8,  8, 4, 4, { 1, 0, 2, 3 }, false, false, 4.0f, 600000,   900000 }};
+        {StripConfig::WS2812,      StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    }, false, false, 4.0f, 700000,   900000,  800000 },  
+        {StripConfig::SK6812,      StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    }, false, false, 4.0f, 700000,   900000,  800000 },  
+        {StripConfig::TM1804,      StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    }, false, false, 4.0f, 700000,   900000,  800000 }, 
+        {StripConfig::UCS1904,     StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    }, false, false, 4.0f, 700000,   900000,  800000 },
+        {StripConfig::GS8202,      StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    }, false, false, 4.0f, 700000,   900000,  800000 },  
+        {StripConfig::APA102,      StripConfig::NATIVE_RGB8,   8, 4, 3, { 2, 1, 0    },  true,  true, 1.0f,   1000, 20000000, 2000000 },   
+        {StripConfig::APA107,      StripConfig::NATIVE_RGB8,   8, 4, 3, { 2, 1, 0    },  true,  true, 1.0f,   1000, 30000000, 3000000 },
+        {StripConfig::P9813,       StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    },  true, false, 1.0f, 700000,   900000,  800000 },    
+        {StripConfig::SK9822,      StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    },  true,  true, 1.0f,   1000, 15000000, 1000000 },    
+        {StripConfig::HDS107S,     StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    },  true, false, 1.0f,   1000, 40000000, 2000000 }, 
+        {StripConfig::LPD8806,     StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    },  true, false, 4.0f, 700000, 20000000, 2000000 },
+        {StripConfig::TLS3001,     StripConfig::NATIVE_RGB8,   8, 4, 3, { 0, 1, 2    }, false, false, 2.0f, 500000,  1000000,  750000 }, 
+        {StripConfig::TM1829,      StripConfig::NATIVE_RGB8,  16, 4, 3, { 2, 1, 0    }, false, false, 4.0f, 800000,   800000,  800000 }, 
+        {StripConfig::WS2801,      StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    },  true, false, 1.0f, 700000,   900000,  800000 },  
+        {StripConfig::HD108,       StripConfig::NATIVE_RGB16, 16, 6, 3, { 0, 1, 2    },  true, false, 1.0f, 700000, 20000000, 1000000 },
+        {StripConfig::WS2816,      StripConfig::NATIVE_RGB16, 16, 6, 3, { 1, 0, 2    }, false, false, 4.0f, 700000,   900000,  800000 },
+        {StripConfig::SK6812_RGBW, StripConfig::NATIVE_RGBW8,  8, 4, 4, { 1, 0, 2, 3 }, false, false, 4.0f, 700000,   900000,  800000 },
+        {StripConfig::WS2811,      StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    }, false, false, 4.0f, 700000,   900000,  800000 }};
     // clang-format on
 
     enum OutputConfig {
