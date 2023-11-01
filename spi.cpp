@@ -217,7 +217,7 @@ void SPI_0::startDMATransfer() { HAL_SPI_Transmit_DMA(&hspi1, cbuf, uint16_t(cle
 
 void SPI_0::setupDMATransfer() { configSPI1Clock(mul, div); }
 
-bool SPI_0::isDMAbusy() const { return false; }  // ((handle_GPDMA1_Channel7.Instance->CSR & DMA_CSR_IDLEF) == 0); }
+bool SPI_0::isDMAbusy() const { return ((handle_GPDMA1_Channel7.Instance->CSR & DMA_CSR_IDLEF) == 0); }
 
 void SPI_0::init() {
     __HAL_RCC_GPDMA1_CLK_ENABLE();
@@ -244,7 +244,7 @@ void SPI_1::startDMATransfer() { HAL_SPI_Transmit_DMA(&hspi2, cbuf, uint16_t(cle
 
 void SPI_1::setupDMATransfer() { configSPI2Clock(mul, div); }
 
-bool SPI_1::isDMAbusy() const { return false; }  // ((handle_GPDMA2_Channel7.Instance->CSR & DMA_CSR_IDLEF) == 0); }
+bool SPI_1::isDMAbusy() const { return ((handle_GPDMA2_Channel7.Instance->CSR & DMA_CSR_IDLEF) == 0); }
 
 void SPI_1::init() {
     __HAL_RCC_GPDMA2_CLK_ENABLE();
