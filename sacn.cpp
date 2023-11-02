@@ -290,13 +290,7 @@ void sACNPacket::leaveNetworks() {
     std::array<uint16_t, Model::maxUniverses> universes;
     Control::instance().collectAllActiveE131Universes(universes, universeCount);
     for (size_t c = 0; c < universeCount; c++) {
-#if 0
-        ip4_addr multicast_addr;
-        IP4_ADDR(&multicast_addr, 239, 255, (universes[c] >> 8) & 0xFF, (universes[c] >> 0) & 0xFF);
-        if (igmp_lookfor_group(NetConf::instance().netInterface(), &multicast_addr) == 0) {
-            igmp_leavegroup_netif(NetConf::instance().netInterface(), &multicast_addr);
-        }
-#endif  // #if 0
+        nx_igmp_multicast_interface_leave(Network::instance().ip(), 0xEFFF0000 | universes[c], 0);
     }
 }
 
@@ -305,13 +299,7 @@ void sACNPacket::joinNetworks() {
     std::array<uint16_t, Model::maxUniverses> universes;
     Control::instance().collectAllActiveE131Universes(universes, universeCount);
     for (size_t c = 0; c < universeCount; c++) {
-#if 0
-        ip4_addr multicast_addr;
-        IP4_ADDR(&multicast_addr, 239, 255, (universes[c] >> 8) & 0xFF, (universes[c] >> 0) & 0xFF);
-        if (igmp_lookfor_group(NetConf::instance().netInterface(), &multicast_addr) == 0) {
-            igmp_joingroup_netif(NetConf::instance().netInterface(), &multicast_addr);
-        }
-#endif  // #if 0
+        nx_igmp_multicast_interface_join(Network::instance().ip(), 0xEFFF0000 | universes[c], 0);
     }
 }
 

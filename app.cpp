@@ -34,6 +34,7 @@ SOFTWARE.
 #include "./network.h"
 #include "./pwmtimer.h"
 #include "./random.h"
+#include "./sacn.h"
 #include "./settingsdb.h"
 #include "./systick.h"
 #include "./utils.h"
@@ -140,6 +141,8 @@ void App::start() {
     }
 
 #ifndef BOOTLOADER
+    sACNPacket::joinNetworks();
+
     Model::instance().applyToControl();
 
     if (!Control::instance().start()) {
