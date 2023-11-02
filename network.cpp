@@ -250,6 +250,22 @@ void Network::ArtNetSend(const NXD_ADDRESS *addr, uint16_t port, const uint8_t *
     }
 }
 
+void Network::sACNSend(const NXD_ADDRESS *addr, uint16_t port, const uint8_t *data, size_t len) {
+    NX_PACKET *packet_ptr = 0;
+    UINT status = nx_packet_allocate(&client_pool, &packet_ptr, NX_UDP_PACKET, TX_WAIT_FOREVER);
+    if (status != NX_SUCCESS) {
+        return;
+    }
+    status = nx_packet_data_append(packet_ptr, (CHAR *)data, len, &client_pool, TX_WAIT_FOREVER);
+    if (status != NX_SUCCESS) {
+        return;
+    }
+    status = nxd_udp_socket_send(&artnet_socket, packet_ptr, (NXD_ADDRESS *)addr, ArtNetPacket::port);
+    if (status != NX_SUCCESS) {
+        return;
+    }
+}
+
 #endif  // #ifndef BOOTLOADER
 
 static void client_ip_address_changed(NX_IP *ip_ptr, VOID *user) { Network::instance().ClientIPChange(ip_ptr, user); }

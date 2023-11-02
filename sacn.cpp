@@ -230,10 +230,10 @@ void sACNPacket::sendDiscovery() {
         discovery.universes[c] = hton16(universes[c]);
     }
 
-    /*    struct ip4_addr broadcastAddr;
-        broadcastAddr.addr = (NetConf::instance().netInterface()->ip_addr.addr & NetConf::instance().netInterface()->netmask.addr) |
-                             ~NetConf::instance().netInterface()->netmask.addr;
-        NetConf::instance().sendsACNUdpPacket(&broadcastAddr, ACN_SDT_MULTICAST_PORT, (const uint8_t *)&discovery, replySize);*/
+    NXD_ADDRESS broadcastAddr = *Network::instance().ipv4Addr();
+    broadcastAddr.nxd_ip_address.v4 &= Network::instance().ipv4Mask()->nxd_ip_address.v4;
+    broadcastAddr.nxd_ip_address.v4 |= ~Network::instance().ipv4Mask()->nxd_ip_address.v4;
+    Network::instance().sACNSend(&broadcastAddr, ACN_SDT_MULTICAST_PORT, (const uint8_t *)&discovery, replySize);
 }
 
 bool sACNPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t len, bool isBroadcast) {
