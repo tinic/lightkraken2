@@ -53,6 +53,7 @@ class Network {
     void ClientIPChange(NX_IP *ip_ptr, VOID *user);
     void ArtNetReceive(NX_UDP_SOCKET *socket_ptr);
     void ArtNetSend(const NXD_ADDRESS *addr, uint16_t port, const uint8_t *data, size_t len);
+    void sACNReceive(NX_UDP_SOCKET *socket_ptr);
     void sACNSend(const NXD_ADDRESS *addr, uint16_t port, const uint8_t *data, size_t len);
     bool AddrIsBroadcast(const NXD_ADDRESS *addrToCheck) const;
     bool AddrToString(const NXD_ADDRESS *value, char *ip_str, size_t max_len) const;
@@ -72,6 +73,7 @@ class Network {
     NXD_ADDRESS ipv6{};
     ULONG ipv6prefix = 0;
     NX_UDP_SOCKET artnet_socket{};
+    NX_UDP_SOCKET sacn_socket{};
 
     uint32_t murmur3_32(const uint8_t *key, size_t len, uint32_t seed) const;
 

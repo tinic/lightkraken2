@@ -179,8 +179,6 @@ static void dhcp_state_change(NX_DHCP *dhcp_ptr, UCHAR new_state) {
 
 #ifndef BOOTLOADER
 
-static void artnet_receive_notify(NX_UDP_SOCKET *socket_ptr) { Network::instance().ArtNetReceive(socket_ptr); }
-
 bool Network::AddrIsBroadcast(const NXD_ADDRESS *addrToCheck) const {
     if (addrToCheck->nxd_ip_version == NX_IP_VERSION_V4) {
         if (addrToCheck->nxd_ip_address.v4 == 0x00000000 || addrToCheck->nxd_ip_address.v4 == 0xFFFFFFFF) {
@@ -219,6 +217,8 @@ bool Network::AddrToString(const NXD_ADDRESS *value, char *ip_str, size_t max_le
     return false;
 }
 
+static void artnet_receive_notify(NX_UDP_SOCKET *socket_ptr) { Network::instance().ArtNetReceive(socket_ptr); }
+
 void Network::ArtNetReceive(NX_UDP_SOCKET *socket_ptr) {
     NX_PACKET *packet_ptr = 0;
     while (nx_udp_socket_receive(socket_ptr, &packet_ptr, NX_NO_WAIT) == NX_SUCCESS) {
@@ -244,9 +244,26 @@ void Network::ArtNetSend(const NXD_ADDRESS *addr, uint16_t port, const uint8_t *
     if (status != NX_SUCCESS) {
         return;
     }
-    status = nxd_udp_socket_send(&artnet_socket, packet_ptr, (NXD_ADDRESS *)addr, ArtNetPacket::port);
+    status = nxd_udp_socket_send(&artnet_socket, packet_ptr, (NXD_ADDRESS *)addr, port);
     if (status != NX_SUCCESS) {
         return;
+    }
+}
+
+static void sacn_receive_notify(NX_UDP_SOCKET *socket_ptr) { Network::instance().sACNReceive(socket_ptr); }
+
+void Network::sACNReceive(NX_UDP_SOCKET *socket_ptr) {
+    NX_PACKET *packet_ptr = 0;
+    while (nx_udp_socket_receive(socket_ptr, &packet_ptr, NX_NO_WAIT) == NX_SUCCESS) {
+        NXD_ADDRESS recvAddr{};
+        UINT status = nxd_udp_packet_info_extract(packet_ptr, &recvAddr, NULL, NULL, NULL);
+        if (status != NX_SUCCESS) {
+            return;
+        }
+        const uint8_t *sacnBuf = packet_ptr->nx_packet_prepend_ptr;
+        size_t sacnLen = size_t(packet_ptr->nx_packet_append_ptr - packet_ptr->nx_packet_prepend_ptr);
+        sACNPacket::dispatch(&recvAddr, sacnBuf, sacnLen, AddrIsBroadcast(&recvAddr));
+        nx_packet_release(packet_ptr);
     }
 }
 
@@ -260,7 +277,7 @@ void Network::sACNSend(const NXD_ADDRESS *addr, uint16_t port, const uint8_t *da
     if (status != NX_SUCCESS) {
         return;
     }
-    status = nxd_udp_socket_send(&artnet_socket, packet_ptr, (NXD_ADDRESS *)addr, ArtNetPacket::port);
+    status = nxd_udp_socket_send(&artnet_socket, packet_ptr, (NXD_ADDRESS *)addr, port);
     if (status != NX_SUCCESS) {
         return;
     }
@@ -372,6 +389,12 @@ uint8_t *Network::setup(uint8_t *pointer) {
     if (status) goto fail;
 
     status = nx_udp_socket_receive_notify(&artnet_socket, artnet_receive_notify);
+    if (status) goto fail;
+
+    status = nx_udp_socket_create(&client_ip, &sacn_socket, (CHAR *)"sACN", NX_IP_MIN_DELAY, NX_DONT_FRAGMENT, NX_IP_TIME_TO_LIVE, 8);
+    if (status) goto fail;
+
+    status = nx_udp_socket_receive_notify(&sacn_socket, sacn_receive_notify);
     if (status) goto fail;
 #endif  // #ifndef BOOTLOADER
 
@@ -555,6 +578,11 @@ bool Network::start() {
         }
 
         status = nx_udp_socket_bind(&artnet_socket, ArtNetPacket::port, NX_WAIT_FOREVER);
+        if (status) {
+            return false;
+        }
+
+        status = nx_udp_socket_bind(&sacn_socket, sACNPacket::ACN_SDT_MULTICAST_PORT, NX_WAIT_FOREVER);
         if (status) {
             return false;
         }
