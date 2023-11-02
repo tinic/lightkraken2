@@ -155,20 +155,12 @@ sACNPacket::PacketType sACNPacket::maybeValid(const uint8_t *buf, size_t len) {
     return PacketInvalid;
 }
 
-__attribute__((hot, flatten, optimize("O3"), optimize("unroll-loops"))) static void memcpy_fast_aligned(uint8_t *dst, const uint8_t *src, size_t len) {
-    uint8_t *d = (uint8_t *)__builtin_assume_aligned(dst, 4);
-    const uint8_t *s = (const uint8_t *)__builtin_assume_aligned(src, 4);
-    for (size_t c = 0; c < len; c++) {
-        d[c] = s[c];
-    }
-}
-
 bool sACNPacket::verify(sACNPacket &packet, const uint8_t *buf, size_t len) {  // cppcheck-suppress constParameterReference
     PacketType type = sACNPacket::maybeValid(buf, len);
     if (type == PacketInvalid) {
         return false;
     }
-    memcpy_fast_aligned(packet.packet, buf, std::min(len, sizeof(packet.packet)));
+    memcpy(packet.packet, buf, std::min(len, sizeof(packet.packet)));
     switch (type) {
         case PacketData:
         case PacketSync:
