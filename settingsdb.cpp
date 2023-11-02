@@ -208,7 +208,7 @@ UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
                         emio::format_to(buf, "]").value();
                     } break;
                     case KEY_TYPE_NUMBER_VECTOR_CHAR: {
-                        std::array<float, max_array_size> value;
+                        std::array<float, max_array_size> value{};
                         size_t len = fdb_blob_read(reinterpret_cast<fdb_db_t>(&kvdb),
                                                    fdb_kv_to_blob(cur_kv, fdb_blob_make(&blob, value.data(), sizeof(float) * max_array_size)));
                         emio::format_to(buf, "{}\"{}\":[", comma, name_buf).value();
@@ -501,8 +501,8 @@ UINT SettingsDB::jsonPUTRequest(NX_PACKET *packet_ptr, bool deleteRequest) {
         nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, 0,
                                                        NX_NULL, 0);
     } else {
-        nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_NOT_ACCEPTABLE, sizeof(NX_HTTP_STATUS_NOT_ACCEPTABLE) - 1, NX_NULL, 0,
-                                                       NX_NULL, 0);
+        nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_NOT_ACCEPTABLE,
+                                                       sizeof(NX_HTTP_STATUS_NOT_ACCEPTABLE) - 1, NX_NULL, 0, NX_NULL, 0);
     }
     return (NX_HTTP_CALLBACK_COMPLETED);
 }
@@ -610,7 +610,7 @@ bool SettingsDB::getNumberVector(const char *key, floatFixedVector_t &vec) {
     keyF.append(KEY_TYPE_NUMBER_VECTOR);
     struct fdb_blob blob {};
     size_t len = 0;
-    std::array<float, max_array_size> value;
+    std::array<float, max_array_size> value{};
     if ((len = fdb_kv_get_blob(&kvdb, keyF.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(value.data()), value.size() * sizeof(float)))) > 0) {
         for (size_t c = 0; c < len / sizeof(float); c++) {
             vec.push_back(value[c]);
@@ -628,7 +628,7 @@ bool SettingsDB::getNumberVector2D(const char *key, floatFixedVector2D_t &vec) {
     stringFixed_t keyF(key);
     keyF.append(KEY_TYPE_NUMBER_VECTOR);
     struct fdb_blob blob {};
-    std::array<float, max_array_size_2d * max_array_size_2d + max_array_size_2d + 1> raw;
+    std::array<float, max_array_size_2d * max_array_size_2d + max_array_size_2d + 1> raw{};
     if (fdb_kv_get_blob(&kvdb, keyF.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(raw.data()), raw.size() * sizeof(float))) > 0) {
         size_t idx = 0;
         size_t rows = size_t(raw[idx++]);
@@ -654,7 +654,7 @@ bool SettingsDB::getBoolVector(const char *key, fixed_containers::FixedVector<bo
     keyF.append(KEY_TYPE_BOOL_VECTOR);
     struct fdb_blob blob {};
     size_t len = 0;
-    std::array<bool, max_array_size> value;
+    std::array<bool, max_array_size> value{};
     if ((len = fdb_kv_get_blob(&kvdb, keyF.c_str(), fdb_blob_make(&blob, reinterpret_cast<const void *>(value.data()), value.size() * sizeof(bool)))) > 0) {
         for (size_t c = 0; c < len / sizeof(bool); c++) {
             vec.push_back(value[c]);
@@ -749,7 +749,7 @@ different:
     for (const fixed_containers::FixedVector<float, max_array_size_2d> &row : vec) {
         raw.push_back(float(row.size()));
         for (const float value : row) {
-            raw.push_back(value); // cppcheck-suppress useStlAlgorithm
+            raw.push_back(value);  // cppcheck-suppress useStlAlgorithm
         }
     }
     struct fdb_blob blob {};
