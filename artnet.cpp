@@ -215,8 +215,8 @@ void ArtNetPacket::sendArtPollReply(const NXD_ADDRESS *from, uint16_t universe) 
     reply.oem = 0x1ed5;
     reply.estaManufactor = 0x1ed5;
 
-    const char short_hostname_base[] = "lk-";
-    const char hex_table[16] = {
+    constexpr char short_hostname_base[] = "lk-";
+    constexpr std::array hex_table = {
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
     };
     char short_hostname[sizeof(short_hostname_base) + 8];

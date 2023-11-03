@@ -72,6 +72,14 @@ add_compile_definitions(
     $<$<CONFIG:Release>:TX_DISABLE_ERROR_CHECKING>
     $<$<CONFIG:Release>:NDEBUG>)
 
+execute_process (COMMAND yarn install
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/vue3)
+
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.gitmodules")
+  execute_process (COMMAND git submodule update --init --recursive
+                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endif()
+
 set(STM32HAL_DIR ${PROJECT_SOURCE_DIR}/stm32h5xx_hal_driver)
 set(THREADX_DIR ${PROJECT_SOURCE_DIR}/threadx)
 set(FILEX_DIR ${PROJECT_SOURCE_DIR}/filex)
