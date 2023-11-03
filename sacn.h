@@ -25,6 +25,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <stdint.h>
 
+#include <array>
+
 #include "nx_api.h"
 
 class sACNPacket {
@@ -53,7 +55,7 @@ class sACNPacket {
     virtual ~sACNPacket(){};
 
     virtual bool verify() const { return false; }
-    uint8_t packet[1143] {};
+    std::array<uint8_t, 1143> packet{};
     static uint16_t syncuniverse;
 
    private:

@@ -25,6 +25,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <stdint.h>
 
+#include <array>
+
 #include "nx_api.h"
 
 class DDPPacket {
@@ -44,7 +46,7 @@ class DDPPacket {
    private:
     static PacketType maybeValid(const uint8_t *buf, size_t len);
     static bool verify(DDPPacket &Packet, const uint8_t *buf, size_t len);
-    uint8_t packet[maxDDPPacketSize]{};
+    std::array<uint8_t, maxDDPPacketSize> packet{};
 };
 
 #endif  // #ifndef _DDP_H_

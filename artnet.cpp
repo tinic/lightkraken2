@@ -148,7 +148,7 @@ bool ArtNetPacket::verify(ArtNetPacket &packet, const uint8_t *buf, size_t len) 
     if (op == OpInvalid) {
         return false;
     }
-    memcpy(packet.packet, buf, std::min(len, sizeof(packet.packet)));
+    memcpy(packet.packet.data(), buf, std::min(len, packet.packet.size()));
     switch (op) {
         case OpPoll:
         case OpSync:

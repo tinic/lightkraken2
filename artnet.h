@@ -25,6 +25,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <stdint.h>
 
+#include <array>
+
 #include "nx_api.h"
 
 class ArtSyncWatchDog {
@@ -89,7 +91,7 @@ class ArtNetPacket {
     virtual ~ArtNetPacket() {}
 
     virtual bool verify() const { return false; }
-    uint8_t packet[512 + 18] {};
+    std::array<uint8_t, 512 + 18> packet{};
     Opcode opcode() const;
     int version() const;
 

@@ -28,6 +28,7 @@ SOFTWARE.
 #endif  // #ifndef BOOTLOADER
 
 #include "./artnet.h"
+#include "./ddp.h"
 #include "./sacn.h"
 #include "./settingsdb.h"
 #include "./support/ipv6.h"
@@ -283,6 +284,39 @@ void Network::sACNSend(const NXD_ADDRESS *addr, uint16_t port, const uint8_t *da
     }
 }
 
+static void ddp_receive_notify(NX_UDP_SOCKET *socket_ptr) { Network::instance().DDPReceive(socket_ptr); }
+
+void Network::DDPReceive(NX_UDP_SOCKET *socket_ptr) {
+    NX_PACKET *packet_ptr = 0;
+    while (nx_udp_socket_receive(socket_ptr, &packet_ptr, NX_NO_WAIT) == NX_SUCCESS) {
+        NXD_ADDRESS recvAddr{};
+        UINT status = nxd_udp_packet_info_extract(packet_ptr, &recvAddr, NULL, NULL, NULL);
+        if (status != NX_SUCCESS) {
+            return;
+        }
+        const uint8_t *ddpBuf = packet_ptr->nx_packet_prepend_ptr;
+        size_t ddpLen = size_t(packet_ptr->nx_packet_append_ptr - packet_ptr->nx_packet_prepend_ptr);
+        DDPPacket::dispatch(&recvAddr, ddpBuf, ddpLen, AddrIsBroadcast(&recvAddr));
+        nx_packet_release(packet_ptr);
+    }
+}
+
+void Network::DDPSend(const NXD_ADDRESS *addr, uint16_t port, const uint8_t *data, size_t len) {
+    NX_PACKET *packet_ptr = 0;
+    UINT status = nx_packet_allocate(&client_pool, &packet_ptr, NX_UDP_PACKET, TX_WAIT_FOREVER);
+    if (status != NX_SUCCESS) {
+        return;
+    }
+    status = nx_packet_data_append(packet_ptr, (CHAR *)data, len, &client_pool, TX_WAIT_FOREVER);
+    if (status != NX_SUCCESS) {
+        return;
+    }
+    status = nxd_udp_socket_send(&artnet_socket, packet_ptr, (NXD_ADDRESS *)addr, port);
+    if (status != NX_SUCCESS) {
+        return;
+    }
+}
+
 #endif  // #ifndef BOOTLOADER
 
 static void client_ip_address_changed(NX_IP *ip_ptr, VOID *user) { Network::instance().ClientIPChange(ip_ptr, user); }
@@ -395,6 +429,12 @@ uint8_t *Network::setup(uint8_t *pointer) {
     if (status) goto fail;
 
     status = nx_udp_socket_receive_notify(&sacn_socket, sacn_receive_notify);
+    if (status) goto fail;
+
+    status = nx_udp_socket_create(&client_ip, &ddp_socket, (CHAR *)"DDP", NX_IP_MIN_DELAY, NX_DONT_FRAGMENT, NX_IP_TIME_TO_LIVE, 8);
+    if (status) goto fail;
+
+    status = nx_udp_socket_receive_notify(&ddp_socket, ddp_receive_notify);
     if (status) goto fail;
 #endif  // #ifndef BOOTLOADER
 
@@ -567,12 +607,17 @@ bool Network::start() {
             return false;
         }
 
-        status = nx_mdns_service_add(&mdns, (UCHAR *)hostname, (UCHAR *)"_artnet._udp", NULL, NULL, 120, 0, 0, 6454, NX_TRUE, 0);
+        status = nx_mdns_service_add(&mdns, (UCHAR *)hostname, (UCHAR *)"_artnet._udp", NULL, NULL, 120, 0, 0, ArtNetPacket::port, NX_TRUE, 0);
         if (status) {
             return false;
         }
 
-        status = nx_mdns_service_add(&mdns, (UCHAR *)hostname, (UCHAR *)"_sACN._udp", NULL, NULL, 120, 0, 0, 5568, NX_TRUE, 0);
+        status = nx_mdns_service_add(&mdns, (UCHAR *)hostname, (UCHAR *)"_sACN._udp", NULL, NULL, 120, 0, 0, sACNPacket::ACN_SDT_MULTICAST_PORT, NX_TRUE, 0);
+        if (status) {
+            return false;
+        }
+
+        status = nx_mdns_service_add(&mdns, (UCHAR *)hostname, (UCHAR *)"_DDP._udp", NULL, NULL, 120, 0, 0, DDPPacket::port, NX_TRUE, 0);
         if (status) {
             return false;
         }
@@ -583,6 +628,11 @@ bool Network::start() {
         }
 
         status = nx_udp_socket_bind(&sacn_socket, sACNPacket::ACN_SDT_MULTICAST_PORT, NX_WAIT_FOREVER);
+        if (status) {
+            return false;
+        }
+
+        status = nx_udp_socket_bind(&ddp_socket, DDPPacket::port, NX_WAIT_FOREVER);
         if (status) {
             return false;
         }
