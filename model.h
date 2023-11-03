@@ -32,6 +32,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <fixed_containers/fixed_vector.hpp>
 #pragma GCC diagnostic pop
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#include <magic_enum.hpp>
+#pragma GCC diagnostic pop
+
 #include "./color.h"
 
 struct Model {
@@ -52,8 +57,7 @@ struct Model {
         enum AnalogOutputType { 
             RGB, 
             RGBW, 
-            RGBWWW,
-            OUTPUT_COUNT};
+            RGBWWW};
 
         enum AnalogInputType { 
             RGB8, 
@@ -64,8 +68,7 @@ struct Model {
             RGBWWW8_SRGB, 
             RGB16_MSB, 
             RGBW16_MSB, 
-            RGBWWW16_MSB, 
-            INPUT_COUNT};
+            RGBWWW16_MSB};
         // clang-format on
 
         AnalogOutputType output_type;
@@ -124,8 +127,7 @@ struct Model {
             HD108,
             WS2816,
             SK6812_RGBW,
-            WS2811,
-            OUTPUT_COUNT};
+            WS2811};
 
         enum StripInputType { 
             RGB8, 
@@ -135,23 +137,19 @@ struct Model {
             RGB16_MSB, 
             RGBW16_MSB, 
             RGB16_LSB, 
-            RGBW16_LSB,
-            INPUT_COUNT};
+            RGBW16_LSB};
 
         enum StripStartupMode { 
             COLOR, 
             RAINBOW, 
             TRACER, 
             SOLID_TRACER, 
-            NODATA,
-            STARTUP_COUNT};
+            NODATA};
 
         enum StripNativeType { 
             NATIVE_RGB8, 
             NATIVE_RGBW8, 
-            NATIVE_RGB16, 
-            NATIVE_TYPE_COUNT 
-        };
+            NATIVE_RGB16};
         // clang-format on
 
         StripOutputType output_type;
@@ -176,7 +174,7 @@ struct Model {
         uint8_t bytes_per_comp;
         uint8_t bytes_per_pixel;
         uint8_t comp_per_pixel;
-    } stripInputProperties[StripConfig::INPUT_COUNT] = {
+    } stripInputProperties[magic_enum::enum_count<StripConfig::StripInputType>()] = {
         { StripConfig::RGB8,       3, 1, 3 },
         { StripConfig::RGBW8,      4, 1, 4 },
         { StripConfig::RGB8_SRGB,  3, 1, 3 },
@@ -202,7 +200,7 @@ struct Model {
         uint32_t min_mbps;
         uint32_t max_mbps;
         uint32_t default_mpbs;
-    } stripOutputProperties[StripConfig::OUTPUT_COUNT] = {
+    } stripOutputProperties[magic_enum::enum_count<StripConfig::StripOutputType>()] = {
         {StripConfig::WS2812,      StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    }, false, false, 4.0f, 700000,   900000,  800000 },  
         {StripConfig::SK6812,      StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    }, false, false, 4.0f, 700000,   900000,  800000 },  
         {StripConfig::TM1804,      StripConfig::NATIVE_RGB8,   8, 4, 3, { 1, 0, 2    }, false, false, 4.0f, 700000,   900000,  800000 }, 
@@ -229,8 +227,7 @@ struct Model {
         RGB_DUAL_STRIP,  // channel0: single	channel1: single     channel2: rgb
         RGBW_STRIP,      // channel0: single	channel1: rgbw
         RGB_RGB,         // channel0: rgb 	    channel1: rgb
-        RGBWWW,          // channel0: rgbwww
-        CONFIG_COUNT
+        RGBWWW           // channel0: rgbwww
     } output_config = DUAL_STRIP;
 
     // clang-format off
@@ -244,7 +241,7 @@ struct Model {
         bool analog[OutputConfigMaxDevices];
         bool has_clock[OutputConfigMaxDevices];
         uint8_t components[OutputConfigMaxDevices];
-    } outputConfigProperties[CONFIG_COUNT] = {
+    } outputConfigProperties[magic_enum::enum_count<OutputConfig>()] = {
         {"2 x RGB Strip",                    DUAL_STRIP,     2, 0, {true,  true,  false}, {false, false, false}, {true,   true,  false}, {0, 0, 0}},
         {"1 x RGB Strip + 1 x Analog RGB",   RGB_STRIP,      1, 1, {true,  false, false}, {false, true,  false}, {false,  true,  false}, {0, 3, 0}},
         {"2 x RGB Strip + 1 x Analog RGB",   RGB_DUAL_STRIP, 2, 1, {true,  true,  false}, {false, false, true }, {false,  false, false}, {0, 3, 0}},
@@ -289,7 +286,7 @@ struct Model {
                 const char *s;
             } with_clock[OutputConfigPinCount];
         } pinlabels;
-    } outputConfigPinNames[CONFIG_COUNT] = {
+    } outputConfigPinNames[magic_enum::enum_count<OutputConfig>()] = {
         { { /*s0*/ 0x02, 0x01, /*s1*/ 0x06, 0x05, /*a0*/ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /*a1*/ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },
           {{ /*0*/"GND" , "GND" , /*1*/"---" , "NIL" , /*2*/"DAT0", "DAT" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"---" , "NIL" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" },
            { /*0*/"GND" , "GND" , /*1*/"CLK0", "CLK" , /*2*/"DAT0", "DAT" , /*3*/"VCC" , "VCC" , /*4*/"GND" , "GND" , /*5*/"CLK1", "CLK" , /*6*/"DAT1", "DAT" , /*7*/"VCC" , "VCC" }} },

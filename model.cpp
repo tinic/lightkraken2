@@ -24,14 +24,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <emio/buffer.hpp>
 #include <emio/format.hpp>
-
 #include <string>
 #include <vector>
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#include <magic_enum.hpp>
-#pragma GCC diagnostic pop
 
 #include "./control.h"
 #include "./driver.h"
@@ -67,7 +61,7 @@ void Model::exportStaticsToDB() {
                 emio::format_to(buf, "\"{}\":{},", NAMEOF(prop.has_clock), prop.has_clock ? "true" : "false").value();
                 emio::format_to(buf, "\"{}\":{}", NAMEOF(prop.globalillum), prop.globalillum ? "true" : "false").value();
                 emio::format_to(buf, "}}").value();
-                comma = ","; 
+                comma = ",";
             }
             emio::format_to(buf, "]").value();
             return fixed_containers::FixedString<4096>(buf.view());
@@ -165,7 +159,7 @@ void Model::exportStaticsToDB() {
             emio::static_buffer<SettingsDB::max_object_size> buf{};
             emio::format_to(buf, "[").value();
             const char *comma_outer = "";
-            for (size_t c = 0; c < AnalogConfig::OUTPUT_COUNT; c++) {
+            for (size_t c = 0; c < magic_enum::enum_count<AnalogConfig::AnalogOutputType>(); c++) {
                 emio::format_to(buf, "{}\"{}\"", comma_outer, NAMEOF_ENUM(AnalogConfig::AnalogOutputType(c))).value();
                 comma_outer = ",";
             }
@@ -181,7 +175,7 @@ void Model::exportStaticsToDB() {
             emio::static_buffer<SettingsDB::max_object_size> buf{};
             emio::format_to(buf, "[").value();
             const char *comma_outer = "";
-            for (size_t c = 0; c < AnalogConfig::INPUT_COUNT; c++) {
+            for (size_t c = 0; c < magic_enum::enum_count<AnalogConfig::AnalogInputType>(); c++) {
                 emio::format_to(buf, "{}\"{}\"", comma_outer, NAMEOF_ENUM(AnalogConfig::AnalogInputType(c))).value();
                 comma_outer = ",";
             }
@@ -197,7 +191,7 @@ void Model::exportStaticsToDB() {
             emio::static_buffer<SettingsDB::max_object_size> buf{};
             emio::format_to(buf, "[").value();
             const char *comma_outer = "";
-            for (size_t c = 0; c < StripConfig::INPUT_COUNT; c++) {
+            for (size_t c = 0; c < magic_enum::enum_count<StripConfig::StripInputType>(); c++) {
                 emio::format_to(buf, "{}\"{}\"", comma_outer, NAMEOF_ENUM(StripConfig::StripInputType(c))).value();
                 comma_outer = ",";
             }
@@ -213,7 +207,7 @@ void Model::exportStaticsToDB() {
             emio::static_buffer<SettingsDB::max_object_size> buf{};
             emio::format_to(buf, "[").value();
             const char *comma_outer = "";
-            for (size_t c = 0; c < StripConfig::OUTPUT_COUNT; c++) {
+            for (size_t c = 0; c < magic_enum::enum_count<StripConfig::StripOutputType>(); c++) {
                 emio::format_to(buf, "{}\"{}\"", comma_outer, NAMEOF_ENUM(StripConfig::StripOutputType(c))).value();
                 comma_outer = ",";
             }
@@ -229,7 +223,7 @@ void Model::exportStaticsToDB() {
             emio::static_buffer<SettingsDB::max_object_size> buf{};
             emio::format_to(buf, "[").value();
             const char *comma_outer = "";
-            for (size_t c = 0; c < StripConfig::STARTUP_COUNT; c++) {
+            for (size_t c = 0; c < magic_enum::enum_count<StripConfig::StripStartupMode>(); c++) {
                 emio::format_to(buf, "{}\"{}\"", comma_outer, NAMEOF_ENUM(StripConfig::StripStartupMode(c))).value();
                 comma_outer = ",";
             }
@@ -244,7 +238,7 @@ void Model::exportStaticsToDB() {
             emio::static_buffer<SettingsDB::max_object_size> buf{};
             emio::format_to(buf, "[").value();
             const char *comma_outer = "";
-            for (size_t c = 0; c < CONFIG_COUNT; c++) {
+            for (size_t c = 0; c < magic_enum::enum_count<OutputConfig>(); c++) {
                 emio::format_to(buf, "{}\"{}\"", comma_outer, NAMEOF_ENUM(OutputConfig(c))).value();
                 comma_outer = ",";
             }

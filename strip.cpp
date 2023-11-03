@@ -164,17 +164,11 @@ void Strip::init() {
 
 void Strip::setRGBColorSpace(const RGBColorSpace &colorSpace) { converter.setRGBColorSpace(colorSpace); }
 
-size_t Strip::getBytesPerPixel() const {
-    return Model::stripOutputProperties[output_type].bytes_per_pixel;
-}
+size_t Strip::getBytesPerPixel() const { return Model::stripOutputProperties[output_type].bytes_per_pixel; }
 
-Model::StripConfig::StripNativeType Strip::nativeType() const {
-    return Model::stripOutputProperties[output_type].native_type;
-}
+Model::StripConfig::StripNativeType Strip::nativeType() const { return Model::stripOutputProperties[output_type].native_type; }
 
-bool Strip::needsClock() const {
-    return Model::stripOutputProperties[output_type].has_clock;
-}
+bool Strip::needsClock() const { return Model::stripOutputProperties[output_type].has_clock; }
 
 size_t Strip::getPixelLen() const {
     const size_t pixsize = getBytesPerPixel();
@@ -213,17 +207,11 @@ bool Strip::isUniverseActive(size_t uniN, Model::StripConfig::StripInputType inp
     return false;
 }
 
-size_t Strip::getBytesPerInputPixel(Model::StripConfig::StripInputType input_type) const {
-    return Model::stripInputProperties[input_type].bytes_per_pixel;
-}
+size_t Strip::getBytesPerInputPixel(Model::StripConfig::StripInputType input_type) const { return Model::stripInputProperties[input_type].bytes_per_pixel; }
 
-size_t Strip::getComponentsPerInputPixel(Model::StripConfig::StripInputType input_type) const {
-    return Model::stripInputProperties[input_type].comp_per_pixel;
-}
+size_t Strip::getComponentsPerInputPixel(Model::StripConfig::StripInputType input_type) const { return Model::stripInputProperties[input_type].comp_per_pixel; }
 
-size_t Strip::getComponentBytes(Model::StripConfig::StripInputType input_type) const {
-    return Model::stripInputProperties[input_type].bytes_per_comp;
-}
+size_t Strip::getComponentBytes(Model::StripConfig::StripInputType input_type) const { return Model::stripInputProperties[input_type].bytes_per_comp; }
 
 void Strip::setData(const uint8_t *data, const size_t len, const Model::StripConfig::StripInputType input_type) {
     if (len == 0) {
@@ -246,7 +234,7 @@ __attribute__((hot, optimize("O3"), optimize("unroll-loops"))) void Strip::setUn
                                                                                            const Model::StripConfig::StripInputType input_type) {
     __assume(uniN < Model::universeN);
     __assume(len <= 512);
-    __assume(input_type < Model::StripConfig::INPUT_COUNT);
+    __assume(input_type < magic_enum::enum_count<Model::StripConfig::StripInputType>());
 
     if (uniN >= Model::universeN) {
         return;

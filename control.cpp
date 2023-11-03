@@ -544,7 +544,6 @@ void Control::setArtnetUniverseOutputData(uint16_t uni, const uint8_t *data, siz
                 setArtnetUniverseOutputDataForDriver(Model::analogN, 5, uni, data, len);
             }
         } break;
-        case Model::CONFIG_COUNT:
         default: {
         } break;
     }
@@ -641,7 +640,6 @@ void Control::setE131UniverseOutputData(uint16_t uni, const uint8_t *data, size_
                 setE131UniverseOutputDataForDriver(Model::analogN, 5, uni, data, len);
             }
         } break;
-        case Model::CONFIG_COUNT:
         default: {
         } break;
     }
@@ -716,7 +714,6 @@ void Control::update() {
             } break;
             case Model::RGBWWW: {
             } break;
-            case Model::CONFIG_COUNT:
             default: {
             } break;
         }
@@ -971,7 +968,7 @@ void Control::startupModePattern() {
             } break;
             case Model::StripConfig::NODATA: {
             } break;
-            case Model::StripConfig::STARTUP_COUNT: {
+            default: {
             } break;
         }
     };

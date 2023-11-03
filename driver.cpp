@@ -76,8 +76,6 @@ void Driver::sync(size_t terminal) {
                         ret.w = m;
                         ret.ww = 0;
                     } break;
-                    case Model::AnalogConfig::OUTPUT_COUNT: {
-                    } break;
                 }
             } break;
             case Model::AnalogConfig::RGBW8: {
@@ -103,8 +101,6 @@ void Driver::sync(size_t terminal) {
                         ret.w = scale8bit(rgb.w);
                         ret.ww = 0;
                     } break;
-                    case Model::AnalogConfig::OUTPUT_COUNT: {
-                    } break;
                 }
             } break;
             case Model::AnalogConfig::RGBWWW8: {
@@ -129,8 +125,6 @@ void Driver::sync(size_t terminal) {
                         ret.b = scale8bit(rgb.b);
                         ret.w = scale8bit(rgb.w);
                         ret.ww = scale8bit(rgb.ww);
-                    } break;
-                    case Model::AnalogConfig::OUTPUT_COUNT: {
                     } break;
                 }
             } break;
@@ -158,8 +152,6 @@ void Driver::sync(size_t terminal) {
                         ret.w = uint16_t(mp);
                         ret.ww = 0;
                     } break;
-                    case Model::AnalogConfig::OUTPUT_COUNT: {
-                    } break;
                 }
             } break;
             case Model::AnalogConfig::RGBW8_SRGB: {
@@ -186,8 +178,6 @@ void Driver::sync(size_t terminal) {
                         ret.b = uint16_t(bp);
                         ret.w = uint16_t(wp);
                         ret.ww = 0;
-                    } break;
-                    case Model::AnalogConfig::OUTPUT_COUNT: {
                     } break;
                 }
             } break;
@@ -229,8 +219,6 @@ void Driver::sync(size_t terminal) {
                         ret.w = uint16_t(wp);
                         ret.ww = uint16_t(wwp);
                     } break;
-                    case Model::AnalogConfig::OUTPUT_COUNT: {
-                    } break;
                 }
             } break;
             case Model::AnalogConfig::RGB16_MSB: {
@@ -253,8 +241,6 @@ void Driver::sync(size_t terminal) {
                         ret.b = b - m;
                         ret.w = m;
                         ret.ww = 0;
-                    } break;
-                    case Model::AnalogConfig::OUTPUT_COUNT: {
                     } break;
                 }
             } break;
@@ -281,8 +267,6 @@ void Driver::sync(size_t terminal) {
                         ret.w = scale16bit(rgb.w);
                         ret.ww = 0;
                     } break;
-                    case Model::AnalogConfig::OUTPUT_COUNT: {
-                    } break;
                 }
             } break;
             case Model::AnalogConfig::RGBWWW16_MSB: {
@@ -308,11 +292,7 @@ void Driver::sync(size_t terminal) {
                         ret.w = scale16bit(rgb.w);
                         ret.ww = scale16bit(rgb.ww);
                     } break;
-                    case Model::AnalogConfig::OUTPUT_COUNT: {
-                    } break;
                 }
-            } break;
-            case Model::AnalogConfig::INPUT_COUNT: {
             } break;
         }
         return ret;
@@ -361,8 +341,6 @@ void Driver::sync(size_t terminal) {
                 setPulse(3, col.w);
                 setPulse(4, col.ww);
             }
-        } break;
-        case Model::CONFIG_COUNT: {
         } break;
     }
 }
