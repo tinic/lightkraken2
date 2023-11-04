@@ -43,6 +43,7 @@ class sACNPacket {
         ACN_SDT_MULTICAST_PORT = 5568
     };
 
+    static constexpr int32_t port = ACN_SDT_MULTICAST_PORT;
     enum PacketType { PacketInvalid = -1, PacketData = 0, PacketSync = 1, PacketDiscovery = 2 };
 
     static bool dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t len, bool isBroadcast);

@@ -612,7 +612,7 @@ bool Network::start() {
             return false;
         }
 
-        status = nx_mdns_service_add(&mdns, (UCHAR *)hostname, (UCHAR *)"_sACN._udp", NULL, NULL, 120, 0, 0, sACNPacket::ACN_SDT_MULTICAST_PORT, NX_TRUE, 0);
+        status = nx_mdns_service_add(&mdns, (UCHAR *)hostname, (UCHAR *)"_sACN._udp", NULL, NULL, 120, 0, 0, sACNPacket::port, NX_TRUE, 0);
         if (status) {
             return false;
         }
@@ -627,7 +627,7 @@ bool Network::start() {
             return false;
         }
 
-        status = nx_udp_socket_bind(&sacn_socket, sACNPacket::ACN_SDT_MULTICAST_PORT, NX_WAIT_FOREVER);
+        status = nx_udp_socket_bind(&sacn_socket, sACNPacket::port, NX_WAIT_FOREVER);
         if (status) {
             return false;
         }
