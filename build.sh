@@ -6,7 +6,7 @@ mkdir -p build
 mkdir -p build/cppcheck
 
 cppcheck . --inline-suppr -q -i nameof -i fixed-containers -i magic_enum -i emio -i filex -i FlashDB -i netxduo -i threadx -i build -i stm32h5xx_hal_driver -f --cppcheck-build-dir=build/cppcheck
-cppcheck . --enable=style --inline-suppr --suppress=cstyleCast -q -i nameof -i fixed-containers -i magic_enum -i emio -i lwjson -i filex -i FlashDB -i netxduo -i threadx -i build -i stm32h5xx_hal_driver -f --cppcheck-build-dir=build/cppcheck
+cppcheck . --enable=style --inline-suppr -q -i nameof -i fixed-containers -i magic_enum -i emio -i lwjson -i filex -i FlashDB -i netxduo -i threadx -i build -i stm32h5xx_hal_driver -f --cppcheck-build-dir=build/cppcheck
 
 build_type="Ninja"
 
