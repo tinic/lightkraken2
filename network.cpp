@@ -241,7 +241,7 @@ void Network::ArtNetSend(const NXD_ADDRESS *addr, uint16_t port, const uint8_t *
     if (status != NX_SUCCESS) {
         return;
     }
-    status = nx_packet_data_append(packet_ptr, (CHAR *)data, len, &client_pool, TX_WAIT_FOREVER);
+    status = nx_packet_data_append(packet_ptr, const_cast<CHAR *>(reinterpret_cast<const CHAR*>(data)), len, &client_pool, TX_WAIT_FOREVER);
     if (status != NX_SUCCESS) {
         return;
     }
@@ -274,7 +274,7 @@ void Network::sACNSend(const NXD_ADDRESS *addr, uint16_t port, const uint8_t *da
     if (status != NX_SUCCESS) {
         return;
     }
-    status = nx_packet_data_append(packet_ptr, (CHAR *)data, len, &client_pool, TX_WAIT_FOREVER);
+    status = nx_packet_data_append(packet_ptr, const_cast<CHAR *>(reinterpret_cast<const CHAR*>(data)), len, &client_pool, TX_WAIT_FOREVER);
     if (status != NX_SUCCESS) {
         return;
     }
@@ -307,7 +307,7 @@ void Network::DDPSend(const NXD_ADDRESS *addr, uint16_t port, const uint8_t *dat
     if (status != NX_SUCCESS) {
         return;
     }
-    status = nx_packet_data_append(packet_ptr, (CHAR *)data, len, &client_pool, TX_WAIT_FOREVER);
+    status = nx_packet_data_append(packet_ptr, const_cast<CHAR *>(reinterpret_cast<const CHAR*>(data)), len, &client_pool, TX_WAIT_FOREVER);
     if (status != NX_SUCCESS) {
         return;
     }
@@ -372,11 +372,11 @@ uint8_t *Network::setup(uint8_t *pointer) {
 
     nx_system_initialize();
 
-    status = nx_packet_pool_create(&client_pool, (CHAR *)"NetX Main Packet Pool", ETH_MAX_PACKET_SIZE, pointer, NX_PACKET_POOL_SIZE);
+    status = nx_packet_pool_create(&client_pool, const_cast<CHAR *>("NetX Main Packet Pool"), ETH_MAX_PACKET_SIZE, pointer, NX_PACKET_POOL_SIZE);
     pointer = pointer + NX_PACKET_POOL_SIZE;
     if (status) goto fail;
 
-    status = nx_ip_create(&client_ip, (CHAR *)hostname, IP_ADDRESS(0, 0, 0, 0), 0xFFFFFF00UL, &client_pool, nx_stm32_eth_driver, pointer, ip_stack_size,
+    status = nx_ip_create(&client_ip, const_cast<CHAR *>(hostname), IP_ADDRESS(0, 0, 0, 0), 0xFFFFFF00UL, &client_pool, nx_stm32_eth_driver, pointer, ip_stack_size,
                           NX_IP_THREAD_PRIORITY);
     pointer = pointer + ip_stack_size;
     if (status) goto fail;
@@ -384,7 +384,7 @@ uint8_t *Network::setup(uint8_t *pointer) {
     status = nx_ip_interface_mtu_set(&client_ip, 0, ETH_MAX_PAYLOAD);
     if (status) goto fail;
 
-    status = nx_auto_ip_create(&auto_ip, (CHAR *)hostname, &client_ip, pointer, auto_ip_stack_size, NX_AUTOP_PRIORITY);
+    status = nx_auto_ip_create(&auto_ip, const_cast<CHAR *>(hostname), &client_ip, pointer, auto_ip_stack_size, NX_AUTOP_PRIORITY);
     pointer = pointer + auto_ip_stack_size;
     if (status) goto fail;
 
@@ -414,24 +414,24 @@ uint8_t *Network::setup(uint8_t *pointer) {
     pointer = pointer + mdns_stack_size + mdns_service_cache_size + mdns_peer_service_cache_size;
     if (status) goto fail;
 
-    status = nx_dhcpv6_client_create(&dhcpv6_client, &client_ip, (CHAR *)hostname, &client_pool, pointer, dhcpv6_client_stack_size, dhcpv6_state_change,
+    status = nx_dhcpv6_client_create(&dhcpv6_client, &client_ip, const_cast<CHAR *>(hostname), &client_pool, pointer, dhcpv6_client_stack_size, dhcpv6_state_change,
                                      dhcpv6_server_error);
     pointer = pointer + dhcpv6_client_stack_size;
     if (status) goto fail;
 
-    status = nx_udp_socket_create(&client_ip, &artnet_socket, (CHAR *)"Art-Net", NX_IP_MIN_DELAY, NX_DONT_FRAGMENT, NX_IP_TIME_TO_LIVE, 8);
+    status = nx_udp_socket_create(&client_ip, &artnet_socket, const_cast<CHAR *>("Art-Net"), NX_IP_MIN_DELAY, NX_DONT_FRAGMENT, NX_IP_TIME_TO_LIVE, 8);
     if (status) goto fail;
 
     status = nx_udp_socket_receive_notify(&artnet_socket, artnet_receive_notify);
     if (status) goto fail;
 
-    status = nx_udp_socket_create(&client_ip, &sacn_socket, (CHAR *)"sACN", NX_IP_MIN_DELAY, NX_DONT_FRAGMENT, NX_IP_TIME_TO_LIVE, 8);
+    status = nx_udp_socket_create(&client_ip, &sacn_socket, const_cast<CHAR *>("sACN"), NX_IP_MIN_DELAY, NX_DONT_FRAGMENT, NX_IP_TIME_TO_LIVE, 8);
     if (status) goto fail;
 
     status = nx_udp_socket_receive_notify(&sacn_socket, sacn_receive_notify);
     if (status) goto fail;
 
-    status = nx_udp_socket_create(&client_ip, &ddp_socket, (CHAR *)"DDP", NX_IP_MIN_DELAY, NX_DONT_FRAGMENT, NX_IP_TIME_TO_LIVE, 8);
+    status = nx_udp_socket_create(&client_ip, &ddp_socket, const_cast<CHAR *>("DDP"), NX_IP_MIN_DELAY, NX_DONT_FRAGMENT, NX_IP_TIME_TO_LIVE, 8);
     if (status) goto fail;
 
     status = nx_udp_socket_receive_notify(&ddp_socket, ddp_receive_notify);
@@ -542,7 +542,7 @@ bool Network::start() {
 
     if (!got_ip && try_dhcp) {
         /* Create the DHCP instance.  */
-        status = nx_dhcp_create(&dhcp_client, &client_ip, (CHAR *)hostname);
+        status = nx_dhcp_create(&dhcp_client, &client_ip, const_cast<CHAR *>(hostname));
         if (status) {
             return false;
         }

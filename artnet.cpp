@@ -231,7 +231,7 @@ void ArtNetPacket::sendArtPollReply(const NXD_ADDRESS *from, uint16_t universe) 
     strncpy((char *)reply.shortName, short_hostname, 17);
 
     char tag[17] = {};
-    if (SettingsDB::instance().getString(SettingsDB::kTag, (char *)&tag, sizeof(tag)) > 0) {
+    if (SettingsDB::instance().getString(SettingsDB::kTag, reinterpret_cast<char *>(&tag), sizeof(tag)) > 0) {
         snprintf((char *)reply.longName, 63, "%.20s - %.16s", Network::instance().hostName(), tag);
     } else {
         snprintf((char *)reply.longName, 63, "%.20s", Network::instance().hostName());

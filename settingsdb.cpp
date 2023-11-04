@@ -274,8 +274,8 @@ UINT SettingsDB::jsonGETRequest(NX_PACKET *packet_ptr) {
     UINT status = 0;
     NX_PACKET *resp_packet_ptr = 0;
     const char *jsonContentType = "application/json";
-    status = nx_http_server_callback_generate_response_header_extended(WebServer::instance().httpServer(), &resp_packet_ptr, (CHAR *)NX_HTTP_STATUS_OK,
-                                                                       sizeof(NX_HTTP_STATUS_OK) - 1, cbuf.count(), (CHAR *)jsonContentType,
+    status = nx_http_server_callback_generate_response_header_extended(WebServer::instance().httpServer(), &resp_packet_ptr, const_cast<CHAR *>(NX_HTTP_STATUS_OK),
+                                                                       sizeof(NX_HTTP_STATUS_OK) - 1, cbuf.count(), const_cast<CHAR *>(jsonContentType),
                                                                        strlen(jsonContentType), NX_NULL, 0);
     if (status != NX_SUCCESS) {
         while (1) {
@@ -450,13 +450,13 @@ UINT SettingsDB::jsonPUTRequest(NX_PACKET *packet_ptr, bool deleteRequest) {
     UINT status = nx_http_server_packet_content_find(WebServer::instance().httpServer(), &packet_ptr, &contentLength);
     if (status) {
         nx_packet_release(packet_ptr);
-        nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_REQUEST_TIMEOUT,
+        nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), const_cast<CHAR *>(NX_HTTP_STATUS_REQUEST_TIMEOUT),
                                                        sizeof(NX_HTTP_STATUS_REQUEST_TIMEOUT) - 1, NX_NULL, 0, NX_NULL, 0);
         return (NX_HTTP_CALLBACK_COMPLETED);
     }
     if (contentLength == 0) {
         nx_packet_release(packet_ptr);
-        nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_NO_CONTENT,
+        nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), const_cast<CHAR *>(NX_HTTP_STATUS_NO_CONTENT),
                                                        sizeof(NX_HTTP_STATUS_NO_CONTENT) - 1, NX_NULL, 0, NX_NULL, 0);
         return (NX_HTTP_CALLBACK_COMPLETED);
     }
@@ -477,7 +477,7 @@ UINT SettingsDB::jsonPUTRequest(NX_PACKET *packet_ptr, bool deleteRequest) {
                 break;
             } else {
                 nx_packet_release(packet_ptr);
-                nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_BAD_REQUEST,
+                nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), const_cast<CHAR *>(NX_HTTP_STATUS_BAD_REQUEST),
                                                                sizeof(NX_HTTP_STATUS_BAD_REQUEST) - 1, NX_NULL, 0, NX_NULL, 0);
                 return (NX_HTTP_CALLBACK_COMPLETED);
             }
@@ -490,7 +490,7 @@ UINT SettingsDB::jsonPUTRequest(NX_PACKET *packet_ptr, bool deleteRequest) {
             nx_packet_release(packet_ptr);
             status = nx_tcp_socket_receive(&(WebServer::instance().httpServer()->nx_http_server_socket), &packet_ptr, NX_HTTP_SERVER_TIMEOUT_RECEIVE);
             if (status) {
-                nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_REQUEST_TIMEOUT,
+                nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), const_cast<CHAR *>(NX_HTTP_STATUS_REQUEST_TIMEOUT),
                                                                sizeof(NX_HTTP_STATUS_REQUEST_TIMEOUT) - 1, NX_NULL, 0, NX_NULL, 0);
                 return (NX_HTTP_CALLBACK_COMPLETED);
             }
@@ -498,10 +498,10 @@ UINT SettingsDB::jsonPUTRequest(NX_PACKET *packet_ptr, bool deleteRequest) {
     } while (!done);
     nx_packet_release(packet_ptr);
     if (Model::instance().importFromDB()) {
-        nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, 0,
+        nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), const_cast<CHAR *>(NX_HTTP_STATUS_OK), sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, 0,
                                                        NX_NULL, 0);
     } else {
-        nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), (CHAR *)NX_HTTP_STATUS_NOT_ACCEPTABLE,
+        nx_http_server_callback_response_send_extended(WebServer::instance().httpServer(), const_cast<CHAR *>(NX_HTTP_STATUS_NOT_ACCEPTABLE),
                                                        sizeof(NX_HTTP_STATUS_NOT_ACCEPTABLE) - 1, NX_NULL, 0, NX_NULL, 0);
     }
     return (NX_HTTP_CALLBACK_COMPLETED);

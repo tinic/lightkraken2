@@ -54,7 +54,7 @@ uint8_t *Control::setup(uint8_t *first_unused_memory) {
     uint8_t *pointer = (uint8_t *)first_unused_memory;
 
     const size_t control_stack_size = 8192;
-    tx_thread_create(&thread_control, (CHAR *)"control", thread_control_entry, 0, pointer, control_stack_size, NX_CONTROL_THREAD_PRIORITY,
+    tx_thread_create(&thread_control, const_cast<CHAR *>("control"), thread_control_entry, 0, pointer, control_stack_size, NX_CONTROL_THREAD_PRIORITY,
                      NX_CONTROL_THREAD_PRIORITY, TX_NO_TIME_SLICE, TX_DONT_START);
     pointer = pointer + control_stack_size;
 

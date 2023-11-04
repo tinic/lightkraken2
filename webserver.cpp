@@ -61,7 +61,7 @@ UINT WebServer::postRequestUpload(NX_HTTP_SERVER *server_ptr, UINT request_type,
         }
     }
 
-    nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, 0, NX_NULL, 0);
+    nx_http_server_callback_response_send_extended(server_ptr, const_cast<CHAR *>(NX_HTTP_STATUS_OK), sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, 0, NX_NULL, 0);
     return (NX_HTTP_CALLBACK_COMPLETED);
 }
 #endif  // #ifdef BOOTLOADER
@@ -76,7 +76,7 @@ UINT WebServer::requestNotify(NX_HTTP_SERVER *server_ptr, UINT request_type, con
             if (strcmp(resource, "/") == 0) {
                 const char *redirect = "<html><head><meta http-equiv=\"refresh\" content=\"0; url='./index.html'\"/></head><body></body></html>";
                 nx_packet_release(packet_ptr);
-                nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, (CHAR *)redirect,
+                nx_http_server_callback_response_send_extended(server_ptr, const_cast<CHAR *>(NX_HTTP_STATUS_OK), sizeof(NX_HTTP_STATUS_OK) - 1, const_cast<CHAR *>(redirect),
                                                                strlen(redirect), NX_NULL, 0);
                 return (NX_HTTP_CALLBACK_COMPLETED);
             }
@@ -92,14 +92,14 @@ UINT WebServer::requestNotify(NX_HTTP_SERVER *server_ptr, UINT request_type, con
             if (strcmp(resource, "/reset") == 0) {
                 Systick::instance().scheduleReset();
                 nx_packet_release(packet_ptr);
-                nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, NX_NULL, NX_NULL,
+                nx_http_server_callback_response_send_extended(server_ptr, const_cast<CHAR *>(NX_HTTP_STATUS_OK), sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, NX_NULL, NX_NULL,
                                                                0);
                 return (NX_HTTP_CALLBACK_COMPLETED);
             }
             if (strcmp(resource, "/erase") == 0) {
                 SettingsDB::instance().erase();
                 nx_packet_release(packet_ptr);
-                nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_OK, sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, NX_NULL, NX_NULL,
+                nx_http_server_callback_response_send_extended(server_ptr, const_cast<CHAR *>(NX_HTTP_STATUS_OK), sizeof(NX_HTTP_STATUS_OK) - 1, NX_NULL, NX_NULL, NX_NULL,
                                                                0);
                 return (NX_HTTP_CALLBACK_COMPLETED);
             }
@@ -113,7 +113,7 @@ UINT WebServer::requestNotify(NX_HTTP_SERVER *server_ptr, UINT request_type, con
             }
 #endif  // #ifdef BOOTLOADER
             nx_packet_release(packet_ptr);
-            nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_METHOD_NOT_ALLOWED, sizeof(NX_HTTP_STATUS_METHOD_NOT_ALLOWED) - 1,
+            nx_http_server_callback_response_send_extended(server_ptr, const_cast<CHAR *>(NX_HTTP_STATUS_METHOD_NOT_ALLOWED), sizeof(NX_HTTP_STATUS_METHOD_NOT_ALLOWED) - 1,
                                                            NX_NULL, 0, NX_NULL, 0);
             return (NX_HTTP_CALLBACK_COMPLETED);
         } break;
@@ -124,13 +124,13 @@ UINT WebServer::requestNotify(NX_HTTP_SERVER *server_ptr, UINT request_type, con
             }
 #endif  // #ifndef BOOTLOADER
             nx_packet_release(packet_ptr);
-            nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_METHOD_NOT_ALLOWED, sizeof(NX_HTTP_STATUS_METHOD_NOT_ALLOWED) - 1,
+            nx_http_server_callback_response_send_extended(server_ptr, const_cast<CHAR *>(NX_HTTP_STATUS_METHOD_NOT_ALLOWED), sizeof(NX_HTTP_STATUS_METHOD_NOT_ALLOWED) - 1,
                                                            NX_NULL, 0, NX_NULL, 0);
             return (NX_HTTP_CALLBACK_COMPLETED);
         } break;
         case NX_HTTP_SERVER_HEAD_REQUEST: {
             nx_packet_release(packet_ptr);
-            nx_http_server_callback_response_send_extended(server_ptr, (CHAR *)NX_HTTP_STATUS_METHOD_NOT_ALLOWED, sizeof(NX_HTTP_STATUS_METHOD_NOT_ALLOWED) - 1,
+            nx_http_server_callback_response_send_extended(server_ptr, const_cast<CHAR *>(NX_HTTP_STATUS_METHOD_NOT_ALLOWED), sizeof(NX_HTTP_STATUS_METHOD_NOT_ALLOWED) - 1,
                                                            NX_NULL, 0, NX_NULL, 0);
             return (NX_HTTP_CALLBACK_COMPLETED);
         } break;
@@ -145,17 +145,17 @@ uint8_t *WebServer::setup(uint8_t *pointer) {
 
     fx_system_initialize();
 
-    status = nx_http_server_create(&http_server, (CHAR *)"WebServer", Network::instance().ip(), &ram_disk, pointer, http_server_stack_size,
+    status = nx_http_server_create(&http_server, const_cast<CHAR *>("WebServer"), Network::instance().ip(), &ram_disk, pointer, http_server_stack_size,
                                    Network::instance().pool(), NX_NULL, (requestNotifyFunc)requestNotifyCallback);
     pointer = pointer + http_server_stack_size;
     if (status) {
         goto fail;
     }
 
-    static NX_HTTP_SERVER_MIME_MAP map[] = {{(CHAR *)"js", (CHAR *)"text/javascript"},
-                                            {(CHAR *)"css", (CHAR *)"text/css"},
-                                            {(CHAR *)"json", (CHAR *)"application/json"},
-                                            {(CHAR *)"svg", (CHAR *)"image/svg+xml"}};
+    static NX_HTTP_SERVER_MIME_MAP map[] = {{const_cast<CHAR *>("js"), const_cast<CHAR *>("text/javascript")},
+                                            {const_cast<CHAR *>("css"), const_cast<CHAR *>("text/css")},
+                                            {const_cast<CHAR *>("json"), const_cast<CHAR *>("application/json")},
+                                            {const_cast<CHAR *>("svg"), const_cast<CHAR *>("image/svg+xml")}};
 
     nx_http_server_mime_maps_additional_set(&http_server, map, 4);
 

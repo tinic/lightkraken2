@@ -159,7 +159,7 @@ void App::setup(void *first_unused_memory) {
     uint8_t *pointer = (uint8_t *)first_unused_memory;
 
     const size_t startup_stack_size = 8192;
-    tx_thread_create(&thread_startup, (CHAR *)"startup", thread_startup_entry, 0, pointer, startup_stack_size, NX_STARTUP_THREAD_PRIORITY,
+    tx_thread_create(&thread_startup, const_cast<CHAR *>("startup"), thread_startup_entry, 0, pointer, startup_stack_size, NX_STARTUP_THREAD_PRIORITY,
                      NX_STARTUP_THREAD_PRIORITY, TX_NO_TIME_SLICE, TX_AUTO_START);
     pointer = pointer + startup_stack_size;
 
