@@ -32,9 +32,23 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 class DDPPacket {
    public:
     static constexpr int32_t port = 4048;
+    static constexpr size_t maxDDPPayloadSize = 480 * 3;
     static constexpr size_t maxDDPPacketSize = 480 * 3 + 14;
 
-    enum PacketType { PacketInvalid = -1, PacketData = 0, PacketStatusQuery = 1, PacketConfigQuery = 2 };
+    enum PacketType {
+        PacketInvalid = -1,
+        PacketDataQuery = 0,
+        PacketDataSet = 1,
+        PacketStatusQuery = 2,
+        PacketConfigQuery = 3,
+        PacketConfigSet = 4,
+        PacketControlQuery = 5,
+        PacketControlSet = 6,
+        PacketDMXQuery = 7,
+        PacketDMXSet = 8,
+        PacketAllQuery = 9,
+        PacketAllSet = 10,
+    };
 
     static bool dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t len, bool isBroadcast);
 
@@ -42,13 +56,11 @@ class DDPPacket {
     DDPPacket(){};
     virtual ~DDPPacket(){};
     virtual bool verify() const { return false; }
+    std::array<uint8_t, maxDDPPacketSize> packet{};
 
    private:
-    static void sendStatusReply();
-    static void sendConfigReply();
     static PacketType maybeValid(const uint8_t *buf, size_t len);
     static bool verify(DDPPacket &Packet, const uint8_t *buf, size_t len);
-    std::array<uint8_t, maxDDPPacketSize> packet{};
 };
 
 #endif  // #ifndef _DDP_H_
