@@ -23,6 +23,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #include "./ddp.h"
 
+#include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -60,7 +61,19 @@ bool DDPPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t len
                 return true;
             }
         } break;
-        case PacketQuery: {
+        case PacketStatusQuery: {
+            if (!Model::instance().broadcastEnabled && isBroadcast) {
+                return false;
+            }
+            sendStatusReply();
+            return true;
+        } break;
+        case PacketConfigQuery: {
+            if (!Model::instance().broadcastEnabled && isBroadcast) {
+                return false;
+            }
+            sendConfigReply();
+            return true;
         } break;
         case PacketInvalid: {
         } break;
@@ -74,7 +87,10 @@ enum {
     DDP_FLAGS1_REPLY = 0x04,
     DDP_FLAGS1_STORAGE = 0x08,
     DDP_FLAGS1_TIMECODE = 0x10,
+    DDP_FLAGS1_VER1 = 0x40,
 };
+
+enum { DDP_ID_DISPLAY = 1, DDP_ID_CONFIG = 250, DDP_ID_STATUS = 251 };
 
 DDPPacket::PacketType DDPPacket::maybeValid(const uint8_t *buf, size_t len) {
     if (len < 10) {
@@ -89,9 +105,61 @@ DDPPacket::PacketType DDPPacket::maybeValid(const uint8_t *buf, size_t len) {
         return PacketInvalid;
     }
     if ((buf[0] & DDP_FLAGS1_QUERY) != 0) {
-        return PacketQuery;
+        if (buf[2] == DDP_ID_STATUS) {
+            return PacketStatusQuery;
+        }
+        if (buf[2] == DDP_ID_CONFIG) {
+            return PacketConfigQuery;
+        }
+        return PacketInvalid;
     }
     return PacketData;
+}
+
+void DDPPacket::sendStatusReply() {
+    struct ddp_hdr_struct {
+        uint8_t flags1;
+        uint8_t flags2;
+        uint8_t type;
+        uint8_t id;
+        uint32_t offset;
+        uint8_t len1;
+        uint8_t len2;
+        uint8_t data[480 * 3];
+    } __attribute__((packed)) reply{};
+
+    reply.flags1 = DDP_FLAGS1_VER1 | DDP_FLAGS1_REPLY | DDP_FLAGS1_PUSH;
+    reply.id = DDP_ID_STATUS;
+    reply.type = 0;
+    reply.offset = 0;
+    size_t len = 0;
+    // Gen json
+    reply.len1 = (len >> 8) & 0xFF;
+    reply.len2 = (len >> 0) & 0xFF;
+    Network::instance().DDPSend(Network::instance().ipv4Addr(), port, (const uint8_t *)&reply, offsetof(ddp_hdr_struct, data) + len);
+}
+
+void DDPPacket::sendConfigReply() {
+    struct ddp_hdr_struct {
+        uint8_t flags1;
+        uint8_t flags2;
+        uint8_t type;
+        uint8_t id;
+        uint32_t offset;
+        uint8_t len1;
+        uint8_t len2;
+        uint8_t data[480 * 3];
+    } __attribute__((packed)) reply{};
+
+    reply.flags1 = DDP_FLAGS1_VER1 | DDP_FLAGS1_REPLY | DDP_FLAGS1_PUSH;
+    reply.id = DDP_ID_CONFIG;
+    reply.type = 0;
+    reply.offset = 0;
+    size_t len = 0;
+    // Gen json
+    reply.len1 = (len >> 8) & 0xFF;
+    reply.len2 = (len >> 0) & 0xFF;
+    Network::instance().DDPSend(Network::instance().ipv4Addr(), port, (const uint8_t *)&reply, offsetof(ddp_hdr_struct, data) + len);
 }
 
 bool DDPPacket::verify(DDPPacket &packet, const uint8_t *buf, size_t len) {  // cppcheck-suppress constParameterReference
@@ -102,7 +170,8 @@ bool DDPPacket::verify(DDPPacket &packet, const uint8_t *buf, size_t len) {  // 
     memcpy(packet.packet.data(), buf, std::min(len, packet.packet.size()));
     switch (type) {
         case PacketData:
-        case PacketQuery: {
+        case PacketStatusQuery:
+        case PacketConfigQuery: {
             return packet.verify();
         } break;
         default:

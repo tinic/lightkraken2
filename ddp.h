@@ -34,7 +34,7 @@ class DDPPacket {
     static constexpr int32_t port = 4048;
     static constexpr size_t maxDDPPacketSize = 480 * 3 + 14;
 
-    enum PacketType { PacketInvalid = -1, PacketData = 0, PacketQuery = 1 };
+    enum PacketType { PacketInvalid = -1, PacketData = 0, PacketStatusQuery = 1, PacketConfigQuery = 2 };
 
     static bool dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t len, bool isBroadcast);
 
@@ -44,6 +44,8 @@ class DDPPacket {
     virtual bool verify() const { return false; }
 
    private:
+    static void sendStatusReply();
+    static void sendConfigReply();
     static PacketType maybeValid(const uint8_t *buf, size_t len);
     static bool verify(DDPPacket &Packet, const uint8_t *buf, size_t len);
     std::array<uint8_t, maxDDPPacketSize> packet{};

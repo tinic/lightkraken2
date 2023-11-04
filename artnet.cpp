@@ -243,8 +243,7 @@ void ArtNetPacket::sendArtPollReply(const NXD_ADDRESS *from, uint16_t universe) 
     reply.bindIp[2] = (Network::instance().ipv4Addr()->nxd_ip_address.v4 >> 8) & 0xFF;
     reply.bindIp[3] = (Network::instance().ipv4Addr()->nxd_ip_address.v4 >> 0) & 0xFF;
 
-    NXD_ADDRESS ipv4{};
-    SettingsDB::instance().getIP(SettingsDB::kUserIPv4, &ipv4);
+    NXD_ADDRESS ipv4 = *Network::instance().ipv4Addr();
     reply.status2 = 0x01 |                                         // support web browser config
                     0x02 |                                         // supports dhcp
                     (ipv4.nxd_ip_address.v4 == 0 ? 0x04 : 0x00) |  // using dhcp
