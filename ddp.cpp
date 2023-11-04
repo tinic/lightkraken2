@@ -356,11 +356,11 @@ bool DDPPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t len
     if (type == PacketInvalid) {
         return false;
     }
+    if (!Model::instance().broadcastEnabled && isBroadcast) {
+        return false;
+    }
     switch (type) {
         case PacketDataQuery: {
-            if (!Model::instance().broadcastEnabled && isBroadcast) {
-                return false;
-            }
             DDPDataPacketQuery dataQueryPacket;
             if (DDPPacket::verify(dataQueryPacket, buf, len)) {
                 DDPDataPacketQuery::sendReply();
@@ -368,9 +368,6 @@ bool DDPPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t len
             }
         } break;
         case PacketDataSet: {
-            if (!Model::instance().broadcastEnabled && isBroadcast) {
-                return false;
-            }
             DDPDataPacketSet dataPacketSet;
             if (DDPPacket::verify(dataPacketSet, buf, len)) {
                 dataPacketSet.apply();
@@ -378,9 +375,6 @@ bool DDPPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t len
             }
         } break;
         case PacketStatusQuery: {
-            if (!Model::instance().broadcastEnabled && isBroadcast) {
-                return false;
-            }
             DDPStatusQueryPacket statusQueryPacket;
             if (DDPPacket::verify(statusQueryPacket, buf, len)) {
                 DDPStatusQueryPacket::sendReply();
@@ -388,9 +382,6 @@ bool DDPPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t len
             }
         } break;
         case PacketConfigQuery: {
-            if (!Model::instance().broadcastEnabled && isBroadcast) {
-                return false;
-            }
             DDPConfigQueryPacket configQueryPacket;
             if (DDPPacket::verify(configQueryPacket, buf, len)) {
                 DDPConfigQueryPacket::sendReply();
@@ -398,9 +389,6 @@ bool DDPPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t len
             }
         } break;
         case PacketConfigSet: {
-            if (!Model::instance().broadcastEnabled && isBroadcast) {
-                return false;
-            }
             DDPConfigSetPacket configSetPacket;
             if (DDPPacket::verify(configSetPacket, buf, len)) {
                 configSetPacket.apply();
@@ -408,9 +396,6 @@ bool DDPPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t len
             }
         } break;
         case PacketControlQuery: {
-            if (!Model::instance().broadcastEnabled && isBroadcast) {
-                return false;
-            }
             DDPControlQueryPacket controlQueryPacket;
             if (DDPPacket::verify(controlQueryPacket, buf, len)) {
                 DDPControlQueryPacket::sendReply();
@@ -418,9 +403,6 @@ bool DDPPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t len
             }
         } break;
         case PacketControlSet: {
-            if (!Model::instance().broadcastEnabled && isBroadcast) {
-                return false;
-            }
             DDPControlSetPacket controlSetPacket;
             if (DDPPacket::verify(controlSetPacket, buf, len)) {
                 controlSetPacket.apply();
@@ -428,9 +410,6 @@ bool DDPPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t len
             }
         } break;
         case PacketDMXQuery: {
-            if (!Model::instance().broadcastEnabled && isBroadcast) {
-                return false;
-            }
             DDPDMXQueryPacket dmxQueryPacket;
             if (DDPPacket::verify(dmxQueryPacket, buf, len)) {
                 DDPDMXQueryPacket::sendReply();
@@ -438,9 +417,6 @@ bool DDPPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t len
             }
         } break;
         case PacketDMXSet: {
-            if (!Model::instance().broadcastEnabled && isBroadcast) {
-                return false;
-            }
             DDPDMXSetPacket dmxSetPacket;
             if (DDPPacket::verify(dmxSetPacket, buf, len)) {
                 dmxSetPacket.apply();
@@ -448,9 +424,6 @@ bool DDPPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t len
             }
         } break;
         case PacketAllQuery: {
-            if (!Model::instance().broadcastEnabled && isBroadcast) {
-                return false;
-            }
             DDPAllQueryPacket allQueryPacket;
             if (DDPPacket::verify(allQueryPacket, buf, len)) {
                 DDPAllQueryPacket::sendReply();
@@ -458,9 +431,6 @@ bool DDPPacket::dispatch(const NXD_ADDRESS *from, const uint8_t *buf, size_t len
             }
         } break;
         case PacketAllSet: {
-            if (!Model::instance().broadcastEnabled && isBroadcast) {
-                return false;
-            }
             DDPAllSetPacket allSetPacket;
             if (DDPPacket::verify(allSetPacket, buf, len)) {
                 allSetPacket.apply();
