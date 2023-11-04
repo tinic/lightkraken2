@@ -25,6 +25,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <stdint.h>
 
+#include "sacn.h"
 #include "nx_api.h"
 #include "stm32h5xx_hal.h"
 
@@ -42,7 +43,10 @@ class Systick {
 
     void handler();
 
-    void scheduleReset(int32_t count = 2000) { resetCount = count; };
+    void scheduleReset(int32_t count = 2000) { 
+        sACNPacket::leaveNetworks();
+        resetCount = count; 
+    };
     void checkReset();
 
     void start() { started = true; }
