@@ -685,7 +685,9 @@
 */
 
 /* Defined, packet debug infromation is enabled.  */
+/*
 #define NX_ENABLE_PACKET_DEBUG_INFO
+*/
 
 /* Defined, NX_PACKET structure is padded for alignment purpose. The default is no padding. */
 /*

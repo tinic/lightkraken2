@@ -54,10 +54,21 @@ SECTIONS
   /* The startup code into "FLASH" Rom type memory */
   .isr_vector :
   {
+     __FLASH_segment_start__ = .;
     . = ALIGN(4);
     KEEP(*(.isr_vector)) /* Startup code */
     . = ALIGN(4);
   } >FLASH
+
+  .section_info :
+  {
+     _section_info_start = .;
+    . = ALIGN(16);
+    LONG(0x1ED51ED5)
+    LONG(__FLASH_segment_start__)
+    LONG(_crc_section_start)
+    LONG(_crc_section_end)
+  } > FLASH
 
   /* The program code and other data into "FLASH" Rom type memory */
   .text :
@@ -143,7 +154,6 @@ SECTIONS
 
     . = ALIGN(4);
     _edata = .;        /* define a global symbol at data end */
-
   } >RAM AT> FLASH
 
   /* Uninitialized data section into "RAM" Ram type memory */
@@ -173,6 +183,18 @@ SECTIONS
     . = ALIGN(8);
      __RAM_segment_used_end__ = .;
   } >RAM
+
+  .crc_section :
+  {
+    . = ALIGN(16);
+    LONG(0x3412D51E)
+    LONG(__FLASH_segment_start__)
+    LONG(_crc_section_start)
+    LONG(_crc_section_end)
+    _crc_section_start = .;
+    KEEP(*(.crc_section))
+    _crc_section_end = .;
+  } > FLASH
 
   /* Remove information from the compiler libraries */
   /DISCARD/ :

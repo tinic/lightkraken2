@@ -22,11 +22,38 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #include "./support/hal_sys_init.h"
-
 #include "stm32h5xx_hal.h"
 #include "tx_api.h"
 
+static const uint32_t sha256_binary[8] __attribute__((used)) __attribute__((section(".crc_section")));
+extern const void *_section_info_start;
+
+static void check_firmware_sha256() {
+#if 0
+    const uint32_t *section_info = (const uint32_t *)_section_info_start;
+
+    if (section_info[0] != 0x1ED51ED5) {
+        while(1) {};
+    }
+
+    const uint8_t *bin_start = (const uint8_t *)section_info[1];
+    const uint8_t *bin_end = (const uint8_t *)section_info[2];
+
+    const uint8_t *sha256_start = (const uint8_t *)section_info[2];
+    const uint8_t *sha256_end = (const uint8_t *)section_info[3];
+
+    if (sha256_start != (const uint8_t *)(sha256_binary)) {
+        while(1) {};
+    }
+
+    if (sha256_end != (const uint8_t *)(sha256_binary) + sizeof(sha256_binary)) {
+        while(1) {};
+    }
+#endif  // #if 0
+}
+
 int main() {
+    check_firmware_sha256();
     SYS_Init();
     tx_kernel_enter();
     while (1) {
