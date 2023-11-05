@@ -274,50 +274,50 @@ void Model::exportToDB() {
 
     if (!SettingsDB::instance().hasStringVector(SettingsDB::kStripOutputType)) {
         svec.clear();
-        for (size_t c = 0; c < stripN; c++) {
-            svec.push_back(NAMEOF_ENUM(strip_config[c].output_type));
+        for (auto config : strip_config) {
+            svec.push_back(NAMEOF_ENUM(config.output_type));
         }
         SettingsDB::instance().setStringVector(SettingsDB::kStripOutputType, svec);
     }
 
     if (!SettingsDB::instance().hasStringVector(SettingsDB::kStripInputType)) {
         svec.clear();
-        for (size_t c = 0; c < stripN; c++) {
-            svec.push_back(NAMEOF_ENUM(strip_config[c].input_type));
+        for (auto config : strip_config) {
+            svec.push_back(NAMEOF_ENUM(config.input_type));
         }
         SettingsDB::instance().setStringVector(SettingsDB::kStripInputType, svec);
     }
 
     if (!SettingsDB::instance().hasNumberVector(SettingsDB::kStripStartupMode)) {
         svec.clear();
-        for (size_t c = 0; c < stripN; c++) {
-            svec.push_back(NAMEOF_ENUM(strip_config[c].startup_mode));
+        for (auto config : strip_config) {
+            svec.push_back(NAMEOF_ENUM(config.startup_mode));
         }
         SettingsDB::instance().setStringVector(SettingsDB::kStripStartupMode, svec);
     }
 
     if (!SettingsDB::instance().hasNumberVector(SettingsDB::kStripCompLimit)) {
         nvec.clear();
-        for (size_t c = 0; c < stripN; c++) {
-            nvec.push_back(float(strip_config[c].comp_limit));
+        for (auto config : strip_config) {
+            nvec.push_back(float(config.comp_limit));
         }
         SettingsDB::instance().setNumberVector(SettingsDB::kStripCompLimit, nvec);
     }
 
     if (!SettingsDB::instance().hasNumberVector(SettingsDB::kStripLedCount)) {
         nvec.clear();
-        for (size_t c = 0; c < stripN; c++) {
-            nvec.push_back(float(strip_config[c].led_count));
+        for (auto config : strip_config) {
+            nvec.push_back(float(config.led_count));
         }
         SettingsDB::instance().setNumberVector(SettingsDB::kStripLedCount, nvec);
     }
 
     if (!SettingsDB::instance().hasNumberVector2D(SettingsDB::kStripArtnetUniverse)) {
         dvec.clear();
-        for (size_t c = 0; c < stripN; c++) {
+        for (auto config : strip_config) {
             fixed_containers::FixedVector<float, SettingsDB::max_array_size_2d> ivec{};
-            for (size_t d = 0; d < universeN; d++) {
-                ivec.push_back(float(strip_config[c].artnet[d]));
+            for (auto artnet : config.artnet) {
+                ivec.push_back(float(artnet));
             }
             dvec.push_back(ivec);
         }
@@ -326,10 +326,10 @@ void Model::exportToDB() {
 
     if (!SettingsDB::instance().hasNumberVector2D(SettingsDB::kStripe131Universe)) {
         dvec.clear();
-        for (size_t c = 0; c < stripN; c++) {
+        for (auto config : strip_config) {
             fixed_containers::FixedVector<float, SettingsDB::max_array_size_2d> ivec{};
-            for (size_t d = 0; d < universeN; d++) {
-                ivec.push_back(float(strip_config[c].artnet[d]));
+            for (auto e131 : config.artnet) {
+                ivec.push_back(float(e131));
             }
             dvec.push_back(ivec);
         }
@@ -340,34 +340,34 @@ void Model::exportToDB() {
 
     if (!SettingsDB::instance().hasStringVector(SettingsDB::kAnalogOutputType)) {
         svec.clear();
-        for (size_t c = 0; c < analogN; c++) {
-            svec.push_back(NAMEOF_ENUM(analog_config[c].output_type));
+        for (auto config : analog_config) {
+            svec.push_back(NAMEOF_ENUM(config.output_type));
         }
         SettingsDB::instance().setStringVector(SettingsDB::kAnalogOutputType, svec);
     }
 
     if (!SettingsDB::instance().hasStringVector(SettingsDB::kAnalogInputType)) {
         svec.clear();
-        for (size_t c = 0; c < analogN; c++) {
-            svec.push_back(NAMEOF_ENUM(analog_config[c].input_type));
+        for (auto config : analog_config) {
+            svec.push_back(NAMEOF_ENUM(config.input_type));
         }
         SettingsDB::instance().setStringVector(SettingsDB::kAnalogInputType, svec);
     }
 
     if (!SettingsDB::instance().hasNumberVector(SettingsDB::kAnalogPwmLimit)) {
         nvec.clear();
-        for (size_t c = 0; c < analogN; c++) {
-            nvec.push_back(float(analog_config[c].pwm_limit));
+        for (auto config : analog_config) {
+            nvec.push_back(float(config.pwm_limit));
         }
         SettingsDB::instance().setNumberVector(SettingsDB::kAnalogPwmLimit, nvec);
     }
 
     if (!SettingsDB::instance().hasNumberVector2D(SettingsDB::kAnalogArtnetUniverse)) {
         dvec.clear();
-        for (size_t c = 0; c < analogN; c++) {
+        for (auto config : analog_config) {
             fixed_containers::FixedVector<float, SettingsDB::max_array_size_2d> ivec{};
-            for (size_t d = 0; d < analogCompN; d++) {
-                ivec.push_back(float(analog_config[c].components[d].artnet.universe));
+            for (auto component : config.components) {
+                ivec.push_back(float(component.artnet.universe));
             }
             dvec.push_back(ivec);
         }
@@ -376,10 +376,10 @@ void Model::exportToDB() {
 
     if (!SettingsDB::instance().hasNumberVector2D(SettingsDB::kAnalogArtnetChannel)) {
         dvec.clear();
-        for (size_t c = 0; c < analogN; c++) {
+        for (auto config : analog_config) {
             fixed_containers::FixedVector<float, SettingsDB::max_array_size_2d> ivec{};
-            for (size_t d = 0; d < analogCompN; d++) {
-                ivec.push_back(float(analog_config[c].components[d].artnet.channel));
+            for (auto component : config.components) {
+                ivec.push_back(float(component.artnet.channel));
             }
             dvec.push_back(ivec);
         }
@@ -388,10 +388,10 @@ void Model::exportToDB() {
 
     if (!SettingsDB::instance().hasNumberVector2D(SettingsDB::kAnaloge131Universe)) {
         dvec.clear();
-        for (size_t c = 0; c < analogN; c++) {
+        for (auto config : analog_config) {
             fixed_containers::FixedVector<float, SettingsDB::max_array_size_2d> ivec{};
-            for (size_t d = 0; d < analogCompN; d++) {
-                ivec.push_back(float(analog_config[c].components[d].e131.universe));
+            for (auto component : config.components) {
+                ivec.push_back(float(component.e131.universe));
             }
             dvec.push_back(ivec);
         }
@@ -400,10 +400,10 @@ void Model::exportToDB() {
 
     if (!SettingsDB::instance().hasNumberVector2D(SettingsDB::kAnaloge131Channel)) {
         dvec.clear();
-        for (size_t c = 0; c < analogN; c++) {
+        for (auto config : analog_config) {
             fixed_containers::FixedVector<float, SettingsDB::max_array_size_2d> ivec{};
-            for (size_t d = 0; d < analogCompN; d++) {
-                ivec.push_back(float(analog_config[c].components[d].e131.channel));
+            for (auto component : config.components) {
+                ivec.push_back(float(component.e131.channel));
             }
             dvec.push_back(ivec);
         }
