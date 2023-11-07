@@ -199,6 +199,7 @@ set(COMMON_SOURCES
     ${PROJECT_SOURCE_DIR}/app.cpp
     ${PROJECT_SOURCE_DIR}/color.cpp
     ${PROJECT_SOURCE_DIR}/control.cpp
+    ${PROJECT_SOURCE_DIR}/crc.cpp
     ${PROJECT_SOURCE_DIR}/ddp.cpp
     ${PROJECT_SOURCE_DIR}/driver.cpp
     ${PROJECT_SOURCE_DIR}/network.cpp
