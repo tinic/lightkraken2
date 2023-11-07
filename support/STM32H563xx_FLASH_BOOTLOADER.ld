@@ -64,10 +64,10 @@ SECTIONS
   {
     . = ALIGN(16);
     _crc_section_pre_info_start = .;
-    LONG(0x1ED51ED5)
+    LONG(0x1ED51234)
+    LONG(0x1ED54321)
     LONG(__FLASH_segment_start__)
     LONG(_crc_section_start)
-    LONG(_crc_section_end)
   } > FLASH
 
   /* The program code and other data into "FLASH" Rom type memory */
@@ -168,7 +168,7 @@ SECTIONS
     *(COMMON)
 
     . = ALIGN(4);
-    _ebss = .;         /* define a global symbol at bss end */
+    _ebss = .;         /* define a global symbol at bss end */ 
     __bss_end__ = _ebss;
   } >RAM
 
@@ -188,12 +188,19 @@ SECTIONS
   {
     . = ALIGN(16);
     _crc_section_post_info_start = .;
-    LONG(0x1ED51ED5)
+    LONG(0x1ED51234)
+    LONG(0x1ED54321)
     LONG(__FLASH_segment_start__)
     LONG(_crc_section_start)
-    LONG(_crc_section_end)
     _crc_section_start = .;
-    KEEP(*(.crc_section))
+    LONG(0x00000000)
+    LONG(0x00000000)
+    LONG(0x00000000)
+    LONG(0x00000000)
+    LONG(0x00000000)
+    LONG(0x00000000)
+    LONG(0x00000000)
+    LONG(0x00000000)
     _crc_section_end = .;
   } > FLASH
 
