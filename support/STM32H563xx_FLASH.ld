@@ -62,8 +62,8 @@ SECTIONS
 
   .section_info :
   {
-     _section_info_start = .;
     . = ALIGN(16);
+    _crc_section_pre_info_start = .;
     LONG(0x1ED51ED5)
     LONG(__FLASH_segment_start__)
     LONG(_crc_section_start)
@@ -187,7 +187,8 @@ SECTIONS
   .crc_section :
   {
     . = ALIGN(16);
-    LONG(0x3412D51E)
+    _crc_section_post_info_start = .;
+    LONG(0x1ED51ED5)
     LONG(__FLASH_segment_start__)
     LONG(_crc_section_start)
     LONG(_crc_section_end)
