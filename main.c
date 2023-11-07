@@ -30,7 +30,7 @@ SOFTWARE.
 #include "crc.h"
 
 int main() {
-    verify_sha256_checksum();
+    verify_sha256_checksum_self();
     SYS_Init();
     tx_kernel_enter();
     while (1) {

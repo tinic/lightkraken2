@@ -193,7 +193,7 @@ SECTIONS
     LONG(__FLASH_segment_start__)
     LONG(_crc_section_start)
     _crc_section_start = .;
-    LONG(0x00000000)
+    LONG(0x00000000) /* placeholder for SHA256, 32 bytes */
     LONG(0x00000000)
     LONG(0x00000000)
     LONG(0x00000000)
@@ -203,6 +203,8 @@ SECTIONS
     LONG(0x00000000)
     _crc_section_end = .;
   } > FLASH
+
+  /* Nothing should come after this in FLASH space, tools depend on it. */
 
   /* Remove information from the compiler libraries */
   /DISCARD/ :
