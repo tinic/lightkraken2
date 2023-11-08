@@ -102,7 +102,7 @@ set(CC_COMMON_FLAGS
     -Wnull-dereference
     -mthumb
     -mfloat-abi=hard
-    -mfpu=fpv4-sp-d16
+    -mfpu=fpv5-sp-d16
     -fdata-sections
     -ffunction-sections
     -Wall
