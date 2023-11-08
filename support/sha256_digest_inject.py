@@ -57,8 +57,6 @@ if __name__ == '__main__':
 
     if sys.version_info[0] < 3:
         raise Exception("Must be using Python 3 or newer")
-    else:
-        print("You are running Python {}.".format(sys.version_info[0]))
     
     file_path_bin = sys.argv[1]
     file_path_elf = sys.argv[2]

@@ -32,8 +32,8 @@ void verify_sha256_checksum(const uint32_t *crc_pre_info_start, const uint32_t *
     _nx_crypto_sha256_initialize(&sha256, NX_CRYPTO_HASH_SHA256);
 
     // Calc sha256 digest of binary, starting from vector table to start of crc section
-    const uint8_t *bin_start = (const uint8_t *)crc_pre_info_start[2];
-    const uint8_t *bin_end = (const uint8_t *)crc_pre_info_start[3];
+    const uint8_t *bin_start = (const uint8_t *)crc_pre_info_start[2]; // __FLASH_segment_start__
+    const uint8_t *bin_end = (const uint8_t *)crc_pre_info_start[3]; // _crc_section_start
     _nx_crypto_sha256_update(&sha256, const_cast<UCHAR *>(bin_start), static_cast<UINT>(bin_end - bin_start));
 
     UCHAR sha256_digest[32]{};
