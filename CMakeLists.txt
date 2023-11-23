@@ -95,19 +95,13 @@ set(LD_SCRIPT_RUNTIME ${PROJECT_SOURCE_DIR}/support/STM32H563xx_FLASH.ld)
 set(LD_SCRIPT_BOOTLOADER ${PROJECT_SOURCE_DIR}/support/STM32H563xx_FLASH_BOOTLOADER.ld)
 
 set(CC_COMMON_FLAGS
-    -mcpu=cortex-m33
+    -Wall
+    -Wextra
+    -Wpedantic 
     -Wformat=2
     -Wformat-overflow
     -Wformat-truncation
     -Wnull-dereference
-    -mthumb
-    -mfloat-abi=hard
-    -mfpu=fpv5-sp-d16
-    -fdata-sections
-    -ffunction-sections
-    -Wall
-    -Wextra
-    -Wpedantic 
     -Wfloat-conversion 
     -Wdouble-promotion
     -Wno-unused-parameter
@@ -116,6 +110,12 @@ set(CC_COMMON_FLAGS
     -Wstack-usage=8192
     -Wuninitialized
     -Wno-psabi
+    -mcpu=cortex-m33
+    -mthumb
+    -mfloat-abi=hard
+    -mfpu=fpv5-sp-d16
+    -fdata-sections
+    -ffunction-sections
     -funsigned-char
     -fshort-enums
     -fno-common
@@ -158,7 +158,7 @@ set(LD_COMMON_FLAGS
     -mcpu=cortex-m33
     -mthumb
     -mfloat-abi=hard
-    -mfpu=fpv4-sp-d16
+    -mfpu=fpv5-sp-d16
     -lm
     -lnosys
     -Wl,--gc-sections)
